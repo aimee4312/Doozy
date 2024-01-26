@@ -6,8 +6,11 @@ const Login = () => {
     const [password, setPassword] = React.useState('');
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.content}>
+            <View style={styles.title}>
                 <Text>Login screen</Text>
+            </View>
+            <View style={styles.content}>
+                
                 <TextInput
                     style={styles.input}
                     onChangeText={setEmail}
@@ -40,6 +43,16 @@ const styles = StyleSheet.create({
     content: {
         alignItems: 'center',
     },
+    title:{
+        alignItems: 'center'
+    },
+    input: {
+        height: 40,
+        width: 200,
+        margin: 12,
+        borderWidth: 1,
+        padding: 10,
+      },
 });
 
 export default Login;
