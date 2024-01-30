@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
 import { StyleSheet, Button, View, SafeAreaView, Alert , TouchableOpacity} from 'react-native';
 
 const Stack = createStackNavigator();
@@ -19,6 +20,11 @@ const App = () => (
         component={LoginScreen}
         options={{ title: 'Login' }}
       />
+      <Stack.Screen
+        name="Signup"
+        component={SignupScreen}
+        options={{ title: 'Signup' }}
+      />
     </Stack.Navigator>
   </NavigationContainer>
 );
@@ -34,10 +40,7 @@ const HomeScreen = ({ navigation }) => (
     <View>
       <Button
         title="Sign up"
-        onPress={() => {
-          console.log('Button pressed');
-          Alert.alert('Simple Button pressed');
-        }}
+        onPress={() => navigation.navigate('Signup')}
       />
     </View>
   </SafeAreaView>
