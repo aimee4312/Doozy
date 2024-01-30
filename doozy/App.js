@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
-import { StyleSheet, Button, View, SafeAreaView, Alert , TouchableOpacity} from 'react-native';
+import { StyleSheet, Button, View, SafeAreaView } from 'react-native';
 
 const Stack = createStackNavigator();
 
