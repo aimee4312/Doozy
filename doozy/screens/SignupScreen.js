@@ -34,6 +34,18 @@ const Signup = () => {
         } else if (password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
             isValid = false;
+        } else if (!/(?=.*[a-z])/.test(password)) {
+            setPasswordError('Password must contain at least one lowercase letter');
+            isValid = false;
+        } else if (!/(?=.*[A-Z])/.test(password)) {
+            setPasswordError('Password must contain at least one uppercase letter');
+            isValid = false;
+        } else if (!/(?=.*\d)/.test(password)) {
+            setPasswordError('Password must contain at least one number');
+            isValid = false;
+        } else if (!/(?=.*\W)/.test(password)) {
+            setPasswordError('Password must contain at least one special character');
+            isValid = false;
         }
 
         if (!passConfirmation) {
