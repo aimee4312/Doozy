@@ -2,13 +2,14 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/LoginScreen';
+import TaskListScreen from './screens/TaskListScreen';
 import { StyleSheet, Button, View, SafeAreaView, Alert , TouchableOpacity} from 'react-native';
 
 const Stack = createStackNavigator();
 
 const App = () => (
   <NavigationContainer>
-    <Stack.Navigator initialRouteName="Home">
+    <Stack.Navigator initialRouteName="TaskList" screenOptions={{ headerShown: false}}>
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -18,6 +19,11 @@ const App = () => (
         name="Login"
         component={LoginScreen}
         options={{ title: 'Login' }}
+      />
+      <Stack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+        options={{ title: 'TaskList'}}
       />
     </Stack.Navigator>
   </NavigationContainer>
