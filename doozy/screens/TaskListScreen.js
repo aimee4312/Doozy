@@ -18,8 +18,10 @@ const TaskListScreen = () => {
     };
     
     const handleSubmit = () => {
-        setTaskItems([...taskItems, newTask]);
-        setNewTask(null);
+        if (newTask.length !== 0) {
+            setTaskItems([...taskItems, newTask]);
+        }
+        setNewTask('');
         setShowTextInput(false);
     }
 
