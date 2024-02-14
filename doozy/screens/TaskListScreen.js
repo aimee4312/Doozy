@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
-import { StyleSheet, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import React, { createContext, useContext, useState, useRef, forwardRef } from 'react';
+import { StyleSheet, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Task from '../components/Task'
 import TaskCreation from '../components/TaskCreation'
 
@@ -7,50 +7,82 @@ const TaskListScreen = () => {
     
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
+    const [showTaskTitle, setShowTaskTitle] = useState(false);
+    const [showCompletedTitle, setShowCompletedTitle] = useState(false);
+    const childRef = useRef();
     
     const handleSubmit = (newTask) => {
-        console.log(newTask);
         if (newTask.length !== 0) {
             setTaskItems([...taskItems, newTask]);
+            setShowTaskTitle(true);
         }
     }
 
-    const completeTask = (index) => {
-        let itemsCopy = [...taskItems];
-        let deletedItem = taskItems[index];
-        itemsCopy.splice(index, 1);
-        setTaskItems(itemsCopy);
-        setCompletedTaskItems([...completedTaskItems, deletedItem])
+    const completeTask = (index, complete) => {
+        if (!complete) {
+            let itemsCopy = [...taskItems];
+            let completedItem = taskItems[index];
+            itemsCopy.splice(index, 1);
+            setTaskItems(itemsCopy);
+            setCompletedTaskItems([...completedTaskItems, completedItem]);
+            setShowCompletedTitle(true);
+            if (itemsCopy.length === 0) {
+                setShowTaskTitle(false);
+            }
+        }
+        else {
+            let itemsCopy = [...completedTaskItems];
+            let incompletedItem = completedTaskItems[index];
+            itemsCopy.splice(index, 1);
+            setCompletedTaskItems(itemsCopy);
+            setTaskItems([...taskItems, incompletedItem]);
+            setShowTaskTitle(true);
+            if (itemsCopy.length === 0) {
+                setShowCompletedTitle(false);
+            }
+        }
     }
 
+    const DismissKeyboard = ({ children }) => (
+        <TouchableWithoutFeedback onPress={() => childRef.current.closeKeyboard()}>
+            {children}
+        </TouchableWithoutFeedback>
+        );
+
     return (
-        <View style={styles.container}>
-            <View style={styles.tasksContainer}>
-                <Text style={styles.sectionTitle}>Tasks</Text>
-                <View style={styles.tasks}>
-                {   
-                    taskItems.map((item, index) => {
-                        return(
-                            <TouchableOpacity key={index} onPress={() => completeTask(index)}>
-                                <Task text={item} />
-                            </TouchableOpacity>
-                        )
-                    })
-                }
+        <DismissKeyboard>
+            <View style={styles.container}>
+                <View style={styles.tasksContainer}>
+                    {showTaskTitle && (<Text style={styles.sectionTitle}>Tasks</Text>)}
+                    <View style={styles.tasks}>
+                    {   
+                        taskItems.map((item, index) => {
+                            return(
+                                <View key={index}>
+                                    <Task text={item} tick={completeTask} i={index} complete={false} />
+                                </View>
+                            )
+                        })
+                    }
+                    </View>
                 </View>
-                <Text style={styles.sectionTitle}>Completed</Text>
-                <View style={styles.tasks}>
-                {   
-                    completedTaskItems.map((item, index) => {
-                        return(
-                            <Task key={index} text={item} />
-                        )
-                    })
-                }
+                <View style={styles.tasksContainer}>
+                    {showCompletedTitle && <Text style={styles.sectionTitle}>Completed</Text>}
+                    <View style={styles.tasks}>
+                    {   
+                        completedTaskItems.map((item, index) => {
+                            return(
+                                <View key={index}>
+                                    <Task text={item} tick={completeTask} i={index} complete={true} />
+                                </View>
+                            )
+                        })
+                    }
+                    </View>
                 </View>
+                <TaskCreation ref={childRef} callSubmitHandler={handleSubmit} />
             </View>
-            <TaskCreation callSubmitHandler={handleSubmit} />
-        </View>
+        </DismissKeyboard>
     );
 }
 
@@ -70,7 +102,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         marginTop: 5,
         borderRadius: 5,
-        marginBottom: 30,
     },
 })
 export default TaskListScreen;

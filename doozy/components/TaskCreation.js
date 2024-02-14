@@ -1,18 +1,25 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, TextInput, Text, View, Button, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 
-const TaskCreation = ({ callSubmitHandler }) => {
-
+const TaskCreation = forwardRef(( props, ref) => {
+    const {callSubmitHandler} = props;
     const [newTask, setNewTask] = useState('');
     const [showTextInput, setShowTextInput] = useState(false);
     const textInputRef = useRef(null);
+
+    useImperativeHandle(ref, () => ({
+        closeKeyboard() {
+            setShowTextInput(false);
+        }
+    }))
+
+    
 
     const handleAddTask = () => {
         setShowTextInput(true);
         setTimeout(() => {
             textInputRef.current.focus();
         }, 100);
-
     };
 
     const handleSubmitHelper = () => {
@@ -23,31 +30,31 @@ const TaskCreation = ({ callSubmitHandler }) => {
 
     return (
         <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.writeTaskWrapper}
-                >
-                {!showTextInput && (
-                    <TouchableOpacity onPress={handleAddTask}>
-                        <View style={styles.addTaskButtonWrapper}>
-                            <Text style={styles.addTaskText}>+</Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
-                {showTextInput && (
-                    <View style={styles.inputWrapper}>
-                        <TextInput
-                            ref={textInputRef}
-                            style={styles.input}
-                            placeholder="Type something..."
-                            value={newTask}
-                            onChangeText={text => setNewTask(text)}
-                        />
-                        <Button style={styles.submitButton} title="go" onPress={handleSubmitHelper}/>
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.writeTaskWrapper}
+            >
+            {!showTextInput && (
+                <TouchableOpacity onPress={handleAddTask}>
+                    <View style={styles.addTaskButtonWrapper}>
+                        <Text style={styles.addTaskText}>+</Text>
                     </View>
-                )}
-            </KeyboardAvoidingView>
+                </TouchableOpacity>
+            )}
+            {showTextInput && (
+                <View style={styles.inputWrapper}>
+                    <TextInput
+                        ref={textInputRef}
+                        style={styles.input}
+                        placeholder="Type something..."
+                        value={newTask}
+                        onChangeText={text => setNewTask(text)}
+                    />
+                    <Button style={styles.submitButton} title="go" onPress={handleSubmitHelper}/>
+                </View>
+            )}
+        </KeyboardAvoidingView>
     );
-}
+});
 
 const styles = StyleSheet.create({
     writeTaskWrapper: {
