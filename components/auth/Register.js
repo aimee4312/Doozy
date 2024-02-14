@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { View, Button, TextInput } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { FIREBASE_AUTH } from '../../firebaseConfig';
 
 
 export class Register extends Component {
