@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import { View, Button, TextInput } from 'react-native'
+import { FIREBASE_APP, FIREBASE_AUTH } from '../../firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 export class Register extends Component {
@@ -10,11 +12,18 @@ export class Register extends Component {
             email: '',
             password: ''
         }
-        this.onSignUp.bind(this)
+        this.onSignUp = this.onSignUp.bind(this);
     }
 
     onSignUp() {
-
+        const { name, email, password } = this.state;
+        createUserWithEmailAndPassword(FIREBASE_AUTH, email, password)
+        .then((result) => {
+            console.log(result)
+        })
+        .catch((error) => {
+            console.log(error)
+        });
     }
 
     render() {
