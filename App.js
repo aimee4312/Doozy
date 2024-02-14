@@ -5,8 +5,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from './components/auth/Landing';
 import RegisterScreen from './components/auth/Register';
 import LoginScreen from './components/auth/Login'
+import TaskListScreen from './screens/TaskListScreen';
 import { onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './firebaseConfig';
+
 
 const Stack = createStackNavigator();
 
@@ -47,7 +49,7 @@ export class App extends Component {
     if (!loggedIn){
       return (
         <NavigationContainer>
-          <Stack.Navigator initialRouteName="Landing">
+          <Stack.Navigator initialRouteName="TaskList"screenOptions={{ headerShown: false}}>
             <Stack.Screen 
               name="Landing"
               component={ LandingScreen }
@@ -61,6 +63,11 @@ export class App extends Component {
             <Stack.Screen 
               name="Register"
               component={ RegisterScreen }
+              options={{ headShown: false}}
+            />
+            <Stack.Screen 
+              name="TaskList"
+              component={ TaskListScreen }
               options={{ headShown: false}}
             />
           </Stack.Navigator>

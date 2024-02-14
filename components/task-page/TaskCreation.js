@@ -1,11 +1,12 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, Button, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, TextInput, Text, View, Button, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, InputAccessoryView } from 'react-native';
 
 const TaskCreation = forwardRef(( props, ref) => {
     const {callSubmitHandler} = props;
     const [newTask, setNewTask] = useState('');
     const [showTextInput, setShowTextInput] = useState(false);
     const textInputRef = useRef(null);
+    const inputAccessoryViewID = 'uniqueID';
 
     useImperativeHandle(ref, () => ({
         closeKeyboard() {
@@ -29,40 +30,52 @@ const TaskCreation = forwardRef(( props, ref) => {
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.writeTaskWrapper}
-            >
-            {!showTextInput && (
-                <TouchableOpacity onPress={handleAddTask}>
-                    <View style={styles.addTaskButtonWrapper}>
-                        <Text style={styles.addTaskText}>+</Text>
-                    </View>
-                </TouchableOpacity>
-            )}
+        <View style={styles.container}>
+            <View style={styles.buttonContainer}>
+                {!showTextInput && (
+                    <TouchableOpacity onPress={handleAddTask}>
+                        <View style={styles.addTaskButtonWrapper}>
+                            <Text style={styles.addTaskText}>+</Text>
+                        </View>
+                    </TouchableOpacity>
+                )}
+            </View>
             {showTextInput && (
-                <View style={styles.inputWrapper}>
+                <InputAccessoryView>
+                    <View style={styles.inputWrapper}>
                     <TextInput
-                        ref={textInputRef}
-                        style={styles.input}
-                        placeholder="Type something..."
-                        value={newTask}
-                        onChangeText={text => setNewTask(text)}
+                    ref={textInputRef}
+                    style={styles.input}
+                    inputAccessoryViewID={inputAccessoryViewID}
+                    onChangeText={text => setNewTask(text)}
+                    value={newTask}
+                    placeholder={'Please type here…'}
                     />
                     <Button style={styles.submitButton} title="go" onPress={handleSubmitHelper}/>
-                </View>
+                    </View>
+                </InputAccessoryView>
             )}
-        </KeyboardAvoidingView>
+        </View>
     );
 });
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        flexDirection: 'column-reverse',
+        marginBottom: 16,
+    },
     writeTaskWrapper: {
-        position: 'absolute',
         width: '100%',
-        bottom: 40,
-        flexDirection: 'row-reverse',
+        flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'flex-end',
+    },
+    buttonContainer: {
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+        marginBottom: 16,
+        marginRight: 16,
     },
     inputWrapper: {
         flexDirection: 'row',

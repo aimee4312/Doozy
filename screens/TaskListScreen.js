@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useRef, forwardRef } from 'react';
 import { StyleSheet, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
-import Task from '../components/Task'
-import TaskCreation from '../components/TaskCreation'
+import Task from '../components/task-page/Task'
+import TaskCreation from '../components/task-page/TaskCreation'
 
 const TaskListScreen = () => {
     
