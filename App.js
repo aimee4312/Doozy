@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text } from 'react-native';
+import { View, Text, Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from './components/auth/Landing';
@@ -14,7 +14,7 @@ export class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      loaded: false,
+      loggedIn: false,
     }
   }
 
@@ -23,26 +23,23 @@ export class App extends Component {
       if (!user) {
         this.setState({
           loggedIn: false,
-          loaded: true,
         })
       } else {
         this.setState({
           loggedIn: true,
-          loaded: true,
         })
       }
     })
   }
 
+  onLogOut() {
+    this.setState({
+      loggedIn: false,
+    })
+  }
+
   render() {
-    const { loggedIn, loaded } = this.state;
-    if (!loaded) {
-      return(
-        <View style={{ flex:1, justifyContent: 'center' }}>
-          <Text>Loading</Text>
-        </View>
-      )
-    }
+    const { loggedIn } = this.state;
     if (!loggedIn){
       return (
         <NavigationContainer>
@@ -69,6 +66,10 @@ export class App extends Component {
     return (
       <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>User is logged in</Text>
+        <Button
+          onPress={() => this.onLogOut()}
+          title="Log Out"
+        />
       </View>
     )
   }
