@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { View, Button, TextInput } from 'react-native';
+import { View, Button, TextInput, StyleSheet } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { collection } from 'firebase/firestore';
 
 
 export class Register extends Component {
@@ -19,36 +19,45 @@ export class Register extends Component {
     onSignUp() {
         const { name, email, password } = this.state;
         createUserWithEmailAndPassword(FIREBASE_AUTH, email, password)
-        .then((result) => {
-            collection(FIRESTORE_DB, "users")
-            .doc(FIREBASE_AUTH.currentUser.uid)
-            .set({
-                name,
-                email,
-                password
+        .then((userCredential) => {
+            const user = userCredential.user;
+    
+            const userRef = doc(FIRESTORE_DB, "Users", user.uid);
+            return setDoc(userRef, {
+                name: name,
+                email: email,
+                password: password
             })
-            console.log(result)
+            .then(() => {
+                console.log("User information stored in Firestore successfully!");
+            })
+            .catch((error) => {
+                console.error("Error storing user information in Firestore: ", error);
+            });
         })
         .catch((error) => {
-            console.log(error)
+            console.error("Error creating user in Firebase Authentication: ", error);
         });
     }
 
     render() {
         return (
-        <View>
+        <View style={styles.container}>
             <TextInput
-                placeholder="name"
+                placeholder="Name"
                 onChangeText={(name) => this.setState({ name })}
+                style={styles.textBoxes}
             />
             <TextInput
-                placeholder="email"
+                placeholder="Email"
                 onChangeText={(email) => this.setState({ email })}
+                style={styles.textBoxes}
             />
             <TextInput
-                placeholder="password"
+                placeholder="Password"
                 secureTextEntry={true}
                 onChangeText={(password) => this.setState({ password })}
+                style={styles.textBoxes}
             />
             <Button
                 onPress={() => this.onSignUp()}
@@ -58,5 +67,24 @@ export class Register extends Component {
         )
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex:1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    textBoxes: {
+        fontSize: 20,
+        borderWidth: 1,
+        borderColor: '#000000',
+        borderRadius: 20,
+        width: 200,
+        height: 40,
+        paddingHorizontal: 10,
+        marginBottom: 30,
+    }
+})
 
 export default Register

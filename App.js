@@ -67,7 +67,7 @@ export class App extends Component {
       );
     }
     return (
-      <View style={{ flex:1, justifyContent: 'center' }}>
+      <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>User is logged in</Text>
       </View>
     )
