@@ -43,6 +43,25 @@ const TaskListScreen = () => {
         }
     }
 
+    const deleteItem = (index, complete) => {
+        if (!complete) {
+            let itemsCopy = [...taskItems];
+            itemsCopy.splice(index, 1);
+            setTaskItems(itemsCopy);
+            if (itemsCopy.length === 0) {
+                setShowTaskTitle(false);
+            }
+        }
+        else {
+            let itemsCopy = [...completedTaskItems];
+            itemsCopy.splice(index, 1);
+            setCompletedTaskItems(itemsCopy);
+            if (itemsCopy.length === 0) {
+                setShowCompletedTitle(false);
+            }
+        }
+    }
+
     const DismissKeyboard = ({ children }) => (
         <TouchableWithoutFeedback onPress={() => childRef.current.closeKeyboard()}>
             {children}
@@ -59,7 +78,7 @@ const TaskListScreen = () => {
                         taskItems.map((item, index) => {
                             return(
                                 <View key={index}>
-                                    <Task text={item} tick={completeTask} i={index} complete={false} />
+                                    <Task text={item} tick={completeTask} i={index} complete={false} deleteItem={deleteItem}/>
                                 </View>
                             )
                         })
@@ -73,7 +92,7 @@ const TaskListScreen = () => {
                         completedTaskItems.map((item, index) => {
                             return(
                                 <View key={index}>
-                                    <Task text={item} tick={completeTask} i={index} complete={true} />
+                                    <Task text={item} tick={completeTask} i={index} complete={true} deleteItem={deleteItem}/>
                                 </View>
                             )
                         })
@@ -90,10 +109,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: 80,
-        paddingHorizontal: 20,
     },
     tasksContainer: {
         paddingBottom: 20,
+        paddingHorizontal: 20,
     },
     sectionTitle: {
         fontSize: 24,
