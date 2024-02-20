@@ -52,8 +52,8 @@ const TaskListScreen = () => {
     return (
         <DismissKeyboard>
             <View style={styles.container}>
-                <View style={styles.tasksContainer}>
-                    {showTaskTitle && (<Text style={styles.sectionTitle}>Tasks</Text>)}
+                {showTaskTitle && <View style={styles.tasksContainer}>
+                    <Text style={styles.sectionTitle}>Tasks</Text>
                     <View style={styles.tasks}>
                     {   
                         taskItems.map((item, index) => {
@@ -65,9 +65,9 @@ const TaskListScreen = () => {
                         })
                     }
                     </View>
-                </View>
-                <View style={styles.tasksContainer}>
-                    {showCompletedTitle && <Text style={styles.sectionTitle}>Completed</Text>}
+                </View>}
+                {showCompletedTitle && <View style={styles.tasksContainer}>
+                    <Text style={styles.sectionTitle}>Completed</Text>
                     <View style={styles.tasks}>
                     {   
                         completedTaskItems.map((item, index) => {
@@ -79,7 +79,7 @@ const TaskListScreen = () => {
                         })
                     }
                     </View>
-                </View>
+                </View>}
                 <TaskCreation ref={childRef} callSubmitHandler={handleSubmit} />
             </View>
         </DismissKeyboard>
@@ -89,10 +89,11 @@ const TaskListScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    tasksContainer: {
         paddingTop: 80,
         paddingHorizontal: 20,
+    },
+    tasksContainer: {
+        paddingBottom: 20,
     },
     sectionTitle: {
         fontSize: 24,
