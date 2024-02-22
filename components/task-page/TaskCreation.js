@@ -1,6 +1,9 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, TextInput, Text, View, Button, TouchableOpacity, TouchableHighlight, ScrollView } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { MenuProvider } from 'react-native-popup-menu';
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 
 const TaskCreation = forwardRef(( props, ref) => {
     const {callSubmitHandler} = props;
@@ -44,26 +47,90 @@ const TaskCreation = forwardRef(( props, ref) => {
                 </TouchableOpacity>
             </View>)}
             {showTextInput && (
-                <KeyboardAccessoryView heightProperty="minHeight" alwaysVisible={true} hideBorder={true} animateOn='all' androidAdjustResize>
-                    <View style={styles.inputWrapper}>
-                        <TouchableOpacity style={ completedCreateTask ? styles.checkedbox : styles.uncheckedbox } onPress={checker}></TouchableOpacity>
-                        <TextInput
-                            ref={textInputRef}
-                            style={styles.inputTask}
-                            onChangeText={text => setNewTask(text)}
-                            value={newTask}
-                            placeholder={'Please type here…'}
-                        />
-                        <Button style={styles.submitButton} title="go" onPress={handleSubmitHelper}/>
-                    </View>
-                    <View style={styles.descriptionWrapper}>
-                        <TextInput
-                            style={styles.inputDescription}
-                            onChangeText={text => setNewDescription(text)}
-                            value={newDescription}
-                            placeholder={'Description…'}
-                        />
-                    </View>
+                <KeyboardAccessoryView 
+                    style={styles.taskCustomization}
+                    heightProperty="minHeight" 
+                    alwaysVisible={true} 
+                    hideBorder={true} 
+                    animateOn='all' 
+                    androidAdjustResize
+                >
+                    <MenuProvider>
+                        <View style={styles.inputWrapper}>
+                            <TouchableOpacity 
+                                style={ completedCreateTask ? styles.checkedbox : styles.uncheckedbox } 
+                                onPress={checker}
+                            />
+                            <TextInput
+                                ref={textInputRef}
+                                style={styles.inputTask}
+                                onChangeText={text => setNewTask(text)}
+                                value={newTask}
+                                placeholder={'Please type here…'}
+                            />
+                            <Button 
+                                style={styles.submitButton} 
+                                title="go" 
+                                onPress={handleSubmitHelper}
+                            />
+                        </View>
+                        <View style={styles.descriptionWrapper}>
+                            <TextInput
+                                style={styles.inputDescription}
+                                onChangeText={text => setNewDescription(text)}
+                                value={newDescription}
+                                placeholder={'Description…'}
+                            />
+                        </View>
+                        <View style={styles.detailsWrapper}>
+                            <TouchableHighlight 
+                                style={styles.submitButton}
+                            >
+                                <View style={styles.iconContainer}>
+                                    <Icon
+                                        name="calendar"
+                                        size={28}
+                                        color={'black'}
+                                    />
+                                </View>
+                            </TouchableHighlight>
+                            <TouchableHighlight 
+                                style={styles.submitButton}
+                            >
+                                <View style={styles.iconContainer}>
+                                    <Icon
+                                        name="flag"
+                                        size={28}
+                                        color={'black'}
+                                    />
+                                </View>
+                            </TouchableHighlight>
+                            <Menu>
+                                <MenuTrigger 
+                                    style={styles.submitButton}
+                                >
+                                    <View style={styles.iconContainer}>
+                                        <Icon
+                                            name="folder"
+                                            size={28}
+                                            color={'black'}
+                                        />
+                                    </View>
+                                </MenuTrigger>
+                                
+                                <MenuOptions style={styles.listsMenu}>
+                                    <ScrollView style={styles.listsMenuScroll}>
+                                        <MenuOption text="List 1" />
+                                        <MenuOption text="List 2" />
+                                        <MenuOption text="List 1" />
+                                        <MenuOption text="List 2" />
+                                        <MenuOption text="List 1" />
+                                        <MenuOption text="List 2" />
+                                    </ScrollView>
+                                </MenuOptions>
+                            </Menu>
+                        </View>
+                    </MenuProvider>
                 </KeyboardAccessoryView>
             )}
         </View>
@@ -88,15 +155,20 @@ const styles = StyleSheet.create({
         marginRight: 16,
         marginBottom: 32,
     },
+    taskCustomization: {
+        backgroundColor: '#FFF',
+        borderColor: '#C0C0C0',
+        borderWidth: 1,
+        borderTopLeftRadius: 5,
+        borderTopRightRadius: 5,
+    },
     inputWrapper: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingRight: 10,
-        backgroundColor: '#FFF',
-        borderColor: '#C0C0C0',
-        borderWidth: 1,
-        borderRadius: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: '#C0C0C0',
     },
     inputTask: {
         paddingVertical: 15,
@@ -137,12 +209,26 @@ const styles = StyleSheet.create({
         marginLeft: 15,
     },
     inputDescription: {
-        paddingVertical: 15,
+        paddingVertical: 10,
         paddingHorizontal: 15,
         width: '100%',
     },
-    descriptionWrapper: {
-        
+    detailsWrapper: {
+        flexDirection: 'row',
+        justifyContent: 'left',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        padding: 10,
+    },
+    listsMenu: {
+        marginTop: -120,
+        height: 70,
+    },
+    listsMenuScroll: {
+        backgroundColor: 'white',
+        borderWidth: 1,
+        borderColor: '#C0C0C0',
     }
 })
 
