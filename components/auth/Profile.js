@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text, Button, StyleSheet } from 'react-native'
+import { View, Text, Button, StyleSheet, Image } from 'react-native'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
 import { doc, getDoc } from "firebase/firestore";
 
@@ -42,28 +42,31 @@ export class Profile extends Component {
     const { userProfile } = this.state;
 
     return (
-      <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.container}>
         {userProfile && (
-            <View>
-              <View style={styles.bioTextContainer}>
-                <Text style={styles.bioText}>{userProfile.name} is logged in</Text>
-                <View style={styles.detailsContainer}>
-                  <View style={styles.detail}>
-                    <Text style={styles.detailText}>Friends</Text>
-                    <Text>{userProfile.friends}</Text>
-                  </View>
-                  <View style={styles.detail}>
-                    <Text style={styles.detailText}>Posts</Text>
-                    <Text>{userProfile.posts}</Text>
-                  </View>
+          <View style={styles.content}>
+            <Image source={require('../../profile-pic.jpeg')} style={styles.profileImage} />
+            <View style={styles.bioTextContainer}>
+              <Text style={styles.bioText}>{userProfile.name}</Text>
+              <View style={styles.detailsContainer}>
+                <View style={styles.detail}>
+                  <Text style={styles.detailText}>Friends</Text>
+                  <Text>{userProfile.friends}</Text>
+                </View>
+                <View style={styles.detail}>
+                  <Text style={styles.detailText}>Posts</Text>
+                  <Text>{userProfile.posts}</Text>
                 </View>
               </View>
-              <Button
-                onPress={() => this.onLogOut()}
-                title="Log Out"
-              />
             </View>
+          </View>
         )}
+        <View style={styles.buttonContainer}>
+          <Button
+            onPress={() => this.onLogOut()}
+            title="Log Out"
+          />
+        </View>
       </View>
     );
   }     
@@ -71,6 +74,23 @@ export class Profile extends Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 20,
+  },
   bioTextContainer: {
     alignItems: 'center',
     marginBottom: 20,
@@ -91,6 +111,9 @@ const styles = StyleSheet.create({
   bioText: {
     fontWeight: 'bold',
     marginBottom: 10,
+  },
+  buttonContainer: {
+    marginBottom: 20,
   }
 })
 
