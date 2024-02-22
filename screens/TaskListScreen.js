@@ -61,6 +61,18 @@ const TaskListScreen = () => {
             }
         }
     }
+    
+    let swipedCardRef = null;
+    const onOpen = ref => {
+        if (swipedCardRef) swipedCardRef.current.close();
+            swipedCardRef = ref;
+        };
+
+    const onClose = ref => {
+        if (ref == swipedCardRef) {
+            swipedCardRef = null;
+        }
+    };
 
     const DismissKeyboard = ({ children }) => (
         <TouchableWithoutFeedback onPress={() => childRef.current.closeKeyboard()}>
@@ -78,7 +90,15 @@ const TaskListScreen = () => {
                         taskItems.map((item, index) => {
                             return(
                                 <View key={index}>
-                                    <Task text={item} tick={completeTask} i={index} complete={false} deleteItem={deleteItem}/>
+                                    <Task 
+                                        text={item} 
+                                        tick={completeTask} 
+                                        i={index} 
+                                        complete={false} 
+                                        deleteItem={deleteItem}
+                                        onOpen={onOpen}
+                                        onClose={onClose}
+                                    />
                                 </View>
                             )
                         })
@@ -92,7 +112,15 @@ const TaskListScreen = () => {
                         completedTaskItems.map((item, index) => {
                             return(
                                 <View key={index}>
-                                    <Task text={item} tick={completeTask} i={index} complete={true} deleteItem={deleteItem}/>
+                                    <Task 
+                                        text={item} 
+                                        tick={completeTask} 
+                                        i={index} 
+                                        complete={true} 
+                                        deleteItem={deleteItem}
+                                        onOpen={onOpen}
+                                        onClose={onClose}
+                                    />
                                 </View>
                             )
                         })

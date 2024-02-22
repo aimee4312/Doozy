@@ -1,10 +1,26 @@
-import React from 'react';
+import React, {useState, useRef} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 const Task = (props) => {
 
-    const { text, tick, i, complete, deleteItem} = props;
+    const { text, tick, i, complete, deleteItem, onOpen, onClose } = props;
+    
+    const [isOpened, setIsOpened] = useState(false);
+    const rowRef = useRef(null);
+
+    const onSwipeOpen = () => {
+        if (!isOpened) {
+          setIsOpened(true);
+          onOpen(rowRef);
+        }
+      };
+      const onSwipeClose = () => {
+        if (isOpened) {
+            setIsOpened(false);
+          onClose(rowRef);
+        }
+      };
 
     const checkoff = () => {
         tick(i, complete);
@@ -24,10 +40,13 @@ const Task = (props) => {
             </TouchableOpacity>
         )
     }
-
+  
     return (
         <Swipeable 
-            renderRightActions={() => <RightActions onPress={deleteItemHelper} />}>
+            ref={rowRef}
+            renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
+            onSwipeableWillOpen={onSwipeOpen}
+            onSwipeableWillClose={onSwipeClose}>
             <View style={styles.item}>
                 <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}></TouchableOpacity>
                 <Text style={styles.itemText}>{text}</Text>
