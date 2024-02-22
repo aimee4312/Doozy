@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from './components/auth/Landing';
 import RegisterScreen from './components/auth/Register';
 import LoginScreen from './components/auth/Login'
+import ProfileScreen from './components/auth/Profile'
 import { onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './firebaseConfig';
 
@@ -32,15 +33,7 @@ export class App extends Component {
     })
   }
 
-  onLogOut() {
-    this.setState({
-      loggedIn: false,
-    })
-  }
-
   render() {
-    const { loggedIn } = this.state;
-    if (!loggedIn){
       return (
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Landing">
@@ -59,19 +52,14 @@ export class App extends Component {
               component={ RegisterScreen }
               options={{ headShown: false}}
             />
+            <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{ headerShown: false }}
+          />
           </Stack.Navigator>
         </NavigationContainer>
       );
-    }
-    return (
-      <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>User is logged in</Text>
-        <Button
-          onPress={() => this.onLogOut()}
-          title="Log Out"
-        />
-      </View>
-    )
   }
 }
 

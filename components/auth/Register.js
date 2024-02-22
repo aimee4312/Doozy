@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import { View, Button, TextInput, StyleSheet } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import React, { Component } from 'react'
+import { View, Button, TextInput, StyleSheet } from 'react-native'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
 
 
 export class Register extends Component {

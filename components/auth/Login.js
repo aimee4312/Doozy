@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import { View, Button, TextInput, StyleSheet, Text } from 'react-native';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { Component } from 'react'
+import { View, Button, TextInput, StyleSheet, Text } from 'react-native'
+import { FIREBASE_AUTH } from '../../firebaseConfig'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 
 
 export class Login extends Component {
@@ -19,6 +19,7 @@ export class Login extends Component {
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
         .then((result) => {
             console.log(result)
+            this.props.navigation.navigate('Profile');
         })
         .catch((error) => {
             console.log(error)
