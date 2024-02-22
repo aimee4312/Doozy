@@ -4,6 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { View, Text, Button, StyleSheet, Image, Dimensions, StatusBar} from 'react-native'
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { CommonActions } from '@react-navigation/native';
+import UploadImage from './profilePic';
 
 
 
@@ -56,7 +57,7 @@ export class Profile extends Component {
       <View style={styles.container}>
         {userProfile && (
           <View style={styles.content}>
-            <Image source={require('../../profile-pic.jpeg')} style={styles.profileImage} />
+            <UploadImage/>
             <View style={styles.bioTextContainer}>
               <Text style={styles.bioText}>{userProfile.name}</Text>
               <View style={styles.detailsContainer}>
@@ -99,13 +100,13 @@ const SecondRoute = () => (
 const UserPosts = () => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    { key: 'first', title: 'First' },
-    { key: 'second', title: 'Second' },
+    { key: 'posts', title: 'Posts' },
+    { key: 'achievements', title: 'Achievements' },
   ]);
 
   const renderScene = SceneMap({
-    first: FirstRoute,
-    second: SecondRoute,
+    posts: FirstRoute,
+    achievements: SecondRoute,
   });
 
   return (
@@ -129,12 +130,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
   },
   bioTextContainer: {
     alignItems: 'center',
