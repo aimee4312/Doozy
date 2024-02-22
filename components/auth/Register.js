@@ -11,66 +11,70 @@ export class Register extends Component {
         this.state = {
             name: '',
             email: '',
-            password: ''
+            password: '',
+            friends: '0',
+            posts: '0'
         }
         this.onSignUp = this.onSignUp.bind(this);
     }
 
     onSignUp() {
-        const { name, email, password } = this.state;
+        const { name, email, password, friends, posts } = this.state;
         createUserWithEmailAndPassword(FIREBASE_AUTH, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-    
-            const userRef = doc(FIRESTORE_DB, "Users", user.uid);
-            return setDoc(userRef, {
-                name: name,
-                email: email,
-                password: password
-            })
-            .then(() => {
-                console.log("User information stored in Firestore successfully!");
+            .then((userCredential) => {
+                const user = userCredential.user;
+
+                const userRef = doc(FIRESTORE_DB, "Users", user.uid);
+                return setDoc(userRef, {
+                    name: name,
+                    email: email,
+                    password: password,
+                    friends: friends,
+                    posts: posts
+                })
+                    .then(() => {
+                        console.log("User information stored in Firestore successfully!");
+                    })
+                    .catch((error) => {
+                        console.error("Error storing user information in Firestore: ", error);
+                    });
             })
             .catch((error) => {
-                console.error("Error storing user information in Firestore: ", error);
+                console.error("Error creating user in Firebase Authentication: ", error);
             });
-        })
-        .catch((error) => {
-            console.error("Error creating user in Firebase Authentication: ", error);
-        });
     }
 
     render() {
         return (
-        <View style={styles.container}>
-            <TextInput
-                placeholder="Name"
-                onChangeText={(name) => this.setState({ name })}
-                style={styles.textBoxes}
-            />
-            <TextInput
-                placeholder="Email"
-                onChangeText={(email) => this.setState({ email })}
-                style={styles.textBoxes}
-            />
-            <TextInput
-                placeholder="Password"
-                secureTextEntry={true}
-                onChangeText={(password) => this.setState({ password })}
-                style={styles.textBoxes}
-            />
-            <Button
-                onPress={() => this.onSignUp()}
-                title="Sign Up"
-            />
-        </View>
+            <View style={styles.container}>
+                <TextInput
+                    placeholder="Name"
+                    onChangeText={(name) => this.setState({ name })}
+                    style={styles.textBoxes}
+                />
+                <TextInput
+                    placeholder="Email"
+                    onChangeText={(email) => this.setState({ email })}
+                    style={styles.textBoxes}
+                />
+                <TextInput
+                    placeholder="Password"
+                    secureTextEntry={true}
+                    onChangeText={(password) => this.setState({ password })}
+                    style={styles.textBoxes}
+                />
+                <Button
+                    onPress={() => this.onSignUp()}
+                    title="Sign Up"
+                />
+            </View>
         )
     }
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex:1,
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
     },

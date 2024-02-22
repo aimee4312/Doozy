@@ -1,8 +1,11 @@
-import React, { Component } from 'react'
-import { View, Text, Button, StyleSheet, Image } from 'react-native'
+import React, { Component, useState } from 'react'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
 import { doc, getDoc } from "firebase/firestore";
+import { View, Text, Button, StyleSheet, Image, Dimensions, StatusBar} from 'react-native'
+import { TabView, SceneMap } from 'react-native-tab-view';
 import { CommonActions } from '@react-navigation/native';
+
+
 
 export class Profile extends Component {
   constructor(props) {
@@ -29,23 +32,23 @@ export class Profile extends Component {
         .catch((error) => {
           console.error("Error fetching document: ", error);
         });
-      }
-      
     }
 
-    onLogOut() {
-      FIREBASE_AUTH.signOut().then(() => {
-        this.props.navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Landing' }],
-          })
-        );
-      }).catch((error) => {
-        console.error("Error logging out: ", error);
-      });
-    }
-    
+  }
+
+  onLogOut() {
+    FIREBASE_AUTH.signOut().then(() => {
+      this.props.navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Landing' }],
+        })
+      );
+    }).catch((error) => {
+      console.error("Error logging out: ", error);
+    });
+  }
+
   render() {
     const { userProfile } = this.state;
 
@@ -65,7 +68,11 @@ export class Profile extends Component {
                   <Text style={styles.detailText}>Posts</Text>
                   <Text>{userProfile.posts}</Text>
                 </View>
+                {/* <UserPosts/> */}
               </View>
+            </View>
+            <View style={styles.detailsContainer}>
+              <UserPosts/>
             </View>
           </View>
         )}
@@ -77,9 +84,39 @@ export class Profile extends Component {
         </View>
       </View>
     );
-  }     
+  }
 
 }
+
+const FirstRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ff4081' }]} />
+);
+
+const SecondRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#673ab7' }]} />
+);
+
+const UserPosts = () => {
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'first', title: 'First' },
+    { key: 'second', title: 'Second' },
+  ]);
+
+  const renderScene = SceneMap({
+    first: FirstRoute,
+    second: SecondRoute,
+  });
+
+  return (
+    <TabView
+      navigationState={{ index, routes }}
+      renderScene={renderScene}
+      onIndexChange={setIndex}
+      initialLayout={{ width: Dimensions.get('window').width }}
+    />
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -122,7 +159,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginBottom: 20,
-  }
+  },
+  scene: {
+    flex: 1,
+  },
 })
 
 export default Profile;

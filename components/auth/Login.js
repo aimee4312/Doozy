@@ -12,49 +12,49 @@ export class Login extends Component {
             password: ''
         }
         this.onSignUp = this.onSignIn.bind(this);
-                
+
     }
 
     onSignIn() {
         const { email, password } = this.state;
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
-        .then((result) => {
-            console.log(result)
-            this.props.navigation.navigate('Profile');
-        })
-        .catch((error) => {
-            console.log(error)
-        });
+            .then((result) => {
+                console.log(result)
+                this.props.navigation.navigate('Profile');
+            })
+            .catch((error) => {
+                console.log(error)
+            });
     }
 
     render() {
         return (
-        <View style={styles.container}>
-            <Text>Email</Text>
-            <TextInput
-                placeholder="Email"
-                onChangeText={(email) => this.setState({ email })}
-                style={styles.textBoxes}
-            />
-            <Text>Password</Text>
-            <TextInput
-                placeholder="Password"
-                secureTextEntry={true}
-                onChangeText={(password) => this.setState({ password })}
-                style={styles.textBoxes}
-            />
-            <Button
-                onPress={() => this.onSignIn()}
-                title="Sign In"
-            />
-        </View>
+            <View style={styles.container}>
+                <Text>Email</Text>
+                <TextInput
+                    placeholder="Email"
+                    onChangeText={(email) => this.setState({ email })}
+                    style={styles.textBoxes}
+                />
+                <Text>Password</Text>
+                <TextInput
+                    placeholder="Password"
+                    secureTextEntry={true}
+                    onChangeText={(password) => this.setState({ password })}
+                    style={styles.textBoxes}
+                />
+                <Button
+                    onPress={() => this.onSignIn()}
+                    title="Sign In"
+                />
+            </View>
         )
     }
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex:1,
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
     },
