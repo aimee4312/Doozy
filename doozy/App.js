@@ -2,7 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/LoginScreen';
-import { StyleSheet, Button, View, SafeAreaView, Alert , TouchableOpacity} from 'react-native';
+import { StyleSheet, Button, View, SafeAreaView, Alert , TouchableOpacity, Text} from 'react-native';
+import Bar from './components/NavigationBar';
 
 const Stack = createStackNavigator();
 
@@ -40,7 +41,11 @@ const HomeScreen = ({ navigation }) => (
         }}
       />
     </View>
+    <View>
+      <Bar navigation={navigation}/>
+    </View>
   </SafeAreaView>
+  
 );
 
 const styles = StyleSheet.create({
@@ -49,6 +54,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: 16,
   },
+  bottomBar: {
+    flex: 1,
+    justifyContent: 'center',
+    marginHorizontal: 0,
+  }
 });
 
 export default App;

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Button , StyleSheet, SafeAreaView, TextInput, Alert} from 'react-native';
+import Bar from '../components/NavigationBar';
 
-const Login = () => {
+const Login = ({ navigation }) => {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     return (
@@ -30,6 +31,9 @@ const Login = () => {
                     Alert.alert('Logged in');
                     }}
                 />
+            </View>
+            <View>
+                <Bar navigation={navigation}/>
             </View>
         </SafeAreaView>
     );
