@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text, Button } from 'react-native'
+import { View, Text, Button, StyleSheet } from 'react-native'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
 import { doc, getDoc } from "firebase/firestore";
 
@@ -45,7 +45,19 @@ export class Profile extends Component {
       <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
         {userProfile && (
             <View>
-              <Text>{userProfile.name} is logged in</Text>
+              <View style={styles.bioTextContainer}>
+                <Text style={styles.bioText}>{userProfile.name} is logged in</Text>
+                <View style={styles.detailsContainer}>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Friends</Text>
+                    <Text>{userProfile.friends}</Text>
+                  </View>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Posts</Text>
+                    <Text>{userProfile.posts}</Text>
+                  </View>
+                </View>
+              </View>
               <Button
                 onPress={() => this.onLogOut()}
                 title="Log Out"
@@ -54,7 +66,32 @@ export class Profile extends Component {
         )}
       </View>
     );
-  }
+  }     
+
 }
+
+const styles = StyleSheet.create({
+  bioTextContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  detailsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  detail: {
+    alignItems: 'center',
+    margin: 10,
+  },
+  detailText: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  bioText: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+  }
+})
 
 export default Profile

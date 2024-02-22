@@ -12,6 +12,7 @@ export class Login extends Component {
             password: ''
         }
         this.onSignUp = this.onSignIn.bind(this);
+                
     }
 
     onSignIn() {
