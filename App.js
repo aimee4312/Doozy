@@ -14,52 +14,42 @@ const Stack = createStackNavigator();
 export class App extends Component {
   constructor(props) {
     super(props)
-    this.state = {
-      loggedIn: false,
-    }
+    this.state = { loggedIn: false, }
   }
 
   componentDidMount(){
     onAuthStateChanged(FIREBASE_AUTH, (user) => {
       if (!user) {
-        this.setState({
-          loggedIn: false,
-        })
+        this.setState({ loggedIn: false, })
       } else {
-        this.setState({
-          loggedIn: true,
-        })
+        this.setState({ loggedIn: true, })
       }
     })
   }
 
   render() {
-      return (
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName="Landing">
-            <Stack.Screen 
-              name="Landing"
-              component={ LandingScreen }
-              options={{ headShown: false}}
-            />
-            <Stack.Screen 
-              name="Login"
-              component={ LoginScreen }
-              options={{ headShown: false}}
-            />
-            <Stack.Screen 
-              name="Register"
-              component={ RegisterScreen }
-              options={{ headShown: false}}
-            />
-            <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{ headerShown: false }}
-          />
-          </Stack.Navigator>
-        </NavigationContainer>
-      );
+    const { loggedIn } = this.state;
+    return (
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
+          {loggedIn ? (
+            <>
+              <Stack.Screen name="Profile" component={ ProfileScreen }
+              />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="Landing" component={ LandingScreen }
+              />
+              <Stack.Screen name="Login" component={ LoginScreen }
+              />
+              <Stack.Screen name="Register" component={ RegisterScreen }
+              />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
   }
 }
 
