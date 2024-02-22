@@ -5,16 +5,16 @@ import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 const TaskCreation = forwardRef(( props, ref) => {
     const {callSubmitHandler} = props;
     const [newTask, setNewTask] = useState('');
+    const [newDescription, setNewDescription] = useState('');
     const [showTextInput, setShowTextInput] = useState(false);
     const textInputRef = useRef(null);
+    const [completedCreateTask, setCompletedCreateTask] = useState(false);
 
     useImperativeHandle(ref, () => ({
         closeKeyboard() {
             setShowTextInput(false);
         }
     }))
-
-    
 
     const handleAddTask = () => {
         setShowTextInput(true);
@@ -24,10 +24,15 @@ const TaskCreation = forwardRef(( props, ref) => {
     };
 
     const handleSubmitHelper = () => {
-        callSubmitHandler(newTask);
+        callSubmitHandler(newTask, completedCreateTask); // add newDescription, 
         setNewTask('');
         setShowTextInput(false);
+        setCompletedCreateTask(false);
     };
+
+    const checker = () => {
+        completedCreateTask ? setCompletedCreateTask(false) : setCompletedCreateTask(true);
+    }
 
     return (
         <View style={styles.container}>
@@ -41,14 +46,23 @@ const TaskCreation = forwardRef(( props, ref) => {
             {showTextInput && (
                 <KeyboardAccessoryView heightProperty="minHeight" alwaysVisible={true} hideBorder={true} animateOn='all' androidAdjustResize>
                     <View style={styles.inputWrapper}>
+                        <TouchableOpacity style={ completedCreateTask ? styles.checkedbox : styles.uncheckedbox } onPress={checker}></TouchableOpacity>
                         <TextInput
                             ref={textInputRef}
-                            style={styles.input}
+                            style={styles.inputTask}
                             onChangeText={text => setNewTask(text)}
                             value={newTask}
                             placeholder={'Please type here…'}
                         />
                         <Button style={styles.submitButton} title="go" onPress={handleSubmitHelper}/>
+                    </View>
+                    <View style={styles.descriptionWrapper}>
+                        <TextInput
+                            style={styles.inputDescription}
+                            onChangeText={text => setNewDescription(text)}
+                            value={newDescription}
+                            placeholder={'Description…'}
+                        />
                     </View>
                 </KeyboardAccessoryView>
             )}
@@ -84,10 +98,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 5,
     },
-    input: {
+    inputTask: {
         paddingVertical: 15,
         paddingHorizontal: 15,
-        width: '90%',
+        width: '80%',
     },
     submitButton: {
         
@@ -106,6 +120,30 @@ const styles = StyleSheet.create({
     addTaskText: {
         fontSize: 48,
     },
+    checkedbox: {
+        width: 24,
+        height: 24,
+        opacity: 0.4,
+        backgroundColor: '#55BCF6',
+        borderRadius: 5,
+        marginLeft: 15,
+    },
+    uncheckedbox: {
+        width: 24,
+        height: 24,
+        opacity: 0.4,
+        backgroundColor: 'grey',
+        borderRadius: 5,
+        marginLeft: 15,
+    },
+    inputDescription: {
+        paddingVertical: 15,
+        paddingHorizontal: 15,
+        width: '100%',
+    },
+    descriptionWrapper: {
+        
+    }
 })
 
 export default TaskCreation;

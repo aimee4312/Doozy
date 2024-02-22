@@ -11,10 +11,16 @@ const TaskListScreen = () => {
     const [showCompletedTitle, setShowCompletedTitle] = useState(false);
     const childRef = useRef();
     
-    const handleSubmit = (newTask) => {
+    const handleSubmit = (newTask, completedCreateTask) => {
         if (newTask.length !== 0) {
-            setTaskItems([...taskItems, newTask]);
-            setShowTaskTitle(true);
+            if (!completedCreateTask) {
+                setTaskItems([...taskItems, newTask]);
+                setShowTaskTitle(true);
+            }
+            else {
+                setCompletedTaskItems([...completedTaskItems, newTask]);
+                setShowCompletedTitle(true);
+            }
         }
     }
 
