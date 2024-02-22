@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { View, Text, Button, StyleSheet, Image } from 'react-native'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
 import { doc, getDoc } from "firebase/firestore";
+import { CommonActions } from '@react-navigation/native';
 
 export class Profile extends Component {
   constructor(props) {
@@ -32,12 +33,19 @@ export class Profile extends Component {
       
     }
 
-  onLogOut() {
-    this.props.navigation.reset({
-      index: 0,
-      routes: [{ name: 'Landing' }],
-    });
-  }
+    onLogOut() {
+      FIREBASE_AUTH.signOut().then(() => {
+        this.props.navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Landing' }],
+          })
+        );
+      }).catch((error) => {
+        console.error("Error logging out: ", error);
+      });
+    }
+    
   render() {
     const { userProfile } = this.state;
 
@@ -117,4 +125,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default Profile
+export default Profile;

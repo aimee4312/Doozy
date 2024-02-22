@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from './components/auth/Landing';
 import RegisterScreen from './components/auth/Register';
 import LoginScreen from './components/auth/Login'
-import ProfileScreen from './components/auth/Profile'
+import ProfileScreen from './components/profile/Profile'
 import { onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './firebaseConfig';
 
