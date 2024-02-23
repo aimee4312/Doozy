@@ -13,7 +13,7 @@ export class Register extends Component {
             password: '',
             friends: '0',
             posts: '0',
-            profilePic: '',
+            profilePic: 'null',
         }
         this.onSignUp = this.onSignUp.bind(this);
     }
