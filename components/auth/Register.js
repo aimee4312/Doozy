@@ -1,9 +1,8 @@
 import React, { Component } from 'react'
-import { View, Button, TextInput, StyleSheet } from 'react-native'
+import { View, Button, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
-
 
 export class Register extends Component {
     constructor(props) {
@@ -40,34 +39,40 @@ export class Register extends Component {
                     });
             })
             .catch((error) => {
-                console.error("Error creating user in Firebase Authentication: ", error);
+                console.log(error)
             });
+    }
+
+    dismissKeyboard() {
+        Keyboard.dismiss();
     }
 
     render() {
         return (
-            <View style={styles.container}>
-                <TextInput
-                    placeholder="Name"
-                    onChangeText={(name) => this.setState({ name })}
-                    style={styles.textBoxes}
-                />
-                <TextInput
-                    placeholder="Email"
-                    onChangeText={(email) => this.setState({ email })}
-                    style={styles.textBoxes}
-                />
-                <TextInput
-                    placeholder="Password"
-                    secureTextEntry={true}
-                    onChangeText={(password) => this.setState({ password })}
-                    style={styles.textBoxes}
-                />
-                <Button
-                    onPress={() => this.onSignUp()}
-                    title="Sign Up"
-                />
-            </View>
+            <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
+                <View style={styles.container}>
+                    <TextInput
+                        placeholder="Name"
+                        onChangeText={(name) => this.setState({ name })}
+                        style={styles.textBoxes}
+                    />
+                    <TextInput
+                        placeholder="Email"
+                        onChangeText={(email) => this.setState({ email })}
+                        style={styles.textBoxes}
+                    />
+                    <TextInput
+                        placeholder="Password"
+                        secureTextEntry={true}
+                        onChangeText={(password) => this.setState({ password })}
+                        style={styles.textBoxes}
+                    />
+                    <Button
+                        onPress={() => this.onSignUp()}
+                        title="Sign Up"
+                    />
+                </View>
+            </TouchableWithoutFeedback>
         )
     }
 }

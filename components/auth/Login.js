@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Button, TextInput, StyleSheet, Text } from 'react-native'
+import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native'
 import { FIREBASE_AUTH } from '../../firebaseConfig'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 
@@ -27,27 +27,33 @@ export class Login extends Component {
             });
     }
 
+    dismissKeyboard() {
+        Keyboard.dismiss();
+    }
+
     render() {
         return (
-            <View style={styles.container}>
-                <Text>Email</Text>
-                <TextInput
-                    placeholder="Email"
-                    onChangeText={(email) => this.setState({ email })}
-                    style={styles.textBoxes}
-                />
-                <Text>Password</Text>
-                <TextInput
-                    placeholder="Password"
-                    secureTextEntry={true}
-                    onChangeText={(password) => this.setState({ password })}
-                    style={styles.textBoxes}
-                />
-                <Button
-                    onPress={() => this.onSignIn()}
-                    title="Sign In"
-                />
-            </View>
+            <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
+                <View style={styles.container}>
+                    <Text>Email</Text>
+                    <TextInput
+                        placeholder="Email"
+                        onChangeText={(email) => this.setState({ email })}
+                        style={styles.textBoxes}
+                    />
+                    <Text>Password</Text>
+                    <TextInput
+                        placeholder="Password"
+                        secureTextEntry={true}
+                        onChangeText={(password) => this.setState({ password })}
+                        style={styles.textBoxes}
+                    />
+                    <Button
+                        onPress={() => this.onSignIn()}
+                        title="Sign In"
+                    />
+                </View>
+            </TouchableWithoutFeedback>
         )
     }
 }

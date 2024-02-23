@@ -2488,6 +2488,11 @@
   resolved "https://registry.npmjs.org/@react-native-community/masked-view/-/masked-view-0.1.11.tgz"
   integrity sha512-rQfMIGSR/1r/SyN87+VD8xHHzDYeHaJq6elOSCAD+0iLagXkSI2pfA0LmSXP21uw5i3em7GkkRjfJ8wpqWXZNw==
 
+"@react-native-firebase/storage@^18.9.0":
+  version "18.9.0"
+  resolved "https://registry.yarnpkg.com/@react-native-firebase/storage/-/storage-18.9.0.tgz#356f8c5ed61e8185cfcb97966b2c510b3ebecf51"
+  integrity sha512-I2lq7CXSzVdYfhzhlfdgXrcLJaP4qBsJidqa3TiYoZDNKwN2djLFShM8n83IDjRpGkzYctvWD/yHtErtkFrmLw==
+
 "@react-native/assets-registry@0.73.1", "@react-native/assets-registry@~0.73.1":
   version "0.73.1"
   resolved "https://registry.npmjs.org/@react-native/assets-registry/-/assets-registry-0.73.1.tgz"
@@ -6655,6 +6660,11 @@ react-native@0.73.4:
     whatwg-fetch "^3.0.0"
     ws "^6.2.2"
     yargs "^17.6.2"
+
+react-password-checklist@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/react-password-checklist/-/react-password-checklist-1.5.1.tgz#f9b2fe81d016852b4c113d8f82d59563fb83f100"
+  integrity sha512-ou0VSQ1Qb2OoTTt3WL03eFPcZIEyZ1hCfTUv9VrB2Nii5n8KcEGWtxn3gEXs59fTBZPF5rB6ta2h5kBPgbF/mQ==
 
 react-redux@^9.1.0:
   version "9.1.0"
