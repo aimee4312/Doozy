@@ -12,13 +12,14 @@ export class Register extends Component {
             email: '',
             password: '',
             friends: '0',
-            posts: '0'
+            posts: '0',
+            profilePic: '',
         }
         this.onSignUp = this.onSignUp.bind(this);
     }
 
     onSignUp() {
-        const { name, email, password, friends, posts } = this.state;
+        const { name, email, password, friends, posts, profilePic } = this.state;
         createUserWithEmailAndPassword(FIREBASE_AUTH, email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
@@ -29,7 +30,8 @@ export class Register extends Component {
                     email: email,
                     password: password,
                     friends: friends,
-                    posts: posts
+                    posts: posts,
+                    profilePic: profilePic,
                 })
                     .then(() => {
                         console.log("User information stored in Firestore successfully!");
