@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native'
-import { FIREBASE_AUTH } from '../../firebaseConfig'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import React, { Component } from 'react';
+import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 
 export class Login extends Component {
