@@ -2,12 +2,14 @@ import {React, useState, useEffect } from 'react';
 import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { updateEmail, sendEmailVerification, reauthenticateWithCredential, emailAuthProvider } from 'firebase/auth';
 
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [oldPassword, setoldPassword] = useState('');
     const [password, setPassword] = useState('');
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -33,12 +35,30 @@ export default function Settings() {
     const updateUserProfile = async () => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-
+    
             try {
+                const credential = emailAuthProvider.credential(currentUser.email, oldPassword);
+                await reauthenticateWithCredential(currentUser, credential);
+    
+                await sendEmailVerification(currentUser);
+                console.log('Email Verification sent! Check your mailbox!');
+    
+                while (!currentUser.emailVerified) {
+                    await currentUser.reload();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+    
+                await updateEmail(currentUser, email);
+                console.log('Email updated!');
+    
+                if (password) {
+                    await updatePassword(currentUser, password);
+                    console.log('Password updated!');
+                }
+    
                 await updateDoc(userProfileRef, {
                     email: email,
                     name: name,
-                    password: password,
                 });
                 console.log('Profile updated!');
             } catch (error) {
@@ -46,6 +66,9 @@ export default function Settings() {
             }
         }
     };
+    
+    
+    
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
@@ -64,6 +87,13 @@ export default function Settings() {
                 <TextInput
                     placeholder="Email"
                     onChangeText={setEmail}
+                    style={styles.textBoxes}
+                />
+                <Text>Old Password</Text>
+                <TextInput
+                    placeholder="Password"
+                    secureTextEntry={true}
+                    onChangeText={setPassword}
                     style={styles.textBoxes}
                 />
                 <Text>Password</Text>
