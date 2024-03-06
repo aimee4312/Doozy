@@ -2,14 +2,14 @@ import {React, useState, useEffect } from 'react';
 import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { updateEmail, sendEmailVerification, reauthenticateWithCredential, emailAuthProvider } from 'firebase/auth';
+import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential } from 'firebase/auth';
 
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [oldPassword, setoldPassword] = useState('');
+    const [oldPassword, setOldPassword] = useState('');
     const [password, setPassword] = useState('');
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -17,7 +17,7 @@ export default function Settings() {
         fetchUserProfile();
     }, [userProfile]);
 
-    const fetchUserProfile = async () => {
+    const fetchUserProfile = async () => {``
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
 
@@ -37,20 +37,14 @@ export default function Settings() {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
     
             try {
-                const credential = emailAuthProvider.credential(currentUser.email, oldPassword);
+                const credential = EmailAuthProvider.credential(currentUser.email, oldPassword);
                 await reauthenticateWithCredential(currentUser, credential);
-    
-                await sendEmailVerification(currentUser);
-                console.log('Email Verification sent! Check your mailbox!');
-    
-                while (!currentUser.emailVerified) {
-                    await currentUser.reload();
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                if (email)
+                {
+                    updateEmail(currentUser, email);
+                    console.log('Email updated!');
                 }
-    
-                await updateEmail(currentUser, email);
-                console.log('Email updated!');
-    
+
                 if (password) {
                     await updatePassword(currentUser, password);
                     console.log('Password updated!');
@@ -93,7 +87,7 @@ export default function Settings() {
                 <TextInput
                     placeholder="Password"
                     secureTextEntry={true}
-                    onChangeText={setPassword}
+                    onChangeText={setOldPassword}
                     style={styles.textBoxes}
                 />
                 <Text>Password</Text>
