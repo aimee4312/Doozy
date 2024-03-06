@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Button, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, Text } from 'react-native';
+import { View, Button, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
@@ -59,32 +59,37 @@ export class Register extends Component {
     render() {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
-                <View style={styles.container}>
-                    <TextInput
-                        placeholder="Name"
-                        onChangeText={(name) => this.setState({ name })}
-                        style={styles.textBoxes}
-                    />
-                    <TextInput
-                        placeholder="Email"
-                        onChangeText={(email) => this.setState({ email })}
-                        style={styles.textBoxes}
-                    />
-                    <TextInput
-                        placeholder="Password"
-                        secureTextEntry={true}
-                        onChangeText={(password) => this.setState({ password })}
-                        style={styles.textBoxes}
-                    />
-                    <Button
-                        onPress={() => {
-                            this.onSignUp();
-                            this.setState({ emailSent: true });
-                        }}
-                        title="Sign Up"
-                    />
-                    {this.state.emailSent && <Text>Email sent!</Text>}
-                </View>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.container}
+                >
+                    <View style={styles.container}>
+                        <TextInput
+                            placeholder="Name"
+                            onChangeText={(name) => this.setState({ name })}
+                            style={styles.textBoxes}
+                        />
+                        <TextInput
+                            placeholder="Email"
+                            onChangeText={(email) => this.setState({ email })}
+                            style={styles.textBoxes}
+                        />
+                        <TextInput
+                            placeholder="Password"
+                            secureTextEntry={true}
+                            onChangeText={(password) => this.setState({ password })}
+                            style={styles.textBoxes}
+                        />
+                        <Button
+                            onPress={() => {
+                                this.onSignUp();
+                                this.setState({ emailSent: true });
+                            }}
+                            title="Sign Up"
+                        />
+                        {this.state.emailSent && <Text>Email sent!</Text>}
+                    </View>
+                </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
         )
     }

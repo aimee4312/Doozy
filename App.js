@@ -1,5 +1,5 @@
-import React, { Component, createContext } from 'react';
-import { config, FIREBASE_AUTH } from './firebaseConfig';
+import { React, Component } from 'react';
+import { FIREBASE_AUTH } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -32,22 +32,15 @@ class App extends Component {
   render() {
     const { loggedIn } = this.state;
     return (
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
-            {loggedIn ? (
-              <>
-                <Stack.Screen name="Profile" component={ProfileScreen} />
-                <Stack.Screen name="Settings" component={SettingsScreen} />
-              </>
-            ) : (
-              <>
-                <Stack.Screen name="Landing" component={LandingScreen} />
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-              </>
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
+      <NavigationContainer>
+      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Landing" component={LandingScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
     );
   }
 }

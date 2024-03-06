@@ -1,5 +1,5 @@
 import {React, useState, useEffect } from 'react';
-import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text } from 'react-native';
+import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential } from 'firebase/auth';
@@ -41,6 +41,14 @@ export default function Settings() {
                 await reauthenticateWithCredential(currentUser, credential);
                 if (email)
                 {
+                    await sendEmailVerification(currentUser);
+                    console.log("Email sent!");
+
+                    while (!user.emailVerified) {
+                        await user.reload();
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+
                     updateEmail(currentUser, email);
                     console.log('Email updated!');
                 }
@@ -70,38 +78,49 @@ export default function Settings() {
 
     return (
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View style={styles.container}>
-                <Text>Name</Text>
-                <TextInput
-                    placeholder="Name"
-                    onChangeText={setName}
-                    style={styles.textBoxes}
-                />
-                <Text>Email</Text>
-                <TextInput
-                    placeholder="Email"
-                    onChangeText={setEmail}
-                    style={styles.textBoxes}
-                />
-                <Text>Old Password</Text>
-                <TextInput
-                    placeholder="Password"
-                    secureTextEntry={true}
-                    onChangeText={setOldPassword}
-                    style={styles.textBoxes}
-                />
-                <Text>Password</Text>
-                <TextInput
-                    placeholder="Password"
-                    secureTextEntry={true}
-                    onChangeText={setPassword}
-                    style={styles.textBoxes}
-                />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
+                <View>
+                    <Text>Name</Text>
+                    <TextInput
+                        placeholder="Name"
+                        onChangeText={setName}
+                        style={styles.textBoxes}
+                    />
+                </View>
+                <View>
+                    <Text>Email</Text>
+                    <TextInput
+                        placeholder="Email"
+                        onChangeText={setEmail}
+                        style={styles.textBoxes}
+                    />
+                </View>
+                <View>
+                    <Text>Old Password</Text>
+                    <TextInput
+                        placeholder="Password"
+                        secureTextEntry={true}
+                        onChangeText={setOldPassword}
+                        style={styles.textBoxes}
+                    />
+                </View>
+                <View>
+                    <Text>Password</Text>
+                    <TextInput
+                        placeholder="Password"
+                        secureTextEntry={true}
+                        onChangeText={setPassword}
+                        style={styles.textBoxes}
+                    />
+                </View>
                 <Button
                     onPress={updateUserProfile}
                     title="Save"
                 />
-            </View>
+            </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
     )
 } 
