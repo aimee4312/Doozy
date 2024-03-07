@@ -43,6 +43,14 @@ export class Register extends Component {
                 profilePic: profilePic,
             });
             console.log("User information stored in Firestore successfully!");
+
+            const tasksCollectionRef = doc(FIRESTORE_DB, "Users", user.uid, "Tasks");
+            await setDoc(tasksCollectionRef, {
+                taskName: "",
+                description: "",
+                completed: false,
+            });
+            console.log("Tasks collection initialized for the user.");
         } catch (error) {
             console.error("Error signing up and storing user information: ", error);
         }
