@@ -7,6 +7,7 @@ import { doc, collection, addDoc } from 'firebase/firestore';
 export default function Task_db() {
     const [taskName, setTaskName] = useState('');
     const [description, setDescription] = useState('');
+    const [folder, setFolder] = useState('');
     const [completed, setCompleted] = useState(false);
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -18,16 +19,29 @@ export default function Task_db() {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
             const tasksRef = collection(userProfileRef, 'Tasks');
+            if (folder) {
+                const folderRef = collection(tasksRef, 'Folders', folder);
+                return addDoc(folderRef, {
+                    title: taskName,
+                    description: description,
+                    completed: completed
+                }).then(() => {
+                    console.log("Task stored successfully!");
+                }).catch((error) => {
+                    console.error("Error storing task:", error);
+                });
 
-            return addDoc(tasksRef, {
-                title: taskName,
-                description: description,
-                completed: completed
-            }).then(() => {
-                console.log("Task stored successfully!");
-            }).catch((error) => {
-                console.error("Error storing task:", error);
-            });
+            } else {
+                return addDoc(tasksRef, {
+                    title: taskName,
+                    description: description,
+                    completed: completed
+                }).then(() => {
+                    console.log("Task stored successfully!");
+                }).catch((error) => {
+                    console.error("Error storing task:", error);
+                });
+            }
         } else {
             console.error("Current user not found.");
         }
@@ -49,6 +63,14 @@ export default function Task_db() {
                 <TextInput
                     placeholder="Description"
                     onChangeText={setDescription}
+                    style={styles.textBoxes}
+                />
+            </View>
+            <View>
+                <Text>Folder</Text>
+                <TextInput
+                    placeholder="Folder"
+                    onChangeText={setFolder}
                     style={styles.textBoxes}
                 />
             </View>
