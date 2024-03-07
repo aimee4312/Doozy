@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     tasks: {
-        backgroundColor: '#FFF',
+        backgroundColor: '#E5F4FA',
         marginTop: 5,
         borderRadius: 5,
     },

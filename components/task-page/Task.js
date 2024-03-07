@@ -1,6 +1,7 @@
 import React, {useState, useRef} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
+import {GestureHandlerRootView} from 'react-native-gesture-handler'
 
 const Task = (props) => {
 
@@ -42,16 +43,18 @@ const Task = (props) => {
     }
   
     return (
-        <Swipeable 
-            ref={rowRef}
-            renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
-            onSwipeableWillOpen={onSwipeOpen}
-            onSwipeableWillClose={onSwipeClose}>
-            <View style={styles.item}>
-                <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}></TouchableOpacity>
-                <Text style={styles.itemText}>{text}</Text>
-            </View>
-        </Swipeable>
+        <GestureHandlerRootView>
+            <Swipeable 
+                ref={rowRef}
+                renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
+                onSwipeableWillOpen={onSwipeOpen}
+                onSwipeableWillClose={onSwipeClose}>
+                <View style={styles.item}>
+                    <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}></TouchableOpacity>
+                    <Text style={styles.itemText}>{text}</Text>
+                </View>
+            </Swipeable>
+        </GestureHandlerRootView>
     )
 }
 
@@ -60,7 +63,7 @@ const Task = (props) => {
             padding: 15,
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: 'white',
+            backgroundColor: '#E5F4FA',
             borderRadius: 5,
         },
         checkedbox: {
