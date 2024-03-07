@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import { View, Button, TextInput } from 'react-native';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { Component } from 'react'
+import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import { FIREBASE_AUTH } from '../../firebaseConfig'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 
 
 export class Login extends Component {
@@ -12,38 +12,69 @@ export class Login extends Component {
             password: ''
         }
         this.onSignUp = this.onSignIn.bind(this);
+
     }
 
     onSignIn() {
         const { email, password } = this.state;
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
-        .then((result) => {
-            console.log(result)
-        })
-        .catch((error) => {
-            console.log(error)
-        });
+            .then((result) => {
+                console.log(result)
+                this.props.navigation.navigate('Profile');
+            })
+            .catch((error) => {
+                console.log(error)
+            });
+    }
+
+    dismissKeyboard() {
+        Keyboard.dismiss();
     }
 
     render() {
         return (
-        <View>
-            <TextInput
-                placeholder="email"
-                onChangeText={(email) => this.setState({ email })}
-            />
-            <TextInput
-                placeholder="password"
-                secureTextEntry={true}
-                onChangeText={(password) => this.setState({ password })}
-            />
-            <Button
-                onPress={() => this.onSignIn()}
-                title="Sign In"
-            />
-        </View>
+            <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
+                <View style={styles.container}>
+                    <Text>Email</Text>
+                    <TextInput
+                        placeholder="Email"
+                        onChangeText={(email) => this.setState({ email })}
+                        style={styles.textBoxes}
+                    />
+                    <Text>Password</Text>
+                    <TextInput
+                        placeholder="Password"
+                        secureTextEntry={true}
+                        onChangeText={(password) => this.setState({ password })}
+                        style={styles.textBoxes}
+                    />
+                    <Button
+                        onPress={() => this.onSignIn()}
+                        title="Sign In"
+                    />
+                </View>
+            </TouchableWithoutFeedback>
         )
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    textBoxes: {
+        fontSize: 20,
+        borderWidth: 1,
+        borderColor: '#000000',
+        borderRadius: 20,
+        width: 200,
+        height: 40,
+        paddingHorizontal: 10,
+        marginBottom: 30,
+    }
+})
 
 export default Login
