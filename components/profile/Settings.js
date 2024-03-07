@@ -2,7 +2,7 @@ import {React, useState, useEffect } from 'react';
 import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
+import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail } from 'firebase/auth';
 
 
 export default function Settings() {
@@ -55,7 +55,7 @@ export default function Settings() {
                             await currentUser.reload();
                             await new Promise(resolve => setTimeout(resolve, 1000));
                         }
-                        
+
                         await updateDoc(userProfileRef, {
                             email: email,
                         });
@@ -76,8 +76,6 @@ export default function Settings() {
             }
         }
     };
-    
-    
     
 
     const dismissKeyboard = () => {

@@ -8,6 +8,7 @@ export class Register extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            id: '',
             name: '',
             email: '',
             password: '',
@@ -35,6 +36,7 @@ export class Register extends Component {
 
             const userRef = doc(FIRESTORE_DB, "Users", user.uid);
             await setDoc(userRef, {
+                id: user.uid,
                 name: name,
                 email: email,
                 password: password,
