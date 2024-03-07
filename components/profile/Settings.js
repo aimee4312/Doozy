@@ -2,7 +2,7 @@ import {React, useState, useEffect } from 'react';
 import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential } from 'firebase/auth';
+import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
 
 
 export default function Settings() {
@@ -39,25 +39,25 @@ export default function Settings() {
             try {
                 const credential = EmailAuthProvider.credential(currentUser.email, oldPassword);
                 await reauthenticateWithCredential(currentUser, credential);
-                if (email)
-                {
-                    await sendEmailVerification(currentUser);
-                    console.log("Email sent!");
-
-                    while (!user.emailVerified) {
-                        await user.reload();
+                if (email) {
+                    
+                    await verifyBeforeUpdateEmail(currentUser, email);
+                    console.log("Email verification sent!");
+    
+                    while (!currentUser.emailVerified) {
+                        await currentUser.reload();
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
-
-                    updateEmail(currentUser, email);
+    
+                    await updateEmail(currentUser, email);
                     console.log('Email updated!');
                 }
-
+    
                 if (password) {
                     await updatePassword(currentUser, password);
                     console.log('Password updated!');
                 }
-    
+
                 await updateDoc(userProfileRef, {
                     email: email,
                     name: name,
