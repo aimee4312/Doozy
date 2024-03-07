@@ -87,17 +87,17 @@ export default function Settings() {
                 style={styles.container}
             >
                 <View>
-                    <Text>Name</Text>
+                    <Text>New Name</Text>
                     <TextInput
-                        placeholder="Name"
+                        placeholder="New Name"
                         onChangeText={setName}
                         style={styles.textBoxes}
                     />
                 </View>
                 <View>
-                    <Text>Email</Text>
+                    <Text>New Email</Text>
                     <TextInput
-                        placeholder="Email"
+                        placeholder="New Email"
                         onChangeText={setEmail}
                         style={styles.textBoxes}
                     />
@@ -105,16 +105,16 @@ export default function Settings() {
                 <View>
                     <Text>Old Password</Text>
                     <TextInput
-                        placeholder="Password"
+                        placeholder="Old Password"
                         secureTextEntry={true}
                         onChangeText={setOldPassword}
                         style={styles.textBoxes}
                     />
                 </View>
                 <View>
-                    <Text>Password</Text>
+                    <Text>New Password</Text>
                     <TextInput
-                        placeholder="Password"
+                        placeholder="New Password"
                         secureTextEntry={true}
                         onChangeText={setPassword}
                         style={styles.textBoxes}
