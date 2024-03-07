@@ -8,6 +8,7 @@ import RegisterScreen from './components/auth/Register';
 import LoginScreen from './components/auth/Login';
 import ProfileScreen from './components/profile/Profile';
 import SettingsScreen from './components/profile/Settings';
+import AddTaskScreen from './components/tasks/Task_db';
 
 const Stack = createStackNavigator();
 
@@ -33,12 +34,13 @@ class App extends Component {
     const { loggedIn } = this.state;
     return (
       <NavigationContainer>
-      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
+      <Stack.Navigator initialRouteName={loggedIn ? "AddTask" : "Landing"}>
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Landing" component={LandingScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="AddTask" component={AddTaskScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     );

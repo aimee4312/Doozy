@@ -8,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
 
 
-
 export class Profile extends Component {
   constructor(props) {
     super(props);
@@ -52,7 +51,7 @@ export class Profile extends Component {
   }
 
   goToSettingsScreen = () => {
-    this.props.navigation.navigate('Settings');
+    //this.props.navigation.navigate('AddTask');
   }
   
 
