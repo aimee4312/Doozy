@@ -9,6 +9,8 @@ export class Register extends Component {
         super(props);
         this.state = {
             name: '',
+            email: '',
+            password: '',
             friends: '0',
             posts: '0',
             profilePic: 'null',
@@ -18,7 +20,7 @@ export class Register extends Component {
     }
 
     async onSignUp() {
-        const { name, friends, posts, profilePic } = this.state;
+        const { name, email, password, friends, posts, profilePic } = this.state;
         try {
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
@@ -34,11 +36,14 @@ export class Register extends Component {
             const userRef = doc(FIRESTORE_DB, "Users", user.uid);
             await setDoc(userRef, {
                 name: name,
+                email: email,
+                password: password,
                 friends: friends,
                 posts: posts,
                 profilePic: profilePic,
             });
             console.log("User information stored in Firestore successfully!");
+
         } catch (error) {
             console.error("Error signing up and storing user information: ", error);
         }

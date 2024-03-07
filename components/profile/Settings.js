@@ -55,6 +55,10 @@ export default function Settings() {
                             await currentUser.reload();
                             await new Promise(resolve => setTimeout(resolve, 1000));
                         }
+                        
+                        await updateDoc(userProfileRef, {
+                            email: email,
+                        });
         
                         await updateEmail(currentUser, email);
                         console.log('Email updated!');
