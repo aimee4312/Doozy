@@ -3,20 +3,19 @@ import { Image, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 
 
 export default function UploadImage() {
     const [image, setImage] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
+    const currentUser = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
         fetchUserProfile();
     }, [userProfile]);
 
     const fetchUserProfile = async () => {
-        const currentUser = FIREBASE_AUTH.currentUser;
-
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
 
@@ -47,8 +46,6 @@ export default function UploadImage() {
     };
 
     const updateProfilePicture = async (uri) => {
-        const currentUser = FIREBASE_AUTH.currentUser;
-
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
 

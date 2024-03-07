@@ -1,9 +1,10 @@
-import React, { Component, useState } from 'react'
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
+import React, { Component, useState } from 'react';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc } from "firebase/firestore";
-import { View, Text, Button, StyleSheet, Image, Dimensions, StatusBar} from 'react-native'
+import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { CommonActions } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
 
 
@@ -50,11 +51,19 @@ export class Profile extends Component {
     });
   }
 
+  goToSettingsScreen = () => {
+    this.props.navigation.navigate('Settings');
+  }
+  
+
   render() {
     const { userProfile } = this.state;
 
     return (
       <View style={styles.container}>
+        <TouchableOpacity onPress={this.goToSettingsScreen}>
+          <Ionicons name="settings-sharp" size={24} color="black" />
+        </TouchableOpacity>
         {userProfile && (
           <View style={styles.content}>
             <UploadImage/>
@@ -69,7 +78,6 @@ export class Profile extends Component {
                   <Text style={styles.detailText}>Posts</Text>
                   <Text>{userProfile.posts}</Text>
                 </View>
-                {/* <UserPosts/> */}
               </View>
             </View>
             <View style={styles.detailsContainer}>
