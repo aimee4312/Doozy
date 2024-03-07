@@ -35,33 +35,37 @@ export default function Settings() {
     const updateUserProfile = async () => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-    
+            
             try {
-                const credential = EmailAuthProvider.credential(currentUser.email, oldPassword);
-                await reauthenticateWithCredential(currentUser, credential);
-                if (email) {
-                    
-                    await verifyBeforeUpdateEmail(currentUser, email);
-                    console.log("Email verification sent!");
-    
-                    while (!currentUser.emailVerified) {
-                        await currentUser.reload();
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
-    
-                    await updateEmail(currentUser, email);
-                    console.log('Email updated!');
-                }
-    
-                if (password) {
-                    await updatePassword(currentUser, password);
-                    console.log('Password updated!');
-                }
-
                 await updateDoc(userProfileRef, {
-                    email: email,
                     name: name,
                 });
+
+                if (email || password)
+                {
+                    const credential = EmailAuthProvider.credential(currentUser.email, oldPassword);
+                    await reauthenticateWithCredential(currentUser, credential);
+
+                    if (email) {
+
+                        await verifyBeforeUpdateEmail(currentUser, email);
+                        console.log("Email verification sent!");
+        
+                        while (!currentUser.emailVerified) {
+                            await currentUser.reload();
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+        
+                        await updateEmail(currentUser, email);
+                        console.log('Email updated!');
+                    }
+        
+                    if (password) {
+                        await updatePassword(currentUser, password);
+                        console.log('Password updated!');
+                    }
+                }
+
                 console.log('Profile updated!');
             } catch (error) {
                 console.error('Error updating profile: ', error);
