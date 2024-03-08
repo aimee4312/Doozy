@@ -1,9 +1,13 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, Button, TouchableOpacity, TouchableHighlight, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, TextInput, Text, View, Button, TouchableOpacity, TouchableHighlight, ScrollView, TouchableWithoutFeedback, SafeAreaView, Keyboard } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { MenuProvider } from 'react-native-popup-menu';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {Modalize} from 'react-native-modalize';
+
 
 const TaskCreation = forwardRef(( props, ref) => {
     const {callSubmitHandler} = props;
@@ -13,6 +17,9 @@ const TaskCreation = forwardRef(( props, ref) => {
     const textInputRef = useRef(null);
     const [completedCreateTask, setCompletedCreateTask] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
+    const modalRef = useRef(null);
+    const openModal = () => {modalRef?.current?.open();}
+
 
     useImperativeHandle(ref, () => ({
         closeKeyboard() {
@@ -37,25 +44,33 @@ const TaskCreation = forwardRef(( props, ref) => {
     const handlePress = () => {
         setIsFocused(true);
     };
-    
-    const handleBlur = () => {
-        setIsFocused(false);
-    };
 
     const checker = () => {
         completedCreateTask ? setCompletedCreateTask(false) : setCompletedCreateTask(true);
     }
 
-    return (
+    const handleCalendarOpen = () => {
         
+        Keyboard.dismiss();
+        setShowTextInput(false);
+        setTimeout(() => {
+            openModal();
+        }, 100);
+    }
+
+
+    return (
+        <MenuProvider>
             <View style={styles.container}>
+                
                 {!showTextInput && (<View style={styles.buttonContainer}>
                     <TouchableOpacity onPress={handleAddTask}>
                         <View style={styles.addTaskButtonWrapper}>
                             <Text style={styles.addTaskText}>+</Text>
                         </View>
                     </TouchableOpacity>
-                </View>)}
+                </View>
+                )}
                 {showTextInput && (
                     <KeyboardAccessoryView 
                         style={styles.taskCustomization}
@@ -65,8 +80,24 @@ const TaskCreation = forwardRef(( props, ref) => {
                         animateOn='all' 
                         androidAdjustResize
                     >
-                        <MenuProvider>
+                            <GestureHandlerRootView style={styles.container}>
+      <SafeAreaView style={styles.container}>
+                    <Modalize ref={modalRef} modalHeight={200}>
+                                                <View style={{padding: 20}}>
+                                                    <Text style={{fontSize: 22, fontWeight: 'bold', lineHeight: 34}}>
+                                                    {'This is a modal'}
+                                                    </Text>
+                                                    <Text>
+                                                    {
+                                                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et euismod nisl. Nulla facilisi. Aenean et mi volutpat, iaculis libero non, luctus quam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Curabitur euismod dapibus metus, eget egestas quam ullamcorper eu.'
+                                                    }
+                                                    </Text>
+                                                </View>
+                                            </Modalize>
+                                            </SafeAreaView>
+                                            </GestureHandlerRootView>
                             <View style={styles.inputWrapper}>
+                                
                                 <TouchableOpacity 
                                     style={ completedCreateTask ? styles.checkedbox : styles.uncheckedbox } 
                                     onPress={checker}
@@ -74,7 +105,6 @@ const TaskCreation = forwardRef(( props, ref) => {
                                 <TextInput
                                     ref={textInputRef}
                                     onFocus={handlePress}
-                                    onBlur={handleBlur}
                                     style={styles.inputTask}
                                     onChangeText={text => setNewTask(text)}
                                     value={newTask}
@@ -98,6 +128,7 @@ const TaskCreation = forwardRef(( props, ref) => {
                                 <View style={styles.detailsWrapper}>
                                     <TouchableHighlight 
                                         style={styles.submitButton}
+                                        onPress={openModal}
                                     >
                                         <View style={styles.iconContainer}>
                                             <Icon
@@ -107,20 +138,71 @@ const TaskCreation = forwardRef(( props, ref) => {
                                             />
                                         </View>
                                     </TouchableHighlight>
-                                    <TouchableHighlight 
-                                        style={styles.submitButton}
-                                    >
-                                        <View style={styles.iconContainer}>
+                                    <Menu>
+                                <MenuTrigger 
+                                    style={styles.submitButton}
+                                >
+                                    <View style={styles.iconContainer}>
+                                        <Icon
+                                            name="flag"
+                                            size={28}
+                                            color={'black'}
+                                        />
+                                    </View>
+                                </MenuTrigger>
+                                
+                                <MenuOptions style={styles.listsMenu}>
+                                    <View style={styles.listsMenuScroll}>
+                                        <MenuOption>
+                                        <View style={styles.priorityWrapper}>
                                             <Icon
                                                 name="flag"
-                                                size={28}
+                                                size={20}
                                                 color={'black'}
+                                                style={styles.flagSmall}
                                             />
+                                            <Text style={styles.flagText}>High Priority</Text>
                                         </View>
-                                    </TouchableHighlight>
-                                    <Menu>
+                                        </MenuOption>
+                                        <MenuOption>
+                                        <View style={styles.priorityWrapper}>
+                                            <Icon
+                                                name="flag"
+                                                size={20}
+                                                color={'black'}
+                                                style={styles.flagSmall}
+                                            />
+                                            <Text style={styles.flagText}>Medium Priority</Text>
+                                        </View>
+                                        </MenuOption>
+                                        <MenuOption>
+                                        <View style={styles.priorityWrapper}>
+                                            <Icon
+                                                name="flag"
+                                                size={20}
+                                                color={'black'}
+                                                style={styles.flagSmall}
+                                            />
+                                            <Text style={styles.flagText}>Low Priority</Text>
+                                        </View>
+                                        </MenuOption>
+                                        <MenuOption>
+                                        <View style={styles.priorityWrapper}>
+                                            <Icon
+                                                name="flag"
+                                                size={20}
+                                                color={'black'}
+                                                style={styles.flagSmall}
+                                            />
+                                            <Text style={styles.flagText}>No Priority</Text>
+                                        </View>
+                                        </MenuOption>
+                                    </View>
+                                </MenuOptions>
+                            </Menu>
+                                    <Menu style={styles.menuContainer}>
                                         <MenuTrigger 
-                                            style={styles.submitButton}
+                                            style={styles.folderButton}
                                         >
                                             <View style={styles.iconContainer}>
                                                 <Icon
@@ -132,29 +214,30 @@ const TaskCreation = forwardRef(( props, ref) => {
                                         </MenuTrigger>
                                         
                                         <MenuOptions style={styles.listsMenu}>
-                                            <ScrollView style={styles.listsMenuScroll}>
+                                            <KeyboardAwareScrollView  
+                                                keyboardShouldPersistTaps={'handled'} 
+                                                style={styles.listsMenuScroll} 
+                                                enableOnAndroid={true}
+                                            >
                                                 <MenuOption text="List 1" />
                                                 <MenuOption text="List 2" />
                                                 <MenuOption text="List 1" />
                                                 <MenuOption text="List 2" />
                                                 <MenuOption text="List 1" />
                                                 <MenuOption text="List 2" />
-                                            </ScrollView>
+                                            </KeyboardAwareScrollView>
                                         </MenuOptions>
                                     </Menu>
                                 </View>
                             </TouchableWithoutFeedback>
-                        </MenuProvider>
                     </KeyboardAccessoryView>
                 )}
             </View>
+        </MenuProvider>
     );
 });
 
 const styles = StyleSheet.create({
-    touchable: {
-        marginVertical: 300,
-    },
     container: {
         flex: 1,
         flexDirection: 'column-reverse',
@@ -195,6 +278,10 @@ const styles = StyleSheet.create({
     submitButton: {
         
     },
+    folderButton: {
+        width: 60,
+        flex: 0,
+    },
     addTaskButtonWrapper: {
         width: 60,
         height: 60,
@@ -234,18 +321,38 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'left',
         alignItems: 'center',
+        
     },
     iconContainer: {
         padding: 10,
     },
+    menuContainer: {
+        width: 300,
+    },
     listsMenu: {
-        marginTop: -120,
-        height: 70,
+        backgroundColor: 'transparent',
+        width: 200,
     },
     listsMenuScroll: {
+        position: 'absolute',
         backgroundColor: 'white',
+        borderColor: 'grey',
         borderWidth: 1,
-        borderColor: '#C0C0C0',
+        bottom: 0,
+        width: 200,
+        borderRadius: 5,
+        maxHeight: 150,
+    },
+    priorityWrapper: {
+        flexDirection: "row",
+        alignItems: 'center',
+        paddingVertical: 2,
+    },
+    flagSmall: {
+        paddingRight: 20,
+    },
+    flagText: {
+        fontSize: 18,
     }
 })
 
