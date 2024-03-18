@@ -1,12 +1,12 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, Button, TouchableOpacity, TouchableHighlight, ScrollView, TouchableWithoutFeedback, SafeAreaView, Keyboard } from 'react-native';
+import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, ScrollView, TouchableWithoutFeedback, SafeAreaView, Keyboard, Dimensions } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { MenuProvider } from 'react-native-popup-menu';
-import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {Modalize} from 'react-native-modalize';
+import { MenuProvider, Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import Modal from "react-native-modal";
+import CustomDropDown from './CustomDropDown';
+import ScheduleBuilder from './ScheduleBuilder';
+
 
 
 const TaskCreation = forwardRef(( props, ref) => {
@@ -14,13 +14,74 @@ const TaskCreation = forwardRef(( props, ref) => {
     const [newTask, setNewTask] = useState('');
     const [newDescription, setNewDescription] = useState('');
     const [showTextInput, setShowTextInput] = useState(false);
-    const textInputRef = useRef(null);
+    const textTaskInputRef = useRef(null);
     const [completedCreateTask, setCompletedCreateTask] = useState(false);
-    const [isFocused, setIsFocused] = useState(false);
-    const modalRef = useRef(null);
-    const openModal = () => {modalRef?.current?.open();}
+    const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
+    const [isListModalVisible, setListModalVisible] = useState(false);
+    const screenHeight = Dimensions.get('window').height;
+    const screenWidth = Dimensions.get('window').width;
+    const modalHeight = screenHeight * 0.7;
 
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [selectedDate, setSelectedDate] = useState('');
 
+    const [openFolders, setOpenFolders] = useState([]);
+
+    const [selectedOption, setSelectedOption] = useState(null);
+
+    const toggleFolder = (index) => {
+      if (openFolders.includes(index)) {
+        setOpenFolders(openFolders.filter((item) => item !== index));
+      } else {
+        setOpenFolders([...openFolders, index]);
+      }
+    };
+
+    const menuOptions = [
+        { text: 'High Priority', icon: 'flag', color: 'red' },
+        { text: 'Medium Priority', icon: 'flag', color: '#FF4500' },
+        { text: 'Low Priority', icon: 'flag', color: 'orange' },
+        { text: 'No Priority', icon: 'flag', color: '#FFD700' }
+      ];
+
+      const handleOptionSelect = (index) => {
+        setSelectedOption(index);
+        // Perform other actions based on the selected option if needed
+      };
+
+    const handleDateSelect = (date) => {
+        setSelectedDate(date.dateString);
+        onDateSelect(date.dateString);
+      };
+
+    const onDateSelect = (date) => {
+        console.log(date);
+    }
+
+    const toggleSelection = (mainIndex, subIndex) => {
+        const isSelected = selectedItems.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex);
+        if (isSelected) {
+        setSelectedItems(selectedItems.filter((item) => !(item.mainIndex === mainIndex && item.subIndex === subIndex)));
+        } else {
+        setSelectedItems([...selectedItems, { mainIndex, subIndex }]);
+        }
+    };
+
+    const options = [
+        { label: '', subrows: [{ label: 'Subrow 1.1' }, { label: 'Subrow 1.2' }] },
+        { label: 'Item 2', subrows: [{ label: 'Subrow 2.1' }, { label: 'Subrow 2.2' }] },
+        { label: '', subrows: [{ label: 'Subrow 3.1' }, { label: 'Subrow 3.2' }] },
+      ];
+
+    const toggleCalendarModal = () => {
+        setCalendarModalVisible(!isCalendarModalVisible);
+    };
+
+    const toggleListModal = () => {
+        setListModalVisible(!isListModalVisible);
+    };
+
+    //handles error
     useImperativeHandle(ref, () => ({
         closeKeyboard() {
             setShowTextInput(false);
@@ -30,7 +91,7 @@ const TaskCreation = forwardRef(( props, ref) => {
     const handleAddTask = () => {
         setShowTextInput(true);
         setTimeout(() => {
-            textInputRef.current.focus();
+            textTaskInputRef?.current?.focus();
         }, 100);
     };
 
@@ -41,28 +102,38 @@ const TaskCreation = forwardRef(( props, ref) => {
         setCompletedCreateTask(false);
     };
 
-    const handlePress = () => {
-        setIsFocused(true);
-    };
 
     const checker = () => {
         completedCreateTask ? setCompletedCreateTask(false) : setCompletedCreateTask(true);
     }
 
-    const handleCalendarOpen = () => {
-        
-        Keyboard.dismiss();
-        setShowTextInput(false);
-        setTimeout(() => {
-            openModal();
-        }, 100);
-    }
-
-
     return (
-        <MenuProvider>
             <View style={styles.container}>
-                
+                <Modal 
+                    isVisible={isCalendarModalVisible} 
+                    onBackdropPress={toggleCalendarModal} 
+                    style={{ justifyContent: 'flex-end', margin: 0 }} 
+                    propagateSwipe
+                >
+                    <View style={{ backgroundColor: 'white', padding: 20, height: modalHeight }}>
+                    <ScrollView>
+                        <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} />
+                    </ScrollView>
+                    </View>
+                </Modal>
+                <Modal 
+                    isVisible={isListModalVisible} 
+                    onBackdropPress={toggleListModal} 
+                    style={{ justifyContent: 'flex-end', margin: 0}} 
+                    propagateSwipe
+                >
+                    <CustomDropDown 
+                    options={options} 
+                    selectedItems={selectedItems} 
+                    toggleSelection={toggleSelection} 
+                    openFolders={openFolders}
+                    toggleFolder={toggleFolder} />
+                </Modal>
                 {!showTextInput && (<View style={styles.buttonContainer}>
                     <TouchableOpacity onPress={handleAddTask}>
                         <View style={styles.addTaskButtonWrapper}>
@@ -79,32 +150,16 @@ const TaskCreation = forwardRef(( props, ref) => {
                         hideBorder={true} 
                         animateOn='all' 
                         androidAdjustResize
-                    >
-                            <GestureHandlerRootView style={styles.container}>
-      <SafeAreaView style={styles.container}>
-                    <Modalize ref={modalRef} modalHeight={200}>
-                                                <View style={{padding: 20}}>
-                                                    <Text style={{fontSize: 22, fontWeight: 'bold', lineHeight: 34}}>
-                                                    {'This is a modal'}
-                                                    </Text>
-                                                    <Text>
-                                                    {
-                                                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et euismod nisl. Nulla facilisi. Aenean et mi volutpat, iaculis libero non, luctus quam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Curabitur euismod dapibus metus, eget egestas quam ullamcorper eu.'
-                                                    }
-                                                    </Text>
-                                                </View>
-                                            </Modalize>
-                                            </SafeAreaView>
-                                            </GestureHandlerRootView>
+                    >     
+                        <TouchableWithoutFeedback>
+                            <View>
                             <View style={styles.inputWrapper}>
-                                
                                 <TouchableOpacity 
                                     style={ completedCreateTask ? styles.checkedbox : styles.uncheckedbox } 
                                     onPress={checker}
                                 />
                                 <TextInput
-                                    ref={textInputRef}
-                                    onFocus={handlePress}
+                                    ref={textTaskInputRef}
                                     style={styles.inputTask}
                                     onChangeText={text => setNewTask(text)}
                                     value={newTask}
@@ -124,116 +179,80 @@ const TaskCreation = forwardRef(( props, ref) => {
                                     placeholder={'Description…'}
                                 />
                             </View>
-                            <TouchableWithoutFeedback onPress={handlePress}>
-                                <View style={styles.detailsWrapper}>
-                                    <TouchableHighlight 
-                                        style={styles.submitButton}
-                                        onPress={openModal}
-                                    >
-                                        <View style={styles.iconContainer}>
-                                            <Icon
-                                                name="calendar"
-                                                size={28}
-                                                color={'black'}
-                                            />
-                                        </View>
-                                    </TouchableHighlight>
-                                    <Menu>
-                                <MenuTrigger 
+                        
+                            <View style={styles.detailsWrapper}>
+                                <TouchableHighlight
                                     style={styles.submitButton}
+                                    onPress={toggleCalendarModal}
                                 >
                                     <View style={styles.iconContainer}>
                                         <Icon
-                                            name="flag"
+                                            name="calendar"
                                             size={28}
                                             color={'black'}
                                         />
                                     </View>
-                                </MenuTrigger>
-                                
-                                <MenuOptions style={styles.listsMenu}>
-                                    <View style={styles.listsMenuScroll}>
-                                        <MenuOption>
-                                        <View style={styles.priorityWrapper}>
+                                </TouchableHighlight>
+                                <Menu>
+                                    <MenuTrigger style={styles.submitButton}>
+                                        <View style={styles.iconContainer}>
                                             <Icon
                                                 name="flag"
-                                                size={20}
+                                                size={28}
                                                 color={'black'}
-                                                style={styles.flagSmall}
                                             />
-                                            <Text style={styles.flagText}>High Priority</Text>
                                         </View>
-                                        </MenuOption>
-                                        <MenuOption>
-                                        <View style={styles.priorityWrapper}>
-                                            <Icon
-                                                name="flag"
-                                                size={20}
-                                                color={'black'}
-                                                style={styles.flagSmall}
-                                            />
-                                            <Text style={styles.flagText}>Medium Priority</Text>
-                                        </View>
-                                        </MenuOption>
-                                        <MenuOption>
-                                        <View style={styles.priorityWrapper}>
-                                            <Icon
-                                                name="flag"
-                                                size={20}
-                                                color={'black'}
-                                                style={styles.flagSmall}
-                                            />
-                                            <Text style={styles.flagText}>Low Priority</Text>
-                                        </View>
-                                        </MenuOption>
-                                        <MenuOption>
-                                        <View style={styles.priorityWrapper}>
-                                            <Icon
-                                                name="flag"
-                                                size={20}
-                                                color={'black'}
-                                                style={styles.flagSmall}
-                                            />
-                                            <Text style={styles.flagText}>No Priority</Text>
-                                        </View>
-                                        </MenuOption>
-                                    </View>
-                                </MenuOptions>
-                            </Menu>
-                                    <Menu style={styles.menuContainer}>
-                                        <MenuTrigger 
-                                            style={styles.folderButton}
-                                        >
-                                            <View style={styles.iconContainer}>
-                                                <Icon
-                                                    name="folder"
-                                                    size={28}
-                                                    color={'black'}
-                                                />
+                                    </MenuTrigger>
+                                    <MenuOptions style={styles.listsMenu}>
+                                        <View style={styles.listsMenuScroll}>
+                                        {menuOptions.map((option, index) => (
+                                        <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
+                                            <View style={[styles.priorityWrapper, selectedOption === index && styles.selectedOption]}>
+                                                <Icon name={option.icon} size={20} color={option.color} style={styles.flagSmall} />
+                                                <Text style={styles.flagText}>{option.text}</Text>
                                             </View>
-                                        </MenuTrigger>
-                                        
-                                        <MenuOptions style={styles.listsMenu}>
-                                            <KeyboardAwareScrollView  
-                                                keyboardShouldPersistTaps={'handled'} 
-                                                style={styles.listsMenuScroll} 
-                                                enableOnAndroid={true}
+                                        </TouchableOpacity>))}
+                                        </View>
+                                    </MenuOptions>
+                                </Menu>
+                                <Menu>
+                                    <MenuTrigger style={styles.submitButton}>
+                                        <View style={styles.iconContainer}>
+                                            <Icon
+                                                name="folder"
+                                                size={28}
+                                                color={'black'}
+                                            />
+                                        </View>
+                                    </MenuTrigger>
+                                    <MenuOptions style={styles.listsMenu}>
+                                        <View style={styles.listsMenuScroll}>
+                                            <TouchableHighlight
+                                                style={styles.submitButton}
+                                                onPress={toggleListModal}
                                             >
-                                                <MenuOption text="List 1" />
-                                                <MenuOption text="List 2" />
-                                                <MenuOption text="List 1" />
-                                                <MenuOption text="List 2" />
-                                                <MenuOption text="List 1" />
-                                                <MenuOption text="List 2" />
-                                            </KeyboardAwareScrollView>
-                                        </MenuOptions>
-                                    </Menu>
-                                </View>
-                            </TouchableWithoutFeedback>
+                                                <View>
+                                                    <Text style={styles.titleText}>Select Lists</Text>
+                                                </View>
+                                            </TouchableHighlight>
+                                            <View style={styles.chipsContainer}>
+                                                {selectedItems.map((item, index) => (
+                                                <TouchableOpacity key={index} onPress={() => toggleSelection(item.mainIndex, item.subIndex)}>
+                                                    <View style={styles.chip}>
+                                                        <Text style={styles.chipText}>{options[item.mainIndex].subrows[item.subIndex].label}</Text>
+                                                    </View>
+                                                </TouchableOpacity>
+                                                ))}
+                                            </View>
+                                        </View>
+                                    </MenuOptions>
+                                </Menu>
+                            </View>
+                            </View>
+                        </TouchableWithoutFeedback>
                     </KeyboardAccessoryView>
                 )}
             </View>
-        </MenuProvider>
     );
 });
 
@@ -250,10 +269,11 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     buttonContainer: {
+        position: 'absolute',
         justifyContent: 'flex-end',
         alignItems: 'flex-end',
-        marginRight: 16,
-        marginBottom: 32,
+        right: 16,
+        bottom: 32,
     },
     taskCustomization: {
         backgroundColor: '#FFF',
@@ -331,7 +351,6 @@ const styles = StyleSheet.create({
     },
     listsMenu: {
         backgroundColor: 'transparent',
-        width: 200,
     },
     listsMenuScroll: {
         position: 'absolute',
@@ -343,17 +362,54 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         maxHeight: 150,
     },
+    listsMenuSelect: {
+        flex: .55,
+        paddingTop: 10,
+        backgroundColor: 'white',
+        borderColor: 'grey',
+        borderWidth: 1,
+        borderRadius: 5,
+    },
+    multiSelectBox: {
+        margin: 0,
+        padding: 5,
+    },
+    listModal: {
+        
+    },
     priorityWrapper: {
         flexDirection: "row",
         alignItems: 'center',
         paddingVertical: 2,
+    },
+    selectedOption: {
+        backgroundColor: "yellow",
     },
     flagSmall: {
         paddingRight: 20,
     },
     flagText: {
         fontSize: 18,
-    }
+    },
+    customItem: {
+        margin: 0,
+    },
+    chipsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+      },
+      chip: {
+        backgroundColor: 'lightgray',
+        borderRadius: 10,
+        padding: 5,
+        margin: 5,
+      },
+      chipText: {
+        fontSize: 14,
+      },
+      titleText: {
+        fontSize: 18,
+      }
 })
 
 export default TaskCreation;

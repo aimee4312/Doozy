@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useRef, forwardRef } from 'react';
-import { StyleSheet, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, ScrollView, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Task from '../components/task-page/Task'
 import TaskCreation from '../components/task-page/TaskCreation'
+import { MenuProvider } from 'react-native-popup-menu';
 
 const TaskListScreen = () => {
     
@@ -87,8 +88,10 @@ const TaskListScreen = () => {
         );
 
     return (
-        <DismissKeyboard>
+        <MenuProvider>
             <View style={styles.container}>
+                <DismissKeyboard>
+                    <ScrollView style={styles.ScrollView}>
                 {showTaskTitle && <View style={styles.tasksContainer}>
                     <Text style={styles.sectionTitle}>Tasks</Text>
                     <View style={styles.tasks}>
@@ -133,16 +136,22 @@ const TaskListScreen = () => {
                     }
                     </View>
                 </View>}
+                <View style={{paddingBottom: 100}} />
+                </ScrollView>
+                </DismissKeyboard>
                 <TaskCreation ref={childRef} callSubmitHandler={handleSubmit} />
             </View>
-        </DismissKeyboard>
+            </MenuProvider>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 80,
+        marginTop: 80,
+    },
+    scrollView: {
+        
     },
     tasksContainer: {
         paddingBottom: 20,
