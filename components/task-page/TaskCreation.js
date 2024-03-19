@@ -6,6 +6,7 @@ import { MenuProvider, Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
 import ScheduleBuilder from './ScheduleBuilder';
+import ScheduleMenu from './ScheduleMenu';
 
 
 
@@ -29,6 +30,13 @@ const TaskCreation = forwardRef(( props, ref) => {
 
     const [selectedOption, setSelectedOption] = useState(null);
 
+    const [time, setTime] = useState(new Date()) //change this eventually
+
+    const handleTimeChange = (newTime) => {
+        setTime(newTime);
+        console.log(time);
+    }
+
     const toggleFolder = (index) => {
       if (openFolders.includes(index)) {
         setOpenFolders(openFolders.filter((item) => item !== index));
@@ -51,12 +59,8 @@ const TaskCreation = forwardRef(( props, ref) => {
 
     const handleDateSelect = (date) => {
         setSelectedDate(date.dateString);
-        onDateSelect(date.dateString);
       };
 
-    const onDateSelect = (date) => {
-        console.log(date);
-    }
 
     const toggleSelection = (mainIndex, subIndex) => {
         const isSelected = selectedItems.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex);
@@ -118,6 +122,7 @@ const TaskCreation = forwardRef(( props, ref) => {
                     <View style={{ backgroundColor: 'white', padding: 20, height: modalHeight }}>
                     <ScrollView>
                         <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} />
+                        <ScheduleMenu handleTimeChange={handleTimeChange} time={time} />
                     </ScrollView>
                     </View>
                 </Modal>

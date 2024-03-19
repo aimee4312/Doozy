@@ -12,6 +12,7 @@
     "@expo/vector-icons": "^14.0.0",
     "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "^1.22.3",
+    "@react-native-community/datetimepicker": "^7.6.3",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-firebase/app": "^18.8.0",
     "@react-navigation/native": "^6.1.10",
