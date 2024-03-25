@@ -3,6 +3,7 @@ import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableH
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { MenuProvider, Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
 import ScheduleBuilder from './ScheduleBuilder';
@@ -31,6 +32,17 @@ const TaskCreation = forwardRef(( props, ref) => {
     const [selectedOption, setSelectedOption] = useState(null);
 
     const [time, setTime] = useState(new Date()) //change this eventually
+
+    const [selectedReminders, setSelectedReminders] = useState([]);
+
+    const handleReminderSelect = (index) => {
+        // Toggle selection state of the option
+        if (selectedReminders.includes(index)) {
+            setSelectedReminders(selectedReminders.filter((item) => item !== index));
+        } else {
+            setSelectedReminders([...selectedReminders, index]);
+        }
+    };
 
     const handleTimeChange = (newTime) => {
         setTime(newTime);
@@ -119,11 +131,15 @@ const TaskCreation = forwardRef(( props, ref) => {
                     style={{ justifyContent: 'flex-end', margin: 0 }} 
                     propagateSwipe
                 >
-                    <View style={{ backgroundColor: 'white', padding: 20, height: modalHeight }}>
-                    <ScrollView>
-                        <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} />
-                        <ScheduleMenu handleTimeChange={handleTimeChange} time={time} />
-                    </ScrollView>
+                    <View style={{ backgroundColor: 'white', height: modalHeight, position: 'relative', zIndex: 0}}>
+                        <Swiper loop={false}>
+                            <View style={{ flex: 1, padding: 20 }}>
+                                <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} />
+                                <ScheduleMenu handleTimeChange={handleTimeChange} time={time} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                            </View>
+                        </Swiper>
                     </View>
                 </Modal>
                 <Modal 
