@@ -1,11 +1,17 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-const CustomPopupMenu = ({ isVisible, onClose, reminderOptions, selectedReminders, handleReminderSelect, buttonHeight }) => {
+const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeight }) => {
 
     const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .3 + buttonHeight);
     console.log(totalButtonHeight)
 
+    const onChange = (event, newTime) => {
+        if (newTime !== undefined) {
+            handleTimeChange(newTime);
+        }
+    };
     
   return (
     <Modal
@@ -17,13 +23,8 @@ const CustomPopupMenu = ({ isVisible, onClose, reminderOptions, selectedReminder
         <TouchableWithoutFeedback onPress={onClose}>
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
-                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 35}]}>
-                        {reminderOptions.map((option, index) => (
-                        <TouchableOpacity key={index} onPress={() => handleReminderSelect(index)}>
-                            <View style={[styles.priorityWrapper, selectedReminders.includes(index) && styles.selectedReminders]}>
-                                <Text style={styles.menuOption}>{option.label}</Text>
-                            </View>
-                        </TouchableOpacity>))}
+                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 35, overflow: 'hidden'}]}>
+                        <DateTimePicker mode="time" value={time} onChange={onChange} display='spinner' style={{flex: 1}}/>
                     </View>
                 </TouchableWithoutFeedback>
             </View>
@@ -41,10 +42,13 @@ const styles = StyleSheet.create({
   },
   menu: {
     backgroundColor: 'grey',
-    paddingHorizontal: 20,
     borderRadius: 10,
     elevation: 5,
     position: 'absolute',
+    height: 150,
+    width: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menuOption: {
     fontSize: 16,
@@ -68,4 +72,4 @@ priorityWrapper: {
 },
 });
 
-export default CustomPopupMenu;
+export default TimePopupMenu;

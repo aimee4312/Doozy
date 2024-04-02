@@ -2,22 +2,28 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Button} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomPopupMenu from './CustomPopupMenu';
+import TimePopupMenu from './TimePopupMenu';
 
 const ScheduleMenu = ( props ) => {
 
     const {handleTimeChange, time, selectedReminders, handleReminderSelect} = props;
 
     const [buttonHeight, setButtonHeight] = useState(null);
+    const [timeButtonHeight, setTimeButtonHeight] = useState(null);
     const onChange = (event, newTime) => {
         if (newTime !== undefined) {
             handleTimeChange(newTime);
         }
     };
     const [isMenuVisible, setIsMenuVisible] = useState(false);
+    const [isTimeMenuVisible, setIsTimeMenuVisible] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuVisible(!isMenuVisible);
-    console.log(buttonHeight)
+  };
+
+  const toggleTimeMenu = () => {
+    setIsTimeMenuVisible(!isTimeMenuVisible);
   };
 
 
@@ -32,16 +38,18 @@ const ScheduleMenu = ( props ) => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.menuButton}>
+            <View style={styles.menuButton} onLayout={(event) => {
+                event.target.measure((x, y, width, height, pageX, pageY) => {
+                setTimeButtonHeight(pageY);
+                })
+            }}>
                 <View style={styles.menuButtonWrapper}>
                     <Text style={styles.menuText}>Time</Text>
-                    <DateTimePicker mode="time" value={time} onChange={onChange} />
+                    <Button title="toggle" onPress={toggleTimeMenu}/>
                 </View>
             </View>
             <View style={styles.menuButton} onLayout={(event) => {
                 event.target.measure((x, y, width, height, pageX, pageY) => {
-                console.log(pageX)
-                console.log(pageY)
                 setButtonHeight(pageY);
                 })
             }}>
@@ -57,6 +65,7 @@ const ScheduleMenu = ( props ) => {
                 <Text style={styles.menuText}>Repeat</Text>
             </View>
             <CustomPopupMenu isVisible={isMenuVisible} onClose={toggleMenu} reminderOptions={reminderOptions} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} buttonHeight={buttonHeight}/>
+            <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={time} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight}/>
         </View>
         );
   };

@@ -6389,6 +6389,11 @@ react-native-vector-icons@^10.0.3, react-native-vector-icons@>7.0.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
+react-native-wheel-time-picker@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.npmjs.org/react-native-wheel-time-picker/-/react-native-wheel-time-picker-0.4.3.tgz"
+  integrity sha512-2h9PggFL39xamxIlq6DDwVHqjl2F3SQfBaUHpMXc2Qq9vzpet0ew2LnWCG5Jh++1rQ01OFszD1r9EQ/JwT8R9Q==
+
 react-native@*, "react-native@^0.0.0-0 || >=0.60 <1.0", "react-native@> 0.50.0", "react-native@>= 0.30.0", "react-native@>= 0.46", react-native@>=0.42.0, react-native@>=0.48.4, react-native@>=0.57, react-native@>=0.65.0, react-native@0.73.4:
   version "0.73.4"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.73.4.tgz"

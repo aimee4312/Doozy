@@ -10,6 +10,9 @@ import ScheduleBuilder from './ScheduleBuilder';
 import ScheduleMenu from './ScheduleMenu';
 
 
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+
 
 const TaskCreation = forwardRef(( props, ref) => {
     const {callSubmitHandler} = props;
@@ -122,6 +125,14 @@ const TaskCreation = forwardRef(( props, ref) => {
     const checker = () => {
         completedCreateTask ? setCompletedCreateTask(false) : setCompletedCreateTask(true);
     }
+    const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(false);
+    setDate(currentDate);
+  };
 
     return (
             <View style={styles.container}>
@@ -138,6 +149,18 @@ const TaskCreation = forwardRef(( props, ref) => {
                                 <ScheduleMenu handleTimeChange={handleTimeChange} time={time} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} />
                             </View>
                             <View style={{ flex: 1 }}>
+                            <View style={styles.dateContainer}>
+        <Text style={styles.dateText}>{date.toDateString()}</Text>
+      </View>
+      <Button title="Select Date" onPress={() => setShowDatePicker(true)} />
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="time"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
                             </View>
                         </Swiper>
                     </View>
