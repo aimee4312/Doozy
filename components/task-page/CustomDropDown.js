@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 
 const CustomDropDown = ( props ) => {
 
-    const { options, selectedItems, toggleSelection, openFolders, toggleFolder } = props;
+    const { options, selectedLists, toggleSelection, openFolders, toggleFolder } = props;
 
   return (
     <View style={styles.dropdown}>
@@ -19,7 +19,7 @@ const CustomDropDown = ( props ) => {
             <View>
           {option.subrows.map((subrow, subIndex) => (
             <TouchableOpacity key={subIndex} onPress={() => toggleSelection(mainIndex, subIndex)}>
-              <Text style={[styles.subrow, selectedItems.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex) && styles.selectedSubrow]}>
+              <Text style={[styles.subrow, selectedLists.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex) && styles.selectedSubrow]}>
                 {subrow.label}
               </Text>
             </TouchableOpacity>

@@ -1,8 +1,8 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, ScrollView, TouchableWithoutFeedback, SafeAreaView, Keyboard, Dimensions } from 'react-native';
+import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { MenuProvider, Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
@@ -10,33 +10,33 @@ import ScheduleBuilder from './ScheduleBuilder';
 import ScheduleMenu from './ScheduleMenu';
 
 
-import DateTimePicker from '@react-native-community/datetimepicker';
-
-
 
 const TaskCreation = forwardRef(( props, ref) => {
     const {callSubmitHandler} = props;
-    const [newTask, setNewTask] = useState('');
-    const [newDescription, setNewDescription] = useState('');
-    const [showTextInput, setShowTextInput] = useState(false);
+    
     const textTaskInputRef = useRef(null);
-    const [completedCreateTask, setCompletedCreateTask] = useState(false);
+    
+    const [newTask, setNewTask] = useState(''); // Task Name
+    const [newDescription, setNewDescription] = useState(''); // Task Description
+    const [selectedLists, setSelectedLists] = useState([]);
+    const [selectedDate, setSelectedDate] = useState('');
+    const [time, setTime] = useState(new Date()) //change this eventually
+    const [selectedPriority, setSelectedPriority] = useState(null);
+    const [selectedReminders, setSelectedReminders] = useState([]);
+    const [isCompleted, setCompleted] = useState(false);
+    
+    const [showTaskCreation, setShowTaskCreation] = useState(false); 
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
+    
+
+    const [openFolders, setOpenFolders] = useState([]); // maybe move this inside of customdropdown
+
+
     const screenHeight = Dimensions.get('window').height;
-    const screenWidth = Dimensions.get('window').width;
     const modalHeight = screenHeight * 0.7;
+    
 
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [selectedDate, setSelectedDate] = useState('');
-
-    const [openFolders, setOpenFolders] = useState([]);
-
-    const [selectedOption, setSelectedOption] = useState(null);
-
-    const [time, setTime] = useState(new Date()) //change this eventually
-
-    const [selectedReminders, setSelectedReminders] = useState([]);
 
     const handleReminderSelect = (index) => {
         // Toggle selection state of the option
@@ -49,7 +49,6 @@ const TaskCreation = forwardRef(( props, ref) => {
 
     const handleTimeChange = (newTime) => {
         setTime(newTime);
-        console.log(time);
     }
 
     const toggleFolder = (index) => {
@@ -68,7 +67,7 @@ const TaskCreation = forwardRef(( props, ref) => {
       ];
 
       const handleOptionSelect = (index) => {
-        setSelectedOption(index);
+        setSelectedPriority(index);
         // Perform other actions based on the selected option if needed
       };
 
@@ -78,16 +77,16 @@ const TaskCreation = forwardRef(( props, ref) => {
 
 
     const toggleSelection = (mainIndex, subIndex) => {
-        const isSelected = selectedItems.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex);
+        const isSelected = selectedLists.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex);
         if (isSelected) {
-        setSelectedItems(selectedItems.filter((item) => !(item.mainIndex === mainIndex && item.subIndex === subIndex)));
+        setSelectedLists(selectedLists.filter((item) => !(item.mainIndex === mainIndex && item.subIndex === subIndex)));
         } else {
-        setSelectedItems([...selectedItems, { mainIndex, subIndex }]);
+        setSelectedLists([...selectedLists, { mainIndex, subIndex }]);
         }
     };
 
     const options = [
-        { label: '', subrows: [{ label: 'Subrow 1.1' }, { label: 'Subrow 1.2' }] },
+        { label: 'item 1', subrows: [{ label: 'Subrow 1.1' }, { label: 'Subrow 1.2' }] },
         { label: 'Item 2', subrows: [{ label: 'Subrow 2.1' }, { label: 'Subrow 2.2' }] },
         { label: '', subrows: [{ label: 'Subrow 3.1' }, { label: 'Subrow 3.2' }] },
       ];
@@ -103,36 +102,28 @@ const TaskCreation = forwardRef(( props, ref) => {
     //handles error
     useImperativeHandle(ref, () => ({
         closeKeyboard() {
-            setShowTextInput(false);
+            setShowTaskCreation(false);
         }
     }))
 
     const handleAddTask = () => {
-        setShowTextInput(true);
+        setShowTaskCreation(true);
         setTimeout(() => {
             textTaskInputRef?.current?.focus();
         }, 100);
     };
 
     const handleSubmitHelper = () => {
-        callSubmitHandler(newTask, completedCreateTask); // add newDescription, 
+        callSubmitHandler(newTask, isCompleted); // add newDescription, 
         setNewTask('');
-        setShowTextInput(false);
-        setCompletedCreateTask(false);
+        setShowTaskCreation(false);
+        setCompleted(false);
     };
 
 
     const checker = () => {
-        completedCreateTask ? setCompletedCreateTask(false) : setCompletedCreateTask(true);
+        isCompleted ? setCompleted(false) : setCompleted(true);
     }
-    const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(false);
-    setDate(currentDate);
-  };
 
     return (
             <View style={styles.container}>
@@ -149,18 +140,7 @@ const TaskCreation = forwardRef(( props, ref) => {
                                 <ScheduleMenu handleTimeChange={handleTimeChange} time={time} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} />
                             </View>
                             <View style={{ flex: 1 }}>
-                            <View style={styles.dateContainer}>
-        <Text style={styles.dateText}>{date.toDateString()}</Text>
-      </View>
-      <Button title="Select Date" onPress={() => setShowDatePicker(true)} />
-      {showDatePicker && (
-        <DateTimePicker
-          value={date}
-          mode="time"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
+                               
                             </View>
                         </Swiper>
                     </View>
@@ -173,12 +153,12 @@ const TaskCreation = forwardRef(( props, ref) => {
                 >
                     <CustomDropDown 
                     options={options} 
-                    selectedItems={selectedItems} 
+                    selectedLists={selectedLists} 
                     toggleSelection={toggleSelection} 
                     openFolders={openFolders}
                     toggleFolder={toggleFolder} />
                 </Modal>
-                {!showTextInput && (<View style={styles.buttonContainer}>
+                {!showTaskCreation && (<View style={styles.buttonContainer}>
                     <TouchableOpacity onPress={handleAddTask}>
                         <View style={styles.addTaskButtonWrapper}>
                             <Text style={styles.addTaskText}>+</Text>
@@ -186,7 +166,7 @@ const TaskCreation = forwardRef(( props, ref) => {
                     </TouchableOpacity>
                 </View>
                 )}
-                {showTextInput && (
+                {showTaskCreation && (
                     <KeyboardAccessoryView 
                         style={styles.taskCustomization}
                         heightProperty="minHeight" 
@@ -197,70 +177,72 @@ const TaskCreation = forwardRef(( props, ref) => {
                     >     
                         <TouchableWithoutFeedback>
                             <View>
-                            <View style={styles.inputWrapper}>
-                                <TouchableOpacity 
-                                    style={ completedCreateTask ? styles.checkedbox : styles.uncheckedbox } 
-                                    onPress={checker}
-                                />
-                                <TextInput
-                                    ref={textTaskInputRef}
-                                    style={styles.inputTask}
-                                    onChangeText={text => setNewTask(text)}
-                                    value={newTask}
-                                    placeholder={'Please type here…'}
-                                />
-                                <Button 
-                                    style={styles.submitButton} 
-                                    title="go" 
-                                    onPress={handleSubmitHelper}
-                                />
-                            </View>
-                            <View style={styles.descriptionWrapper}>
-                                <TextInput
-                                    style={styles.inputDescription}
-                                    onChangeText={text => setNewDescription(text)}
-                                    value={newDescription}
-                                    placeholder={'Description…'}
-                                />
-                            </View>
-                        
-                            <View style={styles.detailsWrapper}>
-                                <TouchableHighlight
-                                    style={styles.submitButton}
-                                    onPress={toggleCalendarModal}
-                                >
-                                    <View style={styles.iconContainer}>
-                                        <Icon
-                                            name="calendar"
-                                            size={28}
-                                            color={'black'}
-                                        />
-                                    </View>
-                                </TouchableHighlight>
-                                <Menu>
-                                    <MenuTrigger style={styles.submitButton}>
+                                <View style={styles.inputWrapper}>
+                                    <TouchableOpacity 
+                                        style={ isCompleted ? styles.checkedbox : styles.uncheckedbox } 
+                                        onPress={checker}
+                                    />
+                                    <TextInput
+                                        ref={textTaskInputRef}
+                                        style={styles.inputTask}
+                                        onChangeText={text => setNewTask(text)}
+                                        value={newTask}
+                                        placeholder={'Please type here…'}
+                                    />
+                                    <Button 
+                                        style={styles.submitButton} 
+                                        title="go" 
+                                        onPress={handleSubmitHelper}
+                                    />
+                                </View>
+                                <View style={styles.descriptionWrapper}>
+                                    <TextInput
+                                        style={styles.inputDescription}
+                                        onChangeText={text => setNewDescription(text)}
+                                        value={newDescription}
+                                        placeholder={'Description…'}
+                                    />
+                                </View>
+                            
+                                <View style={styles.detailsWrapper}>
+                                    <TouchableHighlight
+                                        style={styles.submitButton}
+                                        onPress={toggleCalendarModal}
+                                    >
                                         <View style={styles.iconContainer}>
                                             <Icon
-                                                name="flag"
+                                                name="calendar"
                                                 size={28}
                                                 color={'black'}
                                             />
                                         </View>
-                                    </MenuTrigger>
-                                    <MenuOptions style={styles.listsMenu}>
-                                        <View style={styles.listsMenuScroll}>
-                                        {menuOptions.map((option, index) => (
-                                        <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
-                                            <View style={[styles.priorityWrapper, selectedOption === index && styles.selectedOption]}>
-                                                <Icon name={option.icon} size={20} color={option.color} style={styles.flagSmall} />
-                                                <Text style={styles.flagText}>{option.text}</Text>
+                                    </TouchableHighlight>
+                                    <Menu>
+                                        <MenuTrigger style={styles.submitButton}>
+                                            <View style={styles.iconContainer}>
+                                                <Icon
+                                                    name="flag"
+                                                    size={28}
+                                                    color={'black'}
+                                                />
                                             </View>
-                                        </TouchableOpacity>))}
-                                        </View>
-                                    </MenuOptions>
-                                </Menu>
-                                <Menu>
-                                    <MenuTrigger style={styles.submitButton}>
+                                        </MenuTrigger>
+                                        <MenuOptions style={styles.listsMenu}>
+                                            <View style={styles.listsMenuScroll}>
+                                            {menuOptions.map((option, index) => (
+                                            <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
+                                                <View style={[styles.priorityWrapper, selectedPriority === index && styles.selectedPriority]}>
+                                                    <Icon name={option.icon} size={20} color={option.color} style={styles.flagSmall} />
+                                                    <Text style={styles.flagText}>{option.text}</Text>
+                                                </View>
+                                            </TouchableOpacity>))}
+                                            </View>
+                                        </MenuOptions>
+                                    </Menu>
+                                    <TouchableHighlight
+                                        style={styles.submitButton}
+                                        onPress={toggleListModal}
+                                    >
                                         <View style={styles.iconContainer}>
                                             <Icon
                                                 name="folder"
@@ -268,30 +250,8 @@ const TaskCreation = forwardRef(( props, ref) => {
                                                 color={'black'}
                                             />
                                         </View>
-                                    </MenuTrigger>
-                                    <MenuOptions style={styles.listsMenu}>
-                                        <View style={styles.listsMenuScroll}>
-                                            <TouchableHighlight
-                                                style={styles.submitButton}
-                                                onPress={toggleListModal}
-                                            >
-                                                <View>
-                                                    <Text style={styles.titleText}>Select Lists</Text>
-                                                </View>
-                                            </TouchableHighlight>
-                                            <View style={styles.chipsContainer}>
-                                                {selectedItems.map((item, index) => (
-                                                <TouchableOpacity key={index} onPress={() => toggleSelection(item.mainIndex, item.subIndex)}>
-                                                    <View style={styles.chip}>
-                                                        <Text style={styles.chipText}>{options[item.mainIndex].subrows[item.subIndex].label}</Text>
-                                                    </View>
-                                                </TouchableOpacity>
-                                                ))}
-                                            </View>
-                                        </View>
-                                    </MenuOptions>
-                                </Menu>
-                            </View>
+                                    </TouchableHighlight>
+                                </View>
                             </View>
                         </TouchableWithoutFeedback>
                     </KeyboardAccessoryView>
@@ -426,7 +386,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 2,
     },
-    selectedOption: {
+    selectedPriority: {
         backgroundColor: "yellow",
     },
     flagSmall: {

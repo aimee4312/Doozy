@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Button} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, Text, StyleSheet, TouchableHighlight} from 'react-native';
 import CustomPopupMenu from './CustomPopupMenu';
 import TimePopupMenu from './TimePopupMenu';
 
@@ -10,11 +9,6 @@ const ScheduleMenu = ( props ) => {
 
     const [buttonHeight, setButtonHeight] = useState(null);
     const [timeButtonHeight, setTimeButtonHeight] = useState(null);
-    const onChange = (event, newTime) => {
-        if (newTime !== undefined) {
-            handleTimeChange(newTime);
-        }
-    };
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isTimeMenuVisible, setIsTimeMenuVisible] = useState(false);
 
@@ -38,29 +32,26 @@ const ScheduleMenu = ( props ) => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.menuButton} onLayout={(event) => {
+            <TouchableHighlight onPress={toggleTimeMenu} style={styles.menuButton} onLayout={(event) => {
                 event.target.measure((x, y, width, height, pageX, pageY) => {
                 setTimeButtonHeight(pageY);
                 })
             }}>
                 <View style={styles.menuButtonWrapper}>
                     <Text style={styles.menuText}>Time</Text>
-                    <Button title="toggle" onPress={toggleTimeMenu}/>
+                    <Text style={styles.menuText}>Toggle</Text>
                 </View>
-            </View>
-            <View style={styles.menuButton} onLayout={(event) => {
+            </TouchableHighlight>
+            <TouchableHighlight onPress={toggleMenu} style={styles.menuButton} onLayout={(event) => {
                 event.target.measure((x, y, width, height, pageX, pageY) => {
                 setButtonHeight(pageY);
                 })
             }}>
                 <View style={styles.menuButtonWrapper}>
                     <Text style={styles.menuText}>Reminder</Text>
-                    <View style={styles.buttonReminder} >
-                    <Button title="toggle" onPress={toggleMenu}/>
-                    
-                    </View>
+                    <Text style={styles.menuText}>Toggle</Text>
                 </View>
-            </View>
+            </TouchableHighlight>
             <View style={styles.menuButton}>
                 <Text style={styles.menuText}>Repeat</Text>
             </View>

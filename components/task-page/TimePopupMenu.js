@@ -5,7 +5,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeight }) => {
 
     const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .3 + buttonHeight);
-    console.log(totalButtonHeight)
 
     const onChange = (event, newTime) => {
         if (newTime !== undefined) {
@@ -15,7 +14,7 @@ const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeigh
     
   return (
     <Modal
-      animationType="none"
+      animationType="fade"
       transparent={true}
       visible={isVisible}
       onRequestClose={onClose}
@@ -23,7 +22,7 @@ const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeigh
         <TouchableWithoutFeedback onPress={onClose}>
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
-                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 35, overflow: 'hidden'}]}>
+                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 25, overflow: 'hidden'}]}>
                         <DateTimePicker mode="time" value={time} onChange={onChange} display='spinner' style={{flex: 1}}/>
                     </View>
                 </TouchableWithoutFeedback>

@@ -3,13 +3,11 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedba
 
 const CustomPopupMenu = ({ isVisible, onClose, reminderOptions, selectedReminders, handleReminderSelect, buttonHeight }) => {
 
-    const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .3 + buttonHeight);
-    console.log(totalButtonHeight)
-
+    const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .3 + buttonHeight );
     
   return (
     <Modal
-      animationType="none"
+      animationType="fade"
       transparent={true}
       visible={isVisible}
       onRequestClose={onClose}
@@ -17,7 +15,7 @@ const CustomPopupMenu = ({ isVisible, onClose, reminderOptions, selectedReminder
         <TouchableWithoutFeedback onPress={onClose}>
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
-                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 35}]}>
+                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 25}]}>
                         {reminderOptions.map((option, index) => (
                         <TouchableOpacity key={index} onPress={() => handleReminderSelect(index)}>
                             <View style={[styles.priorityWrapper, selectedReminders.includes(index) && styles.selectedReminders]}>
@@ -45,6 +43,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 5,
     position: 'absolute',
+    width: 200,
   },
   menuOption: {
     fontSize: 16,
