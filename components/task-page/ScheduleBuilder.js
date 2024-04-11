@@ -6,7 +6,7 @@ const ScheduleBuilder = ( props ) => {
   const { selectedDate, handleDateSelect} = props;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, height: '80%' }}>
       <Calendar
         current={selectedDate}
         onDayPress={(day) => handleDateSelect(day)}

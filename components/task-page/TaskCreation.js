@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -23,8 +23,14 @@ const TaskCreation = forwardRef(( props, ref) => {
     const [time, setTime] = useState(new Date()) //change this eventually
     const [selectedPriority, setSelectedPriority] = useState(null);
     const [selectedReminders, setSelectedReminders] = useState([]);
+    const [selectedRepeat, setSelectedRepeat] = useState([]);
     const [isCompleted, setCompleted] = useState(false);
+    const [isTime, setIsTime] = useState(false);
+    const [dateRepeatEnds, setDateRepeatEnds] = useState('');
     
+    const [reminderString, setReminderString] = useState("None");
+    const [repeatString, setRepeatString] = useState("None");
+
     const [showTaskCreation, setShowTaskCreation] = useState(false); 
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
@@ -34,18 +40,50 @@ const TaskCreation = forwardRef(( props, ref) => {
 
 
     const screenHeight = Dimensions.get('window').height;
-    const modalHeight = screenHeight * 0.7;
+    const modalHeight = screenHeight * 0.75;
+
+    const reminderNoTime = [
+        { label: 'On the day (9:00 am)' },
+        { label: '1 day early (9:00 am)' },
+        { label: '2 day early (9:00 am)' },
+        { label: '3 day early (9:00 am)' },
+        { label: '1 week early (9:00 am)' }
+      ];
+
+      const reminderWithTime = [
+        { label: 'On time' },
+        { label: '5 minutes early' },
+        { label: '30 minutes early' },
+        { label: '1 hour early' },
+        { label: '1 day early' }
+      ];
+
+    const repeat = [
+        { label: 'Daily' },
+        { label: 'Weekly' },
+        { label: 'Monthly' },
+        { label: 'Yearly' },
+        { label: 'Every weekday' },
+    ];
     
 
-
-    const handleReminderSelect = (index) => {
-        // Toggle selection state of the option
-        if (selectedReminders.includes(index)) {
-            setSelectedReminders(selectedReminders.filter((item) => item !== index));
-        } else {
-            setSelectedReminders([...selectedReminders, index]);
-        }
+    const handleReminderStringChange = () => {
+        changeReminderString();
     };
+
+    const handleRepeatStringChange = () => {
+        changeRepeatString();
+    };
+    
+    // Call handleReminderStringChange after selectedReminders state is updated
+    useEffect(() => {
+        handleReminderStringChange();
+    }, [selectedReminders]);
+
+    // Call handleReminderStringChange after selectedReminders state is updated
+    useEffect(() => {
+        handleRepeatStringChange();
+    }, [selectedRepeat]);
 
     const handleTimeChange = (newTime) => {
         setTime(newTime);
@@ -67,7 +105,12 @@ const TaskCreation = forwardRef(( props, ref) => {
       ];
 
       const handleOptionSelect = (index) => {
-        setSelectedPriority(index);
+        if (selectedPriority === index) {
+            setSelectedPriority(null);
+        }
+        else {
+            setSelectedPriority(index);
+        }
         // Perform other actions based on the selected option if needed
       };
 
@@ -125,6 +168,31 @@ const TaskCreation = forwardRef(( props, ref) => {
         isCompleted ? setCompleted(false) : setCompleted(true);
     }
 
+
+    const changeReminderString = () => {
+        if (selectedReminders.length === 0) {
+            setReminderString("None");
+        }
+        else if (selectedReminders.length === 1) {
+            setReminderString(isTime ? reminderWithTime[selectedReminders[0]].label : reminderNoTime[selectedReminders[0]].label);
+        }
+        else {
+            setReminderString(isTime ? reminderWithTime[selectedReminders[0]].label + ",..." : reminderNoTime[selectedReminders[0]].label + ",...");
+        }
+    }
+
+    const changeRepeatString = () => {
+        if (selectedRepeat.length === 0) {
+            setRepeatString("None");
+        }
+        else if (selectedRepeat.length === 1) {
+            setRepeatString(repeat[selectedRepeat[0]].label);
+        }
+        else {
+            setRepeatString(repeat[selectedRepeat[0]].label + ",...");
+        }
+    }
+
     return (
             <View style={styles.container}>
                 <Modal 
@@ -135,9 +203,29 @@ const TaskCreation = forwardRef(( props, ref) => {
                 >
                     <View style={{ backgroundColor: 'white', height: modalHeight, position: 'relative', zIndex: 0}}>
                         <Swiper loop={false}>
-                            <View style={{ flex: 1, padding: 20 }}>
-                                <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} />
-                                <ScheduleMenu handleTimeChange={handleTimeChange} time={time} selectedReminders={selectedReminders} handleReminderSelect={handleReminderSelect} />
+                            <View style={{ flex: 1, padding: 20, flexDirection: 'column' }}>
+                                <View style={{ flex: .6 }}>
+                                    <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} />
+                                </View>
+                                <View style={{ flex: .4 }}>
+                                <ScheduleMenu 
+                                    handleTimeChange={handleTimeChange} 
+                                    time={time} 
+                                    isTime={isTime} 
+                                    setIsTime={setIsTime} 
+                                    selectedReminders={selectedReminders} 
+                                    setSelectedReminders={setSelectedReminders} 
+                                    selectedRepeat={selectedRepeat} 
+                                    setSelectedRepeat={setSelectedRepeat} 
+                                    dateRepeatEnds={dateRepeatEnds} 
+                                    setDateRepeatEnds={setDateRepeatEnds} 
+                                    reminderString={reminderString} 
+                                    repeatString={repeatString} 
+                                    reminderNoTime={reminderNoTime} 
+                                    reminderWithTime={reminderWithTime} 
+                                    repeat={repeat} 
+                                />
+                                </View>
                             </View>
                             <View style={{ flex: 1 }}>
                                

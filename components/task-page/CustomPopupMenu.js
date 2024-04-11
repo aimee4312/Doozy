@@ -1,10 +1,20 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
 
-const CustomPopupMenu = ({ isVisible, onClose, reminderOptions, selectedReminders, handleReminderSelect, buttonHeight }) => {
+const CustomPopupMenu = ({ isVisible, onClose, menuOptions, selectedOptions, setSelectedOptions, buttonHeight }) => {
 
-    const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .3 + buttonHeight );
+    const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .25 + buttonHeight );
     
+
+    const handleOptionSelect = (index) => {
+      // Toggle selection state of the option
+      if (selectedOptions.includes(index)) {
+          setSelectedOptions(selectedOptions.filter((item) => item !== index));
+      } else {
+          setSelectedOptions([...selectedOptions, index]);
+      }
+  };
+
   return (
     <Modal
       animationType="fade"
@@ -16,9 +26,9 @@ const CustomPopupMenu = ({ isVisible, onClose, reminderOptions, selectedReminder
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
                     <View style={[styles.menu, { bottom: totalButtonHeight, right: 25}]}>
-                        {reminderOptions.map((option, index) => (
-                        <TouchableOpacity key={index} onPress={() => handleReminderSelect(index)}>
-                            <View style={[styles.priorityWrapper, selectedReminders.includes(index) && styles.selectedReminders]}>
+                        {menuOptions.map((option, index) => (
+                        <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
+                            <View style={[styles.priorityWrapper, selectedOptions.includes(index) && styles.selectedOptions]}>
                                 <Text style={styles.menuOption}>{option.label}</Text>
                             </View>
                         </TouchableOpacity>))}
@@ -57,7 +67,7 @@ const styles = StyleSheet.create({
     color: 'blue',
     marginTop: 10,
   },
-  selectedReminders: {
+  selectedOptions: {
     backgroundColor: "yellow",
 },
 priorityWrapper: {
