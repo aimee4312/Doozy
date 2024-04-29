@@ -9,8 +9,6 @@ import LoginScreen from './components/auth/Login';
 import ProfileScreen from './components/profile/Profile';
 import SettingsScreen from './components/profile/Settings';
 import TaskListScreen from './screens/TaskListScreen';
-import { onAuthStateChanged } from 'firebase/auth';
-import { FIREBASE_AUTH } from './firebaseConfig';
 
 
 const Stack = createStackNavigator();
