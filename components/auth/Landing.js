@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Button } from 'react-native';
+import React from 'react'
+import { View, Button } from 'react-native'
+import List from './listSideMenu'
 
 export default function Landing({ navigation }) {
   return (
@@ -12,6 +13,7 @@ export default function Landing({ navigation }) {
         title="Login"
         onPress={() => navigation.navigate("Login")}
       />
+      <List/>
     </View>
   )
 }
