@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native'
-import { FIREBASE_AUTH } from '../../firebaseConfig'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import React, { Component } from 'react';
+import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 
 export class Login extends Component {
@@ -34,25 +34,30 @@ export class Login extends Component {
     render() {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
-                <View style={styles.container}>
-                    <Text>Email</Text>
-                    <TextInput
-                        placeholder="Email"
-                        onChangeText={(email) => this.setState({ email })}
-                        style={styles.textBoxes}
-                    />
-                    <Text>Password</Text>
-                    <TextInput
-                        placeholder="Password"
-                        secureTextEntry={true}
-                        onChangeText={(password) => this.setState({ password })}
-                        style={styles.textBoxes}
-                    />
-                    <Button
-                        onPress={() => this.onSignIn()}
-                        title="Sign In"
-                    />
-                </View>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.container}
+                >
+                    <View style={styles.container}>
+                        <Text>Email</Text>
+                        <TextInput
+                            placeholder="Email"
+                            onChangeText={(email) => this.setState({ email })}
+                            style={styles.textBoxes}
+                        />
+                        <Text>Password</Text>
+                        <TextInput
+                            placeholder="Password"
+                            secureTextEntry={true}
+                            onChangeText={(password) => this.setState({ password })}
+                            style={styles.textBoxes}
+                        />
+                        <Button
+                            onPress={() => this.onSignIn()}
+                            title="Sign In"
+                        />
+                    </View>
+                </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
         )
     }

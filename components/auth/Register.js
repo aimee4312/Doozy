@@ -1,48 +1,58 @@
-import React, { Component } from 'react'
-import { View, Button, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore'
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig'
+import React, { Component } from 'react';
+import { View, Button, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, Text, KeyboardAvoidingView, Platform } from 'react-native';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 
 export class Register extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            id: '',
             name: '',
             email: '',
             password: '',
             friends: '0',
             posts: '0',
             profilePic: 'null',
+            emailSent: false,
         }
         this.onSignUp = this.onSignUp.bind(this);
     }
 
-    onSignUp() {
+    async onSignUp() {
         const { name, email, password, friends, posts, profilePic } = this.state;
-        createUserWithEmailAndPassword(FIREBASE_AUTH, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
+        try {
+            const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
+            const user = userCredential.user;
+    
+            await sendEmailVerification(user);
+            console.log("Email sent!");
 
-                const userRef = doc(FIRESTORE_DB, "Users", user.uid);
-                return setDoc(userRef, {
-                    name: name,
-                    email: email,
-                    password: password,
-                    friends: friends,
-                    posts: posts,
-                    profilePic: profilePic,
-                })
-                    .then(() => {
-                        console.log("User information stored in Firestore successfully!");
-                    })
-                    .catch((error) => {
-                        console.error("Error storing user information in Firestore: ", error);
-                    });
-            })
-            .catch((error) => {
-                console.log(error)
+            while (!user.emailVerified) {
+                await user.reload();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            const userRef = doc(FIRESTORE_DB, "Users", user.uid);
+            await setDoc(userRef, {
+                id: user.uid,
+                name: name,
+                email: email,
+                password: password,
+                friends: friends,
+                posts: posts,
+                profilePic: profilePic,
             });
+            console.log("User information stored in Firestore successfully!");
+
+        } catch (error) {
+            console.error("Error signing up and storing user information: ", error);
+        }
+    }
+
+    goToLoginScreen = () => {
+        this.props.navigation.navigate('Login');
     }
 
     dismissKeyboard() {
@@ -52,28 +62,37 @@ export class Register extends Component {
     render() {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
-                <View style={styles.container}>
-                    <TextInput
-                        placeholder="Name"
-                        onChangeText={(name) => this.setState({ name })}
-                        style={styles.textBoxes}
-                    />
-                    <TextInput
-                        placeholder="Email"
-                        onChangeText={(email) => this.setState({ email })}
-                        style={styles.textBoxes}
-                    />
-                    <TextInput
-                        placeholder="Password"
-                        secureTextEntry={true}
-                        onChangeText={(password) => this.setState({ password })}
-                        style={styles.textBoxes}
-                    />
-                    <Button
-                        onPress={() => this.onSignUp()}
-                        title="Sign Up"
-                    />
-                </View>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.container}
+                >
+                    <View style={styles.container}>
+                        <TextInput
+                            placeholder="Name"
+                            onChangeText={(name) => this.setState({ name })}
+                            style={styles.textBoxes}
+                        />
+                        <TextInput
+                            placeholder="Email"
+                            onChangeText={(email) => this.setState({ email })}
+                            style={styles.textBoxes}
+                        />
+                        <TextInput
+                            placeholder="Password"
+                            secureTextEntry={true}
+                            onChangeText={(password) => this.setState({ password })}
+                            style={styles.textBoxes}
+                        />
+                        <Button
+                            onPress={() => {
+                                this.onSignUp();
+                                this.setState({ emailSent: true });
+                            }}
+                            title="Sign Up"
+                        />
+                        {this.state.emailSent && <Text>Email sent!</Text>}
+                    </View>
+                </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
         )
     }
