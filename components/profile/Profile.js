@@ -80,7 +80,6 @@ export class Profile extends Component {
               </View>
             </View>
             <View style={styles.detailsContainer}>
-              <UserPosts/>
             </View>
           </View>
         )}

@@ -1,18 +1,34 @@
 import { React, useState } from 'react'
-import { View, Text, TextInput, Button, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, StyleSheet, Platform } from 'react-native'
-import CheckBox from '@react-native-community/checkbox';
+import { View, Text, TextInput, Button, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, StyleSheet, Platform, Image, TouchableOpacity } from 'react-native'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, collection, addDoc } from 'firebase/firestore';
+import * as ImagePicker from 'expo-image-picker';
+import UploadImage from '../profile/profilePic';
+import { AntDesign } from '@expo/vector-icons';
 
 export default function Task_db() {
     const [taskName, setTaskName] = useState('');
     const [description, setDescription] = useState('');
     const [folder, setFolder] = useState('');
     const [completed, setCompleted] = useState(false);
+    const [image, setImage] = useState(null);
     const currentUser = FIREBASE_AUTH.currentUser;
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
+    };
+
+    const addImage = async () => {
+        let _image = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+        console.log(JSON.stringify(_image));
+        if (!_image.cancelled) {
+            setImage(_image.assets[0].uri);
+        }
     };
 
     const storeTask = () => {
@@ -24,7 +40,8 @@ export default function Task_db() {
                 return addDoc(folderRef, {
                     title: taskName,
                     description: description,
-                    completed: completed
+                    completed: completed,
+                    image: image,
                 }).then(() => {
                     console.log("Task stored successfully!");
                 }).catch((error) => {
@@ -35,7 +52,8 @@ export default function Task_db() {
                 return addDoc(tasksRef, {
                     title: taskName,
                     description: description,
-                    completed: completed
+                    completed: completed,
+                    image: image,
                 }).then(() => {
                     console.log("Task stored successfully!");
                 }).catch((error) => {
@@ -51,6 +69,17 @@ export default function Task_db() {
     return (
         <View>
             <View>
+                <View style={styles.picContainer}>
+                    {
+                        image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />
+                    }
+                    <View style={styles.uploadBtnContainer}>
+                        <TouchableOpacity onPress={addImage} style={styles.uploadBtn} >
+                            <Text>{image ? 'Edit' : 'Upload'} Image</Text>
+                            <AntDesign name="camera" size={20} color="black" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
                 <Text>Task Name</Text>
                 <TextInput
                     placeholder="Task Name"
@@ -101,5 +130,30 @@ const styles = StyleSheet.create({
         height: 40,
         paddingHorizontal: 10,
         marginBottom: 30,
+    },
+
+    picContainer: {
+        elevation: 2,
+        height: 150,
+        width: 150,
+        backgroundColor: '#efefef',
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: 20,
+        marginTop: 0,
+    },
+    uploadBtnContainer: {
+        opacity: 0.7,
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'lightgrey',
+        width: '100%',
+        height: '25%',
+    },
+    uploadBtn: {
+        display: 'flex',
+        alignItems: "center",
+        justifyContent: 'center'
     }
 })
