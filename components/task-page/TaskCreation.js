@@ -6,7 +6,6 @@ import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
-import ScheduleBuilder from './ScheduleBuilder';
 import ScheduleMenu from './ScheduleMenu';
 
 
@@ -133,8 +132,17 @@ const TaskCreation = forwardRef(( props, ref) => {
     const handleSubmitHelper = () => {
         callSubmitHandler(newTask, isCompleted); // add newDescription, 
         setNewTask('');
+        setNewDescription('');
         setShowTaskCreation(false);
         setCompleted(false);
+        setSelectedLists([]);
+        setTime(new Date());
+        setSelectedDate('');
+        setSelectedPriority(null);
+        setSelectedReminders([]);
+        setSelectedRepeat([]);
+        setIsTime(false);
+        setDateRepeatEnds('');
     };
 
 
