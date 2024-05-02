@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderColor: 'grey',
         borderWidth: 1,
-        bottom: 0,
+        bottom: 90, // change
         width: 200,
         borderRadius: 5,
         maxHeight: 150,

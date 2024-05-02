@@ -9,8 +9,6 @@ import LoginScreen from './components/auth/Login';
 import ProfileScreen from './components/profile/Profile';
 import SettingsScreen from './components/profile/Settings';
 import TaskListScreen from './screens/TaskListScreen';
-import { onAuthStateChanged } from 'firebase/auth';
-import { FIREBASE_AUTH } from './firebaseConfig';
 
 
 const Stack = createStackNavigator();
@@ -37,7 +35,8 @@ class App extends Component {
     const { loggedIn } = this.state;
     return (
       <NavigationContainer>
-      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
+      {/* <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}> */}
+      <Stack.Navigator initialRouteName={loggedIn ? "TaskList" : "TaskList"}>
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Landing" component={LandingScreen} />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Modal, TouchableWithoutFeedback, StyleSheet, Text} from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import Swiper from 'react-native-swiper';
 
 const RepeatEndsModal = ( props ) => {
   const { isVisible, onClose, dateRepeatEnds, setDateRepeatEnds } = props;
@@ -21,9 +22,8 @@ const RepeatEndsModal = ( props ) => {
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
                     <View style={styles.menu}>
-                        <View>
-                            <Text>hello</Text>
-                        </View>
+                        {/* <Swiper loop={false}> */}
+                        {/* <View> */}
                         <Calendar
                             current={dateRepeatEnds}
                             onDayPress={(day) => handleDateSelect(day)}
@@ -32,6 +32,16 @@ const RepeatEndsModal = ( props ) => {
                             }}
                             style={styles.calendar}
                         />
+                        {/* </View> */}
+                        {/* <Calendar
+                            current={dateRepeatEnds}
+                            onDayPress={(day) => handleDateSelect(day)}
+                            markedDates={{
+                            [dateRepeatEnds]: { selected: true, selectedColor: 'blue' }
+                            }}
+                            style={styles.calendar}
+                        /> */}
+                        {/* </Swiper> */}
                     </View>
                 </TouchableWithoutFeedback>
             </View>
@@ -53,6 +63,7 @@ const styles = StyleSheet.create({
       elevation: 5,
       position: 'absolute',
       width: 300,
+      height: 400,
       flexDirection: 'column',
     },
     calendar: {

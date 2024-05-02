@@ -46,6 +46,11 @@ const ScheduleMenu = ( props ) => {
 
   const handleRepeatCancel = () => {
     setSelectedRepeat([]);
+    setDateRepeatEnds('');
+  }
+
+  const handleRepeatEndsCancel = () => {
+    setDateRepeatEnds('');
   }
 
 
@@ -121,8 +126,8 @@ const ScheduleMenu = ( props ) => {
                 <View style={styles.menuButtonWrapper}>
                     <Text style={styles.menuText}>Repeat Ends</Text>
                     <View style={styles.cancelContainer}>
-                        <Text style={styles.menuText}>{repeatString}</Text>
-                        {(selectedRepeat.length !== 0) && <TouchableOpacity onPress={handleRepeatCancel}>
+                        <Text style={styles.menuText}>{dateRepeatEnds == '' ? 'None' : dateRepeatEnds}</Text>
+                        {(dateRepeatEnds !== '') && <TouchableOpacity onPress={handleRepeatEndsCancel}>
                             <Text> X</Text>
                         </TouchableOpacity>}
                     </View>
