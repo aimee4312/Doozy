@@ -1,8 +1,7 @@
 import React, { Component, useState } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc } from "firebase/firestore";
-import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
@@ -13,9 +12,11 @@ export class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      userProfile: null
+      userProfile: null,
+      tasks: []
     };
   }
+
 
   componentDidMount() {
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -30,6 +31,15 @@ export class Profile extends Component {
           } else {
             console.log("No such document!");
           }
+          const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+          getDocs(tasksRef)
+            .then((querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                this.setState(prevState => ({
+                  tasks: [...prevState.tasks, { id: doc.id, ...doc.data() }]
+                }));
+              });
+            })
         })
         .catch((error) => {
           console.error("Error fetching document: ", error);
@@ -52,22 +62,29 @@ export class Profile extends Component {
     });
   }
 
-  goToSettingsScreen = () => {
+  onSettings = () => {
     this.props.navigation.navigate('Settings');
   }
-  
+
+  onHome = () => {
+    this.props.navigation.navigate('Timeline');
+  }
+
+  handleImagePress = (task) => {
+    this.props.navigation.navigate('TaskDetails', { task });
+  }
 
   render() {
-    const { userProfile } = this.state;
+    const { userProfile, tasks } = this.state;
 
     return (
       <View style={styles.container}>
-        <TouchableOpacity onPress={this.goToSettingsScreen}>
+        <TouchableOpacity onPress={this.onSettings}>
           <Ionicons name="settings-sharp" size={24} color="black" />
         </TouchableOpacity>
         {userProfile && (
           <View style={styles.content}>
-            <UploadImage/>
+            <UploadImage />
             <View style={styles.bioTextContainer}>
               <Text style={styles.bioText}>{userProfile.name}</Text>
               <View style={styles.detailsContainer}>
@@ -81,11 +98,21 @@ export class Profile extends Component {
                 </View>
               </View>
             </View>
-            <View style={styles.detailsContainer}>
-              {/* <UserPosts/> */}
-            </View>
           </View>
         )}
+
+        <ScrollView style={styles.tasksContainer}>
+          <View style={styles.grid}>
+            {tasks && tasks.map((task, index) => (
+              <TouchableOpacity key={index} onPress={() => this.handleImagePress(task)}>
+                <View style={styles.postContainer}>
+                  <Image source={{ uri: task.image }} style={styles.photo} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+
         <View style={styles.buttonContainer}>
           <Button
             onPress={() => this.onHome()}
@@ -104,41 +131,9 @@ export class Profile extends Component {
 
 }
 
-const FirstRoute = () => (
-  <View style={[styles.scene, { backgroundColor: '#ff4081' }]} />
-);
-
-const SecondRoute = () => (
-  <View style={[styles.scene, { backgroundColor: '#673ab7' }]} />
-);
-
-const UserPosts = () => {
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: 'posts', title: 'Posts' },
-    { key: 'achievements', title: 'Achievements' },
-  ]);
-
-  const renderScene = SceneMap({
-    posts: FirstRoute,
-    achievements: SecondRoute,
-  });
-
-  return (
-    <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: Dimensions.get('window').width }}
-    />
-  );
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     paddingTop: 50,
   },
   content: {
@@ -148,7 +143,6 @@ const styles = StyleSheet.create({
   },
   bioTextContainer: {
     alignItems: 'center',
-    marginBottom: 20,
   },
   detailsContainer: {
     flexDirection: 'row',
@@ -170,8 +164,25 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginBottom: 20,
   },
-  scene: {
-    flex: 1,
+  postContainer: {
+    margin: 1.5,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  photo: {
+    width: (Dimensions.get('window').width - 30) / 3,
+    height: (Dimensions.get('window').width - 30) / 3,
+    marginBottom: 2,
+  },
+  tasksContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 10,
+    maxHeight: 300,
   },
 })
 
