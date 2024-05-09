@@ -7,9 +7,15 @@ import ScheduleBuilder from './ScheduleBuilder';
 
 const ScheduleMenu = ( props ) => {
 
-    const {isCalendarModalVisible, setCalendarModalVisible, selectedDate, setSelectedDate, time, setTime, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds, reminderString, repeatString, reminderNoTime, reminderWithTime, repeat} = props;
 
-    const [tempSelectedDate, setTempSelectedDate] = useState(selectedDate);
+    const getTodayDate = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return today.toISOString().split('T')[0]; // Returns date in YYYY-MM-DD format
+      };
+    const {isCalendarModalVisible, setCalendarModalVisible, selectedDate, setSelectedDate, time, setTime, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds, reminderString, setReminderString, repeatString, setRepeatString, reminderNoTime, reminderWithTime, repeat} = props;
+
+    const [tempSelectedDate, setTempSelectedDate] = useState(selectedDate == '' ? getTodayDate() : selectedDate);
     const [tempTime, setTempTime] = useState(time);
     const [tempSelectedReminders, setTempSelectedReminders] = useState(selectedReminders);
     const [tempSelectedRepeat, setTempSelectedRepeat] = useState(selectedRepeat);
@@ -121,6 +127,8 @@ const changeRepeatString = () => {
         setSelectedRepeat(tempSelectedRepeat);
         setDateRepeatEnds(tempDateRepeatEnds);
         setCalendarModalVisible(false);
+        setReminderString(tempReminderString);
+        setRepeatString(tempRepeatString);
     }
 
 

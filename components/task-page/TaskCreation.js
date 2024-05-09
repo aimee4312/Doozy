@@ -160,7 +160,7 @@ const TaskCreation = forwardRef(( props, ref) => {
                 >
                     <View style={{ backgroundColor: 'white', height: modalHeight, position: 'relative', zIndex: 0}}>
                         <Swiper loop={false}>
-                            <View style={{ flex: 1, padding: 20, flexDirection: 'column' }}>
+                            <View style={{ flex: 1, paddingRight: 20, paddingLeft: 20, flexDirection: 'column' }}>
                                 <View style={{ flex: 1 }}>
                                 <ScheduleMenu 
                                     isCalendarModalVisible={isCalendarModalVisible}
@@ -178,15 +178,14 @@ const TaskCreation = forwardRef(( props, ref) => {
                                     dateRepeatEnds={dateRepeatEnds} 
                                     setDateRepeatEnds={setDateRepeatEnds} 
                                     reminderString={reminderString} 
+                                    setReminderString={setReminderString}
                                     repeatString={repeatString} 
+                                    setRepeatString={setRepeatString}
                                     reminderNoTime={reminderNoTime} 
                                     reminderWithTime={reminderWithTime} 
                                     repeat={repeat} 
                                 />
                                 </View>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                               
                             </View>
                         </Swiper>
                     </View>
