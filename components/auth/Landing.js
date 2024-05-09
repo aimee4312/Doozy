@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Button } from 'react-native';
-import NavigationBar from '../auth/NavigationBar';
+import NavigationBar from '../Navigation_Bar';
 
 export default function Landing({ navigation }) {
   return (
@@ -13,7 +13,7 @@ export default function Landing({ navigation }) {
         title="Login"
         onPress={() => navigation.navigate("Login")}
       />
-    <NavigationBar/>
+    <NavigationBar navigation={navigation} />
     </View>
   )
 }

@@ -6,7 +6,7 @@ import { TabView, SceneMap } from 'react-native-tab-view';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
-import navigationBar from '../auth/NavigationBar';
+import navigationBar from '../Navigation_Bar';
 
 
 export class Profile extends Component {
@@ -98,7 +98,7 @@ export class Profile extends Component {
             title="Log Out"
           />
         </View>
-        <navigationBar/>
+        <navigationBar navigation={this.props.navigation} />
       </View>
     );
   }

@@ -3,7 +3,7 @@ import { StyleSheet, ScrollView, TextInput, Text, View, Button, Keyboard, Keyboa
 import Task from '../components/task-page/Task'
 import TaskCreation from '../components/task-page/TaskCreation'
 import { MenuProvider } from 'react-native-popup-menu';
-import NavigationBar from '../components/auth/NavigationBar';
+import NavigationBar from '../components/Navigation_Bar';
 
 const TaskListScreen = () => {
     
@@ -141,7 +141,7 @@ const TaskListScreen = () => {
                 </ScrollView>
                 </DismissKeyboard>
                 <TaskCreation ref={childRef} callSubmitHandler={handleSubmit} />
-                <NavigationBar/>
+                <NavigationBar navigation={this.props.navigation} />
             </View>
             </MenuProvider>
             
