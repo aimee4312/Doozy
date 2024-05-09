@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   selectedOptions: {
-    backgroundColor: "yellow",
+    backgroundColor: "black",
 },
 priorityWrapper: {
     flexDirection: "row",
