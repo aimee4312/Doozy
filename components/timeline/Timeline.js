@@ -32,7 +32,7 @@ class Timeline extends Component {
   }
 
   handlePostPress = (userId) => {
-    // this.props.navigation.navigate('Profile', { userId });
+    // this.props.navigation.navigate('userProfile', { userId });
     console.log('Clicked on post. Owner ID:', userId);
   };
 

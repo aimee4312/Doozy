@@ -1,12 +1,10 @@
 import React, { Component, useState } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
-
-
 
 export class Profile extends Component {
   constructor(props) {
@@ -16,7 +14,6 @@ export class Profile extends Component {
       tasks: []
     };
   }
-
 
   componentDidMount() {
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -46,7 +43,6 @@ export class Profile extends Component {
 
         });
     }
-
   }
 
   onLogOut() {
@@ -78,54 +74,57 @@ export class Profile extends Component {
     const { userProfile, tasks } = this.state;
 
     return (
-      <View style={styles.container}>
-        <TouchableOpacity onPress={this.onSettings}>
-          <Ionicons name="settings-sharp" size={24} color="black" />
-        </TouchableOpacity>
-        {userProfile && (
-          <View style={styles.content}>
-            <UploadImage />
-            <View style={styles.bioTextContainer}>
-              <Text style={styles.bioText}>{userProfile.name}</Text>
-              <View style={styles.detailsContainer}>
-                <View style={styles.detail}>
-                  <Text style={styles.detailText}>Friends</Text>
-                  <Text>{userProfile.friends}</Text>
-                </View>
-                <View style={styles.detail}>
-                  <Text style={styles.detailText}>Posts</Text>
-                  <Text>{userProfile.posts}</Text>
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.scrollView}>
+          <TouchableOpacity onPress={this.onSettings}>
+            <Ionicons name="settings-sharp" size={24} color="black" />
+          </TouchableOpacity>
+          {userProfile && (
+            <View style={styles.content}>
+              <UploadImage />
+              <View style={styles.bioTextContainer}>
+                <Text style={styles.bioText}>{userProfile.name}</Text>
+                <View style={styles.detailsContainer}>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Friends</Text>
+                    <Text style={styles.detailStat}>{userProfile.friends}</Text>
+                  </View>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Posts</Text>
+                    <Text style={styles.detailStat}>{userProfile.posts}</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
-        )}
+          )}
 
-        <ScrollView style={styles.tasksContainer}>
-          <View style={styles.grid}>
-            {tasks && tasks.map((task, index) => (
-              <TouchableOpacity key={index} onPress={() => this.handleImagePress(task)}>
-                <View style={styles.postContainer}>
-                  <Image source={{ uri: task.image }} style={styles.photo} />
-                </View>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {tasks && tasks.map((task, index) => (
+                <TouchableOpacity key={index} onPress={() => this.handleImagePress(task)}>
+                  <View style={styles.postContainer}>
+                    <Image source={{ uri: task.image }} style={styles.photo} />
+                    <View style={styles.postDescription}>
+                      <Text style={styles.taskTitle}>{task.title}</Text>
+                      <Text>{task.description}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </ScrollView>
-
         <View style={styles.buttonContainer}>
           <Button
             onPress={() => this.onHome()}
             title="Home"
           />
-        </View>
-        <View style={styles.buttonContainer}>
           <Button
             onPress={() => this.onLogOut()}
             title="Log Out"
           />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -134,7 +133,12 @@ export class Profile extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
+    backgroundColor: '#f6f7fc',
+
+  },
+  scrollView: {
+    paddingTop: 16,
+    paddingBottom: 16
   },
   content: {
     flex: 1,
@@ -143,11 +147,17 @@ const styles = StyleSheet.create({
   },
   bioTextContainer: {
     alignItems: 'center',
+    width: '80%',
+    borderRadius: 10,
+    height: '40%',
   },
   detailsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    justifyContent: 'space-evenly',
+    margin: 10,
+    backgroundColor: '#70bdb8',
+    width: '100%',
+    borderRadius: 20,
   },
   detail: {
     alignItems: 'center',
@@ -156,33 +166,49 @@ const styles = StyleSheet.create({
   detailText: {
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#d9eced',
+  },
+  detailStat: {
+    color: '#f9fcfd',
   },
   bioText: {
     fontWeight: 'bold',
     marginBottom: 10,
   },
   buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
     marginBottom: 20,
   },
   postContainer: {
-    margin: 1.5,
-  },
-  grid: {
+    width: '100%',
+    backgroundColor: '#F5FCFF',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: 'F5FCFF',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
+  },
+  postDescription: {
+    flexDirection: 'column',
+    justifyContent: 'space-evenly',
+    width: '65%',
+    alignItems: 'center'
   },
   photo: {
     width: (Dimensions.get('window').width - 30) / 3,
     height: (Dimensions.get('window').width - 30) / 3,
     marginBottom: 2,
+    borderRadius: 20,
   },
   tasksContainer: {
-    paddingHorizontal: 10,
-    paddingVertical: 15,
-    backgroundColor: '#f2f2f2',
+    padding: 10,
     borderRadius: 10,
-    maxHeight: 300,
+  },
+  taskTitle: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginBottom: 'auto',
   },
 })
 
