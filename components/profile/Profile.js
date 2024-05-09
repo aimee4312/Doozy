@@ -190,10 +190,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   postDescription: {
-    flexDirection: 'column',
-    justifyContent: 'space-evenly',
     width: '65%',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   photo: {
     width: (Dimensions.get('window').width - 30) / 3,
@@ -208,7 +206,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontWeight: 'bold',
     fontSize: 20,
-    marginBottom: 'auto',
+    marginBottom: '20%',
   },
 })
 
