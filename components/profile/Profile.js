@@ -101,7 +101,7 @@ export class Profile extends Component {
           <View style={styles.tasksContainer}>
             <View style={styles.grid}>
               {tasks && tasks.map((task, index) => (
-                <TouchableOpacity key={index} onPress={() => this.handleImagePress(task)}>
+                <View key={index} onPress={() => this.handleImagePress(task)}>
                   <View style={styles.postContainer}>
                     <Image source={{ uri: task.image }} style={styles.photo} />
                     <View style={styles.postDescription}>
@@ -109,7 +109,7 @@ export class Profile extends Component {
                       <Text>{task.description}</Text>
                     </View>
                   </View>
-                </TouchableOpacity>
+                </View>
               ))}
             </View>
           </View>

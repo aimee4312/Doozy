@@ -25,8 +25,6 @@ const Bar = ({ navigation }) => {
     )
 }
 
-
-
 const styles = StyleSheet.create({
     bar: {
         backgroundColor: 'skyblue',
