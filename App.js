@@ -41,7 +41,7 @@ class App extends Component {
         <Stack.Screen name="Landing" component={LandingScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen  name="TaskList" component={ TaskListScreen } options={{ headShown: false}} />
+        <Stack.Screen name="TaskList" component={ TaskListScreen } options={{ headShown: false}} />
       </Stack.Navigator>
     </NavigationContainer>
     );

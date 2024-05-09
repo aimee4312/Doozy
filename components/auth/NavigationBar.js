@@ -8,10 +8,10 @@ const Bar = ({ navigation }) => {
     return (
         <View style={styles.bar}>
             <TouchableOpacity 
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate('Landing')}
             style={[styles.button]}>
                 <Text>
-                    Home
+                    Landing
                 </Text>
             </TouchableOpacity>
             <TouchableOpacity 
