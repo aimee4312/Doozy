@@ -98,3 +98,87 @@ function Item({ i, active, setActive, child }) {
   }
 
   export default List;
+
+
+
+  import React, { Component, useState } from 'react';
+import {
+    LayoutAnimation,
+    StyleSheet,
+    Button,
+    View,
+    SafeAreaView,
+    Text,
+    Alert,
+    FlatList,
+    TouchableOpacity,
+    ScrollView,
+    style,
+} from 'react-native';
+
+class List extends Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        data: "",
+        dummy: [
+          {
+            _id: "5e12905eb10fe53808d1ca55",
+            name: "WHY NAME EXISTS -_-",
+            stage: "Confirmed",
+            feedback: {
+              _id: "5e12905eb10fe53808d1ca56",
+              rating: 1,
+              review: "bad bad only bad."
+            },
+  
+            itemDetails: [
+              {
+                _id: "5e12905eb10fe53808d1ca5a",
+                nameXquantity: "Lehsun Adrak x100",
+                individualTotal: 155
+              },
+              {
+                _id: "5e12905eb10fe53808d1ca59",
+                nameXquantity: "Lehsun x50",
+                individualTotal: 25
+              },
+              {
+                _id: "5e12905eb10fe53808d1ca58",
+                nameXquantity: "Lehsun Adrak Dhaniya Shimla mirch x Infinity",
+                individualTotal: 9969
+              }
+            ],
+  
+            __v: 0
+          }
+        ]
+      };
+    }
+  
+  
+    render() {
+      return (
+        <SafeAreaView>
+          <ScrollView>
+            <FlatList
+              data={this.state.dummy}
+              renderItem={({ item }) => (
+                <View>
+                  <Text>{item.name}</Text>
+                  <FlatList
+                    data={item.itemDetails}
+                    renderItem={({ item }) => <Text>{item.nameXquantity}</Text>}
+                    keyExtractor={item => item._id}
+                  />
+                </View>
+              )}
+              keyExtractor={item => item._id}
+            />
+          </ScrollView>
+        </SafeAreaView>
+      );
+    }
+  }
+
+export default List;
