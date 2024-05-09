@@ -44,6 +44,7 @@
     "react-native-swiper": "^1.6.0",
     "react-native-tab-view": "^3.5.2",
     "react-native-vector-icons": "^10.1.0",
+
     "react-native-wheel-time-picker": "^0.4.3",
     "typescript": "~5.3.3"
   },

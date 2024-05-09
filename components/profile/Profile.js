@@ -33,6 +33,7 @@ export class Profile extends Component {
         })
         .catch((error) => {
           console.error("Error fetching document: ", error);
+
         });
     }
 
@@ -81,10 +82,16 @@ export class Profile extends Component {
               </View>
             </View>
             <View style={styles.detailsContainer}>
-              <UserPosts/>
+              {/* <UserPosts/> */}
             </View>
           </View>
         )}
+        <View style={styles.buttonContainer}>
+          <Button
+            onPress={() => this.onHome()}
+            title="Home"
+          />
+        </View>
         <View style={styles.buttonContainer}>
           <Button
             onPress={() => this.onLogOut()}
