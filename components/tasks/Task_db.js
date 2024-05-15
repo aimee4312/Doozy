@@ -1,4 +1,4 @@
-import { React, useState } from 'react'
+import { React, useState, useEffect } from 'react'
 import { View, Text, TextInput, Button, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard, StyleSheet, Platform, Image, TouchableOpacity } from 'react-native'
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, collection, addDoc } from 'firebase/firestore';
@@ -6,17 +6,13 @@ import * as ImagePicker from 'expo-image-picker';
 import UploadImage from '../profile/profilePic';
 import { AntDesign } from '@expo/vector-icons';
 
-export default function Task_db() {
+export default function Task_db({ navigation }) {
     const [taskName, setTaskName] = useState('');
     const [description, setDescription] = useState('');
     const [folder, setFolder] = useState('');
     const [completed, setCompleted] = useState(false);
     const [image, setImage] = useState(null);
     const currentUser = FIREBASE_AUTH.currentUser;
-
-    const dismissKeyboard = () => {
-        Keyboard.dismiss();
-    };
 
     const addImage = async () => {
         let _image = await ImagePicker.launchImageLibraryAsync({
@@ -43,9 +39,9 @@ export default function Task_db() {
                     completed: completed,
                     image: image,
                 }).then(() => {
-                    console.log("Task stored successfully!");
+                    console.log("Folder stored successfully!");
                 }).catch((error) => {
-                    console.error("Error storing task:", error);
+                    console.error("Error storing folder:", error);
                 });
 
             } else {
@@ -65,6 +61,34 @@ export default function Task_db() {
         }
 
     }
+
+    const editTask = (task) => {
+        navigation.navigate("UpdateTask", { task })
+    }
+    
+
+    const fetchData = async () => {
+        if (currentUser) {
+            const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+            const tasksRef = collection(userProfileRef, 'Tasks');
+            const querySnapshot = await getDocs(tasksRef);
+            const fetchedTasks = [];
+            querySnapshot.forEach((doc) => {
+                fetchedTasks.push({ id: doc.id, ...doc.data() });
+            });
+            setTasks(fetchedTasks);
+        } else {
+            console.error("Current user not found.");
+        }
+    }
+
+    dismissKeyboard = () => {
+        Keyboard.dismiss();
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     return (
         <View>
