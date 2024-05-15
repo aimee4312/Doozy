@@ -6,7 +6,6 @@ import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
-import ScheduleBuilder from './ScheduleBuilder';
 import ScheduleMenu from './ScheduleMenu';
 
 
@@ -67,28 +66,6 @@ const TaskCreation = forwardRef(( props, ref) => {
     ];
     
 
-    const handleReminderStringChange = () => {
-        changeReminderString();
-    };
-
-    const handleRepeatStringChange = () => {
-        changeRepeatString();
-    };
-    
-    // Call handleReminderStringChange after selectedReminders state is updated
-    useEffect(() => {
-        handleReminderStringChange();
-    }, [selectedReminders]);
-
-    // Call handleReminderStringChange after selectedReminders state is updated
-    useEffect(() => {
-        handleRepeatStringChange();
-    }, [selectedRepeat]);
-
-    const handleTimeChange = (newTime) => {
-        setTime(newTime);
-    }
-
     const toggleFolder = (index) => {
       if (openFolders.includes(index)) {
         setOpenFolders(openFolders.filter((item) => item !== index));
@@ -114,10 +91,6 @@ const TaskCreation = forwardRef(( props, ref) => {
         // Perform other actions based on the selected option if needed
       };
 
-    const handleDateSelect = (date) => {
-        setSelectedDate(date.dateString);
-      };
-
 
     const toggleSelection = (mainIndex, subIndex) => {
         const isSelected = selectedLists.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex);
@@ -129,9 +102,9 @@ const TaskCreation = forwardRef(( props, ref) => {
     };
 
     const options = [
-        { label: 'item 1', subrows: [{ label: 'Subrow 1.1' }, { label: 'Subrow 1.2' }] },
-        { label: 'Item 2', subrows: [{ label: 'Subrow 2.1' }, { label: 'Subrow 2.2' }] },
-        { label: '', subrows: [{ label: 'Subrow 3.1' }, { label: 'Subrow 3.2' }] },
+        { label: 'School', subrows: [{ label: 'Math' }, { label: 'English' }] },
+        { label: 'Errands', subrows: [{ label: 'Chores' }, { label: 'Groceries' }] },
+        { label: '', subrows: [{ label: 'Fun Activities' }, { label: 'Self Inprovement' }] },
       ];
 
     const toggleCalendarModal = () => {
@@ -159,38 +132,22 @@ const TaskCreation = forwardRef(( props, ref) => {
     const handleSubmitHelper = () => {
         callSubmitHandler(newTask, isCompleted); // add newDescription, 
         setNewTask('');
+        setNewDescription('');
         setShowTaskCreation(false);
         setCompleted(false);
+        setSelectedLists([]);
+        setTime(new Date());
+        setSelectedDate('');
+        setSelectedPriority(null);
+        setSelectedReminders([]);
+        setSelectedRepeat([]);
+        setIsTime(false);
+        setDateRepeatEnds('');
     };
 
 
     const checker = () => {
         isCompleted ? setCompleted(false) : setCompleted(true);
-    }
-
-
-    const changeReminderString = () => {
-        if (selectedReminders.length === 0) {
-            setReminderString("None");
-        }
-        else if (selectedReminders.length === 1) {
-            setReminderString(isTime ? reminderWithTime[selectedReminders[0]].label : reminderNoTime[selectedReminders[0]].label);
-        }
-        else {
-            setReminderString(isTime ? reminderWithTime[selectedReminders[0]].label + ",..." : reminderNoTime[selectedReminders[0]].label + ",...");
-        }
-    }
-
-    const changeRepeatString = () => {
-        if (selectedRepeat.length === 0) {
-            setRepeatString("None");
-        }
-        else if (selectedRepeat.length === 1) {
-            setRepeatString(repeat[selectedRepeat[0]].label);
-        }
-        else {
-            setRepeatString(repeat[selectedRepeat[0]].label + ",...");
-        }
     }
 
     return (
@@ -203,14 +160,15 @@ const TaskCreation = forwardRef(( props, ref) => {
                 >
                     <View style={{ backgroundColor: 'white', height: modalHeight, position: 'relative', zIndex: 0}}>
                         <Swiper loop={false}>
-                            <View style={{ flex: 1, padding: 20, flexDirection: 'column' }}>
-                                <View style={{ flex: .6 }}>
-                                    <ScheduleBuilder selectedDate={selectedDate} handleDateSelect={handleDateSelect} />
-                                </View>
-                                <View style={{ flex: .4 }}>
+                            <View style={{ flex: 1, paddingRight: 20, paddingLeft: 20, flexDirection: 'column' }}>
+                                <View style={{ flex: 1 }}>
                                 <ScheduleMenu 
-                                    handleTimeChange={handleTimeChange} 
+                                    isCalendarModalVisible={isCalendarModalVisible}
+                                    setCalendarModalVisible={setCalendarModalVisible}
+                                    selectedDate={selectedDate}
+                                    setSelectedDate={setSelectedDate}
                                     time={time} 
+                                    setTime={setTime}
                                     isTime={isTime} 
                                     setIsTime={setIsTime} 
                                     selectedReminders={selectedReminders} 
@@ -220,15 +178,14 @@ const TaskCreation = forwardRef(( props, ref) => {
                                     dateRepeatEnds={dateRepeatEnds} 
                                     setDateRepeatEnds={setDateRepeatEnds} 
                                     reminderString={reminderString} 
+                                    setReminderString={setReminderString}
                                     repeatString={repeatString} 
+                                    setRepeatString={setRepeatString}
                                     reminderNoTime={reminderNoTime} 
                                     reminderWithTime={reminderWithTime} 
                                     repeat={repeat} 
                                 />
                                 </View>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                               
                             </View>
                         </Swiper>
                     </View>
@@ -449,7 +406,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderColor: 'grey',
         borderWidth: 1,
-        bottom: 0,
+        bottom: 90, // change
         width: 200,
         borderRadius: 5,
         maxHeight: 150,
