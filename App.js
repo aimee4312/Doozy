@@ -11,6 +11,7 @@ import SettingsScreen from './components/profile/Settings';
 import TimelineScreen from './components/timeline/Timeline';
 import TaskListScreen from './screens/TaskListScreen';
 import TaskDetailsScreen from './components/profile/TaskDetails';
+import AddTaskScreen from './components/tasks/Task_db';
 
 const Stack = createStackNavigator();
 
@@ -36,7 +37,7 @@ class App extends Component {
     const { loggedIn } = this.state;
     return (
       <NavigationContainer>
-      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
+      <Stack.Navigator initialRouteName={loggedIn ? "AddTask" : "Landing"}>
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Landing" component={LandingScreen} />
@@ -45,6 +46,7 @@ class App extends Component {
         <Stack.Screen  name="TaskList" component={ TaskListScreen } options={{ headShown: false}} />
         <Stack.Screen name="Timeline" component={TimelineScreen} />
         <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
+        <Stack.Screen name="AddTask" component={AddTaskScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     );
