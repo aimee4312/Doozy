@@ -76,8 +76,8 @@ export default function UploadImage() {
 const imageUploaderStyles = StyleSheet.create({
     container: {
         elevation: 2,
-        height: 150,
-        width: 150,
+        height: 100,
+        width: 100,
         backgroundColor: '#efefef',
         position: 'relative',
         borderRadius: 999,
@@ -92,7 +92,7 @@ const imageUploaderStyles = StyleSheet.create({
         bottom: 0,
         backgroundColor: 'lightgrey',
         width: '100%',
-        height: '25%',
+        height: '45%',
     },
     uploadBtn: {
         display: 'flex',

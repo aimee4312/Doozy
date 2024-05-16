@@ -1,19 +1,17 @@
 import React, { Component, useState } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc } from "firebase/firestore";
-import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
-
-
 
 export class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      userProfile: null
+      userProfile: null,
+      tasks: []
     };
   }
 
@@ -30,13 +28,21 @@ export class Profile extends Component {
           } else {
             console.log("No such document!");
           }
+          const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+          getDocs(tasksRef)
+            .then((querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                this.setState(prevState => ({
+                  tasks: [...prevState.tasks, { id: doc.id, ...doc.data() }]
+                }));
+              });
+            })
         })
         .catch((error) => {
           console.error("Error fetching document: ", error);
 
         });
     }
-
   }
 
   onLogOut() {
@@ -52,94 +58,87 @@ export class Profile extends Component {
     });
   }
 
-  goToSettingsScreen = () => {
+  onSettings = () => {
     this.props.navigation.navigate('Settings');
   }
-  
+
+  onHome = () => {
+    this.props.navigation.navigate('Timeline');
+  }
+
+  handleImagePress = (task) => {
+    this.props.navigation.navigate('TaskDetails', { task });
+  }
 
   render() {
-    const { userProfile } = this.state;
+    const { userProfile, tasks } = this.state;
 
     return (
-      <View style={styles.container}>
-        <TouchableOpacity onPress={this.goToSettingsScreen}>
-          <Ionicons name="settings-sharp" size={24} color="black" />
-        </TouchableOpacity>
-        {userProfile && (
-          <View style={styles.content}>
-            <UploadImage/>
-            <View style={styles.bioTextContainer}>
-              <Text style={styles.bioText}>{userProfile.name}</Text>
-              <View style={styles.detailsContainer}>
-                <View style={styles.detail}>
-                  <Text style={styles.detailText}>Friends</Text>
-                  <Text>{userProfile.friends}</Text>
-                </View>
-                <View style={styles.detail}>
-                  <Text style={styles.detailText}>Posts</Text>
-                  <Text>{userProfile.posts}</Text>
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.scrollView}>
+          <TouchableOpacity onPress={this.onSettings}>
+            <Ionicons name="settings-sharp" size={24} color="black" />
+          </TouchableOpacity>
+          {userProfile && (
+            <View style={styles.content}>
+              <UploadImage />
+              <View style={styles.bioTextContainer}>
+                <Text style={styles.bioText}>{userProfile.name}</Text>
+                <View style={styles.detailsContainer}>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Friends</Text>
+                    <Text style={styles.detailStat}>{userProfile.friends}</Text>
+                  </View>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Posts</Text>
+                    <Text style={styles.detailStat}>{userProfile.posts}</Text>
+                  </View>
                 </View>
               </View>
             </View>
-            <View style={styles.detailsContainer}>
-              {/* <UserPosts/> */}
+          )}
+
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {tasks && tasks.map((task, index) => (
+                <View key={index} onPress={() => this.handleImagePress(task)}>
+                  <View style={styles.postContainer}>
+                    <Image source={{ uri: task.image }} style={styles.photo} />
+                    <View style={styles.postDescription}>
+                      <Text style={styles.taskTitle}>{task.title}</Text>
+                      <Text>{task.description}</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
             </View>
           </View>
-        )}
+        </ScrollView>
         <View style={styles.buttonContainer}>
           <Button
             onPress={() => this.onHome()}
             title="Home"
           />
-        </View>
-        <View style={styles.buttonContainer}>
           <Button
             onPress={() => this.onLogOut()}
             title="Log Out"
           />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
 }
 
-const FirstRoute = () => (
-  <View style={[styles.scene, { backgroundColor: '#ff4081' }]} />
-);
-
-const SecondRoute = () => (
-  <View style={[styles.scene, { backgroundColor: '#673ab7' }]} />
-);
-
-const UserPosts = () => {
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: 'posts', title: 'Posts' },
-    { key: 'achievements', title: 'Achievements' },
-  ]);
-
-  const renderScene = SceneMap({
-    posts: FirstRoute,
-    achievements: SecondRoute,
-  });
-
-  return (
-    <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: Dimensions.get('window').width }}
-    />
-  );
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 50,
+    backgroundColor: '#f6f7fc',
+
+  },
+  scrollView: {
+    paddingTop: 16,
+    paddingBottom: 16
   },
   content: {
     flex: 1,
@@ -148,12 +147,17 @@ const styles = StyleSheet.create({
   },
   bioTextContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    width: '80%',
+    borderRadius: 10,
+    height: '40%',
   },
   detailsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    justifyContent: 'space-evenly',
+    margin: 10,
+    backgroundColor: '#70bdb8',
+    width: '100%',
+    borderRadius: 20,
   },
   detail: {
     alignItems: 'center',
@@ -162,16 +166,47 @@ const styles = StyleSheet.create({
   detailText: {
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#d9eced',
+  },
+  detailStat: {
+    color: '#f9fcfd',
   },
   bioText: {
     fontWeight: 'bold',
     marginBottom: 10,
   },
   buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
     marginBottom: 20,
   },
-  scene: {
-    flex: 1,
+  postContainer: {
+    width: '100%',
+    backgroundColor: '#F5FCFF',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: 'F5FCFF',
+    flexDirection: 'row',
+  },
+  postDescription: {
+    width: '65%',
+    alignItems: 'center',
+  },
+  photo: {
+    width: (Dimensions.get('window').width - 30) / 3,
+    height: (Dimensions.get('window').width - 30) / 3,
+    marginBottom: 2,
+    borderRadius: 20,
+  },
+  tasksContainer: {
+    padding: 10,
+    borderRadius: 10,
+  },
+  taskTitle: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginBottom: '20%',
   },
 })
 
