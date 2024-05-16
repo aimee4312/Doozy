@@ -35,7 +35,7 @@ class App extends Component {
     const { loggedIn } = this.state;
     return (
       <NavigationContainer>
-      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
+      <Stack.Navigator initialRouteName={loggedIn ? "TaskList" : "Landing"}>
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Landing" component={LandingScreen} />

@@ -7,6 +7,8 @@ import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
+import { doc, collection, addDoc, getDocs } from 'firebase/firestore';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 
 
 
@@ -37,9 +39,32 @@ const TaskCreation = forwardRef(( props, ref) => {
 
     const [openFolders, setOpenFolders] = useState([]); // maybe move this inside of customdropdown
 
+    const currentUser = FIREBASE_AUTH.currentUser;
 
     const screenHeight = Dimensions.get('window').height;
     const modalHeight = screenHeight * 0.75;
+
+    const storeTask = () => {
+        if (currentUser) {
+            const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+            const tasksRef = collection(userProfileRef, 'Tasks');
+            return addDoc(tasksRef, {
+                name: newTask,
+                description: newDescription,
+                completed: isCompleted,
+                date: selectedDate,
+                time: isTime ? time : null,
+                priority: selectedPriority,
+                reminders: selectedReminders,
+                repeatEnds: dateRepeatEnds,
+            }).catch((error) => {
+                console.error("Error storing task:", error);
+            });
+        } else {
+            console.error("Current user not found.");
+        }
+
+    }
 
     const reminderNoTime = [
         { label: 'On the day (9:00 am)' },
@@ -130,7 +155,10 @@ const TaskCreation = forwardRef(( props, ref) => {
     };
 
     const handleSubmitHelper = () => {
-        callSubmitHandler(newTask, isCompleted); // add newDescription, 
+        if (newTask.length !== 0) {
+            storeTask();
+        }
+        callSubmitHandler();
         setNewTask('');
         setNewDescription('');
         setShowTaskCreation(false);
