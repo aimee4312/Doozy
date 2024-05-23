@@ -41,7 +41,10 @@ class Timeline extends Component {
       <View style={styles.postContainer}>
         <Image source={{ uri: item.image }} style={styles.postImage} />
         <View style={styles.taskInfo}>
-          <Text style={styles.taskName}>{item.title}</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.taskName}>{item.name}</Text>
+            <Text style={styles.taskDate}>{item.date}</Text>
+          </View>
           <Text style={styles.taskDescription}>{item.description}</Text>
         </View>
       </View>
@@ -49,16 +52,20 @@ class Timeline extends Component {
   );
 
   render() {
+    const { tasks } = this.state;
+    const completedTasks = tasks.filter(task => task.completed);
+  
     return (
       <View style={styles.container}>
         <FlatList
-          data={this.state.tasks}
+          data={completedTasks}
           renderItem={this.renderTask}
           keyExtractor={(item) => item.id.toString()}
         />
       </View>
     );
   }
+  
 }
 
 const styles = StyleSheet.create({
@@ -66,13 +73,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: 20,
+    paddingHorizontal: 10,
   },
   postContainer: {
     marginBottom: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    overflow: 'hidden',
+    elevation: 3,
   },
   postImage: {
     width: '100%',
-    height: 300,
+    height: 200,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   taskInfo: {
     padding: 10,
@@ -83,6 +97,11 @@ const styles = StyleSheet.create({
   },
   taskDescription: {
     fontSize: 16,
+    marginTop: 5,
+  },
+  taskDate: {
+    fontSize: 14,
+    color: '#888',
   },
 });
 
