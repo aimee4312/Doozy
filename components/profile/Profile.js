@@ -72,6 +72,8 @@ export class Profile extends Component {
 
   render() {
     const { userProfile, tasks } = this.state;
+    const completedTasks = tasks.filter(task => task.completed);
+
 
     return (
       <SafeAreaView style={styles.container}>
@@ -100,12 +102,12 @@ export class Profile extends Component {
 
           <View style={styles.tasksContainer}>
             <View style={styles.grid}>
-              {tasks && tasks.map((task, index) => (
+              {completedTasks.map((task, index) => (
                 <View key={index} onPress={() => this.handleImagePress(task)}>
                   <View style={styles.postContainer}>
                     <Image source={{ uri: task.image }} style={styles.photo} />
                     <View style={styles.postDescription}>
-                      <Text style={styles.taskTitle}>{task.title}</Text>
+                      <Text style={styles.taskTitle}>{task.name}</Text>
                       <Text>{task.description}</Text>
                     </View>
                   </View>
