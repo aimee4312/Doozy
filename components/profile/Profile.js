@@ -5,6 +5,7 @@ import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, Sc
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
+import NavBar from '../auth/NavigationBar'
 
 export class Profile extends Component {
   constructor(props) {
@@ -116,16 +117,7 @@ export class Profile extends Component {
             </View>
           </View>
         </ScrollView>
-        <View style={styles.buttonContainer}>
-          <Button
-            onPress={() => this.onHome()}
-            title="Home"
-          />
-          <Button
-            onPress={() => this.onLogOut()}
-            title="Log Out"
-          />
-        </View>
+        <NavBar navigation={this.props.navigation}></NavBar>
       </SafeAreaView>
     );
   }
