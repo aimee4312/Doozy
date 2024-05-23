@@ -46,7 +46,7 @@ class App extends Component {
           <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
           <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }}/>
-          <Stack.Screen name="TaskList" component={TaskListScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="TaskList" component={TaskListScreen} />
           <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }}/>
           <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
           <Stack.Screen name="AddTask" component={AddTaskScreen} />
