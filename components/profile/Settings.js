@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
     },
     inputBackground: {
-        backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white background
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
     },
     backgroundImage: {
         flex: 1,

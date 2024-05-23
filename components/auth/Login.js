@@ -26,7 +26,7 @@ class Login extends Component {
     }
 
     goBackHome() {
-        this.props.navigation.goBack(); // Navigate back home
+        this.props.navigation.goBack();
     }
 
     dismissKeyboard() {
@@ -37,7 +37,7 @@ class Login extends Component {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
                 <ImageBackground
-                    source={require('../../assets/background2.jpg')} // Provide your image path here
+                    source={require('../../assets/background2.jpg')}
                     style={styles.backgroundImage}
                     resizeMode="cover"
                 >
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         width: '80%',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white background
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         padding: 20,
         borderRadius: 10,
     },
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginBottom: 5,
         color: '#333',
-        textAlign: 'left', // Align left
+        textAlign: 'left',
     },
     textBox: {
         fontSize: 16,

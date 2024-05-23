@@ -1,17 +1,18 @@
 import React, { Component, useState } from 'react';
-// import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-// import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-// import UploadImage from './profilePic';
 import NavBar from '../auth/NavigationBar';
 
 export class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      userProfile: null,
+      userProfile: {
+        name: "John Doe",
+        friends: 100,
+        posts: 50
+      },
       tasks: [
         {
           id: 1,
@@ -27,70 +28,13 @@ export class Profile extends Component {
           image: 'https://via.placeholder.com/150',
           completed: true,
         },
-        // Add more hardcoded tasks as needed
       ],
     };
-  }
-
-  // componentDidMount() {
-  //   const currentUser = FIREBASE_AUTH.currentUser;
-
-  //   if (currentUser) {
-  //     const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-
-  //     getDoc(userProfileRef)
-  //       .then((docSnapshot) => {
-  //         if (docSnapshot.exists()) {
-  //           this.setState({ userProfile: docSnapshot.data() });
-  //         } else {
-  //           console.log("No such document!");
-  //         }
-  //         const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
-  //         getDocs(tasksRef)
-  //           .then((querySnapshot) => {
-  //             querySnapshot.forEach((doc) => {
-  //               this.setState(prevState => ({
-  //                 tasks: [...prevState.tasks, { id: doc.id, ...doc.data() }]
-  //               }));
-  //             });
-  //           })
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error fetching document: ", error);
-
-  //       });
-  //   }
-  // }
-
-  onLogOut() {
-    FIREBASE_AUTH.signOut().then(() => {
-      this.props.navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Landing' }],
-        })
-      );
-    }).catch((error) => {
-      console.error("Error logging out: ", error);
-    });
-  }
-
-  onSettings = () => {
-    this.props.navigation.navigate('Settings');
-  }
-
-  onHome = () => {
-    this.props.navigation.navigate('Timeline');
-  }
-
-  handleImagePress = (task) => {
-    this.props.navigation.navigate('TaskDetails', { task });
   }
 
   render() {
     const { userProfile, tasks } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
-
 
     return (
       <ImageBackground
@@ -105,7 +49,6 @@ export class Profile extends Component {
             </TouchableOpacity>
             {userProfile && (
               <View style={styles.content}>
-                {/* <UploadImage /> */}
                 <View style={styles.bioTextContainer}>
                   <Text style={styles.bioText}>{userProfile.name}</Text>
                   <View style={styles.detailsContainer}>
@@ -155,7 +98,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 16, // Adjust as needed
+    paddingBottom: 16,
   },
   backgroundImage: {
     flex: 1,

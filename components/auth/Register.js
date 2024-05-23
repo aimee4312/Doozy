@@ -60,7 +60,7 @@ class Register extends Component {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
                 <ImageBackground
-                    source={require('../../assets/background.jpg')} // Provide your image path here
+                    source={require('../../assets/background.jpg')}
                     style={styles.backgroundImage}
                     resizeMode="cover"
                 >
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         width: '80%',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white background
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         padding: 20,
         borderRadius: 10,
     },
