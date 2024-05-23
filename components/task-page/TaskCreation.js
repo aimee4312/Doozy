@@ -7,11 +7,14 @@ import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
-
+import { doc, collection, addDoc, getDocs, runTransaction } from 'firebase/firestore';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import NavBar from "../auth/NavigationBar";
+import * as ImagePicker from 'expo-image-picker';
 
 
 const TaskCreation = forwardRef(( props, ref) => {
-    const {callSubmitHandler} = props;
+    const {callSubmitHandler, nav} = props;
     
     const textTaskInputRef = useRef(null);
     
@@ -26,6 +29,7 @@ const TaskCreation = forwardRef(( props, ref) => {
     const [isCompleted, setCompleted] = useState(false);
     const [isTime, setIsTime] = useState(false);
     const [dateRepeatEnds, setDateRepeatEnds] = useState('');
+    const [image, setImage] = useState(null);
     
     const [reminderString, setReminderString] = useState("None");
     const [repeatString, setRepeatString] = useState("None");
@@ -37,9 +41,62 @@ const TaskCreation = forwardRef(( props, ref) => {
 
     const [openFolders, setOpenFolders] = useState([]); // maybe move this inside of customdropdown
 
+    const currentUser = FIREBASE_AUTH.currentUser;
 
     const screenHeight = Dimensions.get('window').height;
     const modalHeight = screenHeight * 0.75;
+
+    const storeTask = async () => {
+        if (currentUser) {
+            const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+            
+            const tasksRef = collection(userProfileRef, 'Tasks');
+            try {
+                await addDoc(tasksRef, {
+                    name: newTask,
+                    description: newDescription,
+                    completed: isCompleted,
+                    date: selectedDate,
+                    time: isTime ? time : null,
+                    priority: selectedPriority,
+                    reminders: selectedReminders,
+                    repeatEnds: dateRepeatEnds,
+                    image: image,
+                });
+                await runTransaction(FIRESTORE_DB, async (transaction) => {
+                    const userProfileDoc = await transaction.get(userProfileRef);
+    
+                    const userProfileData = userProfileDoc.data();
+                    let posts = userProfileData.posts;
+    
+                    posts = userProfileData.posts + 1;
+
+                    transaction.update(userProfileRef, { posts });
+                });
+
+            } catch (error) {
+                console.error("Error storing task:", error);
+            }
+        } else {
+            console.error("Current user not found.");
+        }
+
+    }
+
+    const addImage = async () => {
+        let _image = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+        console.log(JSON.stringify(_image));
+        if (_image.assets && !_image.cancelled) {
+            setImage(_image.assets[0].uri);
+            return null;
+        }
+        return true;
+    };
 
     const reminderNoTime = [
         { label: 'On the day (9:00 am)' },
@@ -129,8 +186,17 @@ const TaskCreation = forwardRef(( props, ref) => {
         }, 100);
     };
 
-    const handleSubmitHelper = () => {
-        callSubmitHandler(newTask, isCompleted); // add newDescription, 
+    const handleSubmitHelper = async () => {
+        if (newTask.length !== 0) {
+            if (isCompleted) {
+                const cancelled = await addImage();
+                if (cancelled) {
+                    return;
+                }
+            }
+            storeTask();
+        }
+        callSubmitHandler();
         setNewTask('');
         setNewDescription('');
         setShowTaskCreation(false);
@@ -203,14 +269,18 @@ const TaskCreation = forwardRef(( props, ref) => {
                     openFolders={openFolders}
                     toggleFolder={toggleFolder} />
                 </Modal>
-                {!showTaskCreation && (<View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={handleAddTask}>
-                        <View style={styles.addTaskButtonWrapper}>
-                            <Text style={styles.addTaskText}>+</Text>
-                        </View>
-                    </TouchableOpacity>
-                </View>
-                )}
+                {!showTaskCreation && (<View style={styles.bottomBar}>
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity onPress={handleAddTask}>
+                            <View style={styles.addTaskButtonWrapper}>
+                                <Text style={styles.addTaskText}>+</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.navBar}>
+                        <NavBar navigation={nav} style={styles.navBarContainer}></NavBar>
+                    </View>
+                </View>)}
                 {showTaskCreation && (
                     <KeyboardAccessoryView 
                         style={styles.taskCustomization}
@@ -322,7 +392,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         alignItems: 'flex-end',
         right: 16,
-        bottom: 32,
+        bottom: 64,
     },
     taskCustomization: {
         backgroundColor: '#FFF',
@@ -458,6 +528,11 @@ const styles = StyleSheet.create({
       },
       titleText: {
         fontSize: 18,
+      },
+      navBar: {
+        position: 'absolute',
+        width: '100%',
+        bottom: 34,
       }
 })
 
