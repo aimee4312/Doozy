@@ -60,7 +60,7 @@ class Register extends Component {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
                 <ImageBackground
-                    source={require('../../assets/background.jpg')}
+                    source={require('../../assets/background2.jpg')}
                     style={styles.backgroundImage}
                     resizeMode="cover"
                 >
