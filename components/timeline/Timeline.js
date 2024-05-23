@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import NavBar from '../auth/NavigationBar'
 
 class Timeline extends Component {
   constructor(props) {
@@ -31,24 +32,19 @@ class Timeline extends Component {
     }
   }
 
-  handlePostPress = (userId) => {
-    // this.props.navigation.navigate('userProfile', { userId });
-    console.log('Clicked on post. Owner ID:', userId);
-  };
-
   renderTask = ({ item }) => (
-    <TouchableOpacity onPress={() => this.handlePostPress(item.ownerId)}>
-      <View style={styles.postContainer}>
-        <Image source={{ uri: item.image }} style={styles.postImage} />
-        <View style={styles.taskInfo}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.taskName}>{item.name}</Text>
-            <Text style={styles.taskDate}>{item.date}</Text>
+    <View style={styles.container}>
+        <View style={styles.postContainer}>
+          <Image source={{ uri: item.image }} style={styles.postImage} />
+          <View style={styles.taskInfo}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.taskName}>{item.name}</Text>
+              <Text style={styles.taskDate}>{item.date}</Text>
+            </View>
+            <Text style={styles.taskDescription}>{item.description}</Text>
           </View>
-          <Text style={styles.taskDescription}>{item.description}</Text>
         </View>
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 
   render() {
@@ -62,17 +58,18 @@ class Timeline extends Component {
           renderItem={this.renderTask}
           keyExtractor={(item) => item.id.toString()}
         />
+        <NavBar navigation={this.props.navigation} style={styles.navBarContainer}></NavBar>
       </View>
     );
   }
-  
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 20,
+    paddingTop: 16,
+    paddingBottom: 35,
     paddingHorizontal: 10,
   },
   postContainer: {

@@ -7,38 +7,39 @@ const Bar = ({ navigation }) => {
     
     return (
         <View style={styles.bar}>
+            <View style={styles.emptySpace} />
             <TouchableOpacity 
-            onPress={() => navigation.navigate('Home')}
-            style={[styles.button]}>
-                <Text>
-                    Home
-                </Text>
+                onPress={() => navigation.navigate('Timeline')}
+                style={styles.button}>
+                <Text>Home</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-            onPress={() => navigation.navigate('Login')}
-            style={[styles.button]}>
-                <Text>
-                    Login
-                </Text>
+                onPress={() => navigation.navigate('TaskList')}
+                style={styles.button}>
+                <Text>Task</Text>
             </TouchableOpacity>
+            <TouchableOpacity 
+                onPress={() => navigation.navigate('Profile')}
+                style={styles.button}>
+                <Text>Profile</Text>
+            </TouchableOpacity>
+            <View style={styles.emptySpace} />
         </View>
     )
 }
 
 const styles = StyleSheet.create({
     bar: {
-        backgroundColor: 'skyblue',
         flexDirection: 'row',
+        justifyContent: 'space-evenly',
     },
     button: {
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        borderRadius: 4,
-        alignSelf: 'flex-start',
-        marginHorizontal: '1%',
-        marginBottom: 6,
-        minWidth: '50%',
-        textAlign: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+    },
+    emptySpace: {
+        flex: 0.001,
     }
 })
 

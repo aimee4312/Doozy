@@ -1,4 +1,4 @@
-import { React, Component } from 'react';
+import React, { Component } from 'react';
 import { FIREBASE_AUTH } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
@@ -23,11 +23,11 @@ class App extends Component {
 
   componentDidMount() {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {
-        if (user && user.emailVerified) {
-            this.setState({ loggedIn: true });
-        } else {
-            this.setState({ loggedIn: false });
-        }
+      if (user && user.emailVerified) {
+        this.setState({ loggedIn: true });
+      } else {
+        this.setState({ loggedIn: false });
+      }
     });
 
     this.unsubscribe = unsubscribe;
@@ -37,18 +37,21 @@ class App extends Component {
     const { loggedIn } = this.state;
     return (
       <NavigationContainer>
-      <Stack.Navigator initialRouteName={loggedIn ? "Profile" : "Landing"}>
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="Landing" component={LandingScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen  name="TaskList" component={ TaskListScreen } options={{ headShown: false}} />
-        <Stack.Screen name="Timeline" component={TimelineScreen} />
-        <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
-        <Stack.Screen name="AddTask" component={AddTaskScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={loggedIn ? "Profile" : "Landing"}
+          screenOptions={{ animationEnabled: false }}
+        >
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
+          <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }}/>
+          <Stack.Screen name="TaskList" component={TaskListScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Timeline" component={TimelineScreen} />
+          <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
+          <Stack.Screen name="AddTask" component={AddTaskScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
     );
   }
 }
