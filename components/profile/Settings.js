@@ -1,9 +1,8 @@
-import {React, useState, useEffect } from 'react';
-import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail } from 'firebase/auth';
-
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
@@ -15,9 +14,9 @@ export default function Settings() {
 
     useEffect(() => {
         fetchUserProfile();
-    }, [userProfile]);
+    }, []);
 
-    const fetchUserProfile = async () => {``
+    const fetchUserProfile = async () => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
 
@@ -35,22 +34,20 @@ export default function Settings() {
     const updateUserProfile = async () => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-            
+
             try {
                 await updateDoc(userProfileRef, {
                     name: name,
                 });
 
-                if (email || password)
-                {
+                if (email || password) {
                     const credential = EmailAuthProvider.credential(currentUser.email, oldPassword);
                     await reauthenticateWithCredential(currentUser, credential);
 
                     if (email) {
-
                         await verifyBeforeUpdateEmail(currentUser, email);
                         console.log("Email verification sent!");
-        
+
                         while (!currentUser.emailVerified) {
                             await currentUser.reload();
                             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -59,11 +56,11 @@ export default function Settings() {
                         await updateDoc(userProfileRef, {
                             email: email,
                         });
-        
+
                         await updateEmail(currentUser, email);
                         console.log('Email updated!');
                     }
-        
+
                     if (password) {
                         await updatePassword(currentUser, password);
                         console.log('Password updated!');
@@ -76,60 +73,68 @@ export default function Settings() {
             }
         }
     };
-    
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
     };
 
     return (
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.container}
-            >
-                <View>
-                    <Text>New Name</Text>
-                    <TextInput
-                        placeholder="New Name"
-                        onChangeText={setName}
-                        style={styles.textBoxes}
-                    />
-                </View>
-                <View>
-                    <Text>New Email</Text>
-                    <TextInput
-                        placeholder="New Email"
-                        onChangeText={setEmail}
-                        style={styles.textBoxes}
-                    />
-                </View>
-                <View>
-                    <Text>Old Password</Text>
-                    <TextInput
-                        placeholder="Old Password"
-                        secureTextEntry={true}
-                        onChangeText={setOldPassword}
-                        style={styles.textBoxes}
-                    />
-                </View>
-                <View>
-                    <Text>New Password</Text>
-                    <TextInput
-                        placeholder="New Password"
-                        secureTextEntry={true}
-                        onChangeText={setPassword}
-                        style={styles.textBoxes}
-                    />
-                </View>
-                <Button
-                    onPress={updateUserProfile}
-                    title="Save"
-                />
-            </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
+        <ImageBackground
+            source={require('../../assets/background3.jpg')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+        >
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.container}
+                >
+                    <View style={styles.formContainer}>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>New Name</Text>
+                            <TextInput
+                                placeholder="New Name"
+                                onChangeText={setName}
+                                style={[styles.input, styles.inputBackground]}
+                            />
+                        </View>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>New Email</Text>
+                            <TextInput
+                                placeholder="New Email"
+                                onChangeText={setEmail}
+                                style={[styles.input, styles.inputBackground]}
+                            />
+                        </View>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Old Password</Text>
+                            <TextInput
+                                placeholder="Old Password"
+                                secureTextEntry={true}
+                                onChangeText={setOldPassword}
+                                style={[styles.input, styles.inputBackground]}
+                            />
+                        </View>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>New Password</Text>
+                            <TextInput
+                                placeholder="New Password"
+                                secureTextEntry={true}
+                                onChangeText={setPassword}
+                                style={[styles.input, styles.inputBackground]}
+                            />
+                        </View>
+                        <Button
+                            onPress={updateUserProfile}
+                            title="Save"
+                            color="#007AFF"
+                        />
+                    </View>
+                </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+        </ImageBackground>
     )
-} 
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -137,15 +142,35 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
-
-    textBoxes: {
-        fontSize: 20,
+    formContainer: {
+        width: '80%',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: 20,
+        borderRadius: 10,
+    },
+    inputContainer: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 16,
+        marginBottom: 5,
+        color: '#333',
+    },
+    input: {
+        fontSize: 16,
         borderWidth: 1,
-        borderColor: '#000000',
-        borderRadius: 20,
-        width: 200,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        width: '100%',
         height: 40,
         paddingHorizontal: 10,
-        marginBottom: 30,
-    }
-})
+    },
+    inputBackground: {
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    },
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+    },
+});

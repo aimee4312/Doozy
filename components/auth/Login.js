@@ -1,30 +1,32 @@
 import React, { Component } from 'react';
-import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
-
-export class Login extends Component {
+class Login extends Component {
     constructor(props) {
         super(props);
         this.state = {
             email: '',
             password: ''
-        }
-        this.onSignUp = this.onSignIn.bind(this);
-
+        };
+        this.onSignIn = this.onSignIn.bind(this);
     }
 
     onSignIn() {
         const { email, password } = this.state;
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
             .then((result) => {
-                console.log(result)
-                this.props.navigation.navigate('TaskList');
+                console.log(result);
+                this.props.navigation.navigate('Profile');
             })
             .catch((error) => {
-                console.log(error)
+                console.log(error);
             });
+    }
+
+    goBackHome() {
+        this.props.navigation.goBack();
     }
 
     dismissKeyboard() {
@@ -34,32 +36,46 @@ export class Login extends Component {
     render() {
         return (
             <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.container}
+                <ImageBackground
+                    source={require('../../assets/background2.jpg')}
+                    style={styles.backgroundImage}
+                    resizeMode="cover"
                 >
-                    <View style={styles.container}>
-                        <Text>Email</Text>
-                        <TextInput
-                            placeholder="Email"
-                            onChangeText={(email) => this.setState({ email })}
-                            style={styles.textBoxes}
-                        />
-                        <Text>Password</Text>
-                        <TextInput
-                            placeholder="Password"
-                            secureTextEntry={true}
-                            onChangeText={(password) => this.setState({ password })}
-                            style={styles.textBoxes}
-                        />
-                        <Button
-                            onPress={() => this.onSignIn()}
-                            title="Sign In"
-                        />
-                    </View>
-                </KeyboardAvoidingView>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={styles.container}
+                    >
+                        <Text style={styles.title}>Login</Text>
+                        <View style={styles.formContainer}>
+                            <Text style={styles.label}>Email</Text>
+                            <TextInput
+                                placeholder="Email"
+                                onChangeText={(email) => this.setState({ email })}
+                                style={styles.textBox}
+                            />
+                            <Text style={styles.label}>Password</Text>
+                            <TextInput
+                                placeholder="Password"
+                                secureTextEntry={true}
+                                onChangeText={(password) => this.setState({ password })}
+                                style={styles.textBox}
+                            />
+                            <Button
+                                onPress={() => this.onSignIn()}
+                                title="Sign In"
+                                color="#007bff"
+                            />
+                            <Button
+                                onPress={() => this.goBackHome()}
+                                title="Home"
+                                color="#CCC"
+                                style={styles.smallButton}
+                            />
+                        </View>
+                    </KeyboardAvoidingView>
+                </ImageBackground>
             </TouchableWithoutFeedback>
-        )
+        );
     }
 }
 
@@ -67,19 +83,46 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
-
-    textBoxes: {
-        fontSize: 20,
+    formContainer: {
+        width: '80%',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: 20,
+        borderRadius: 10,
+    },
+    label: {
+        fontSize: 18,
+        marginBottom: 5,
+        color: '#333',
+        textAlign: 'left',
+    },
+    textBox: {
+        fontSize: 16,
         borderWidth: 1,
-        borderColor: '#000000',
-        borderRadius: 20,
-        width: 200,
+        borderColor: '#ccc',
+        borderRadius: 10,
+        width: '100%',
         height: 40,
         paddingHorizontal: 10,
-        marginBottom: 30,
-    }
-})
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'left',
+    },
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+    },
+    smallButton: {
+        fontSize: 12,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+    },
+});
 
-export default Login
+export default Login;

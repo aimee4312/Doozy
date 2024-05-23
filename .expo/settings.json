@@ -4,7 +4,5 @@
   "dev": true,
   "minify": false,
   "urlRandomness": "S695gH0",
-  "https": false,
-  "scheme": "exp+doozy",
-  "devClient": false
+  "https": false
 }
