@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail } from 'firebase/auth';
+import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail, signOut } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
@@ -11,6 +12,7 @@ export default function Settings() {
     const [oldPassword, setOldPassword] = useState('');
     const [password, setPassword] = useState('');
     const currentUser = FIREBASE_AUTH.currentUser;
+    const navigation = useNavigation();
 
     useEffect(() => {
         fetchUserProfile();
@@ -78,6 +80,17 @@ export default function Settings() {
         Keyboard.dismiss();
     };
 
+    const onLogout = () => {
+        signOut(FIREBASE_AUTH)
+        .then(() => {
+            console.log("User signed out");
+            navigation.navigate('Landing');
+        })
+        .catch(error => {
+            console.error("Error signing out: ", error);
+        });
+    };
+
     return (
         <ImageBackground
             source={require('../../assets/background3.jpg')}
@@ -127,6 +140,11 @@ export default function Settings() {
                         <Button
                             onPress={updateUserProfile}
                             title="Save"
+                            color="#007AFF"
+                        />
+                        <Button
+                            onPress={onLogout}
+                            title="Logout"
                             color="#007AFF"
                         />
                     </View>

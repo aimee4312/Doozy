@@ -2,6 +2,7 @@ import React, { Component, useState } from 'react';
 import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import UploadImage from './profilePic';
 import NavBar from '../auth/NavigationBar';
 
 export class Profile extends Component {
@@ -32,6 +33,10 @@ export class Profile extends Component {
     };
   }
 
+  goToSettingsScreen = () => {
+    this.props.navigation.navigate('Settings');
+  }
+
   render() {
     const { userProfile, tasks } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
@@ -44,11 +49,12 @@ export class Profile extends Component {
       >
         <SafeAreaView style={styles.container}>
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-            <TouchableOpacity onPress={this.onSettings}>
+            <TouchableOpacity onPress={this.goToSettingsScreen}>
               <Ionicons name="settings-sharp" size={24} color="black" />
             </TouchableOpacity>
             {userProfile && (
               <View style={styles.content}>
+                <UploadImage />
                 <View style={styles.bioTextContainer}>
                   <Text style={styles.bioText}>{userProfile.name}</Text>
                   <View style={styles.detailsContainer}>
