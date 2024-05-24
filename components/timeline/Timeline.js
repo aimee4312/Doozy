@@ -1,53 +1,36 @@
 import React, { Component } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground } from 'react-native';
-// import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-// import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import NavBar from '../auth/NavigationBar';
 
 class Timeline extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      tasks: [
-        {
-          id: 1,
-          name: 'Task 1',
-          description: 'Description for Task 1',
-          date: '2024-05-25',
-          image: 'https://via.placeholder.com/150',
-          completed: true,
-        },
-        {
-          id: 2,
-          name: 'Task 2',
-          description: 'Description for Task 2',
-          date: '2024-05-26',
-          image: 'https://via.placeholder.com/150',
-          completed: true,
-        },
-      ],
+      tasks: [],
     };
   }
   
-  // componentDidMount() {
-  //   const currentUser = FIREBASE_AUTH.currentUser;
+  componentDidMount() {
+    const currentUser = FIREBASE_AUTH.currentUser;
 
-  //   if (currentUser) {
-  //     const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+    if (currentUser) {
+      const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
 
-  //     getDocs(tasksRef)
-  //       .then((querySnapshot) => {
-  //         const tasks = [];
-  //         querySnapshot.forEach((doc) => {
-  //           tasks.push({ id: doc.id, ...doc.data() });
-  //         });
-  //         this.setState({ tasks });
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error fetching tasks: ", error);
-  //       });
-  //   }
-  // }
+      getDocs(tasksRef)
+        .then((querySnapshot) => {
+          const tasks = [];
+          querySnapshot.forEach((doc) => {
+            tasks.push({ id: doc.id, ...doc.data() });
+          });
+          this.setState({ tasks });
+        })
+        .catch((error) => {
+          console.error("Error fetching tasks: ", error);
+        });
+    }
+  }
 
   renderTask = ({ item }) => (
     <View style={styles.postContainer}>
