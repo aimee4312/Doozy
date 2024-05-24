@@ -1,5 +1,7 @@
-import React, { Component, useState } from 'react';
-import { View, Text, Button, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground } from 'react-native';
+import React, { Component } from 'react';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
@@ -9,28 +11,74 @@ export class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      userProfile: {
-        name: "John Doe",
-        friends: 100,
-        posts: 50
-      },
-      tasks: [
-        {
-          id: 1,
-          name: 'Task 1',
-          description: 'Description for Task 1',
-          image: 'https://via.placeholder.com/150',
-          completed: true,
-        },
-        {
-          id: 2,
-          name: 'Task 2',
-          description: 'Description for Task 2',
-          image: 'https://via.placeholder.com/150',
-          completed: true,
-        },
-      ],
+      userProfile: null,
+      tasks: [],
+      refreshing: false,
     };
+  }
+
+  componentDidMount() {
+    this.focusListener = this.props.navigation.addListener('focus', this.fetchData);
+
+    // Fetch data initially when the component mounts
+    this.fetchData();
+  }
+
+  componentWillUnmount() {
+    // Remove the event listener
+    this.focusListener();
+  }
+
+  fetchData = () => {
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+
+      return getDoc(userProfileRef)
+        .then((docSnapshot) => {
+          if (docSnapshot.exists()) {
+            this.setState({ userProfile: docSnapshot.data() });
+          } else {
+            console.log("No such document!");
+          }
+
+          return getDocs(tasksRef);
+        })
+        .then((querySnapshot) => {
+          const tasks = [];
+          querySnapshot.forEach((doc) => {
+            tasks.push({ id: doc.id, ...doc.data() });
+          });
+          this.setState({ tasks });
+        })
+        .catch((error) => {
+          console.error("Error fetching data: ", error);
+        });
+    } else {
+      return Promise.resolve(); // Return a resolved promise if there is no currentUser
+    }
+  }
+
+  onRefresh = () => {
+    this.setState({ refreshing: true });
+    this.fetchData().finally(() => {
+      this.setState({ refreshing: false });
+    });
+  }
+
+  onLogOut = () => {
+    FIREBASE_AUTH.signOut().then(() => {
+      this.props.navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Landing' }],
+        })
+      );
+    }).catch((error) => {
+      console.error("Error logging out: ", error);
+    });
   }
 
   goToSettingsScreen = () => {
@@ -38,7 +86,7 @@ export class Profile extends Component {
   }
 
   render() {
-    const { userProfile, tasks } = this.state;
+    const { userProfile, tasks, refreshing } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
 
     return (
@@ -48,7 +96,16 @@ export class Profile extends Component {
         resizeMode="cover"
       >
         <SafeAreaView style={styles.container}>
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <ScrollView 
+            style={styles.scrollView} 
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing}
+                onRefresh={this.onRefresh}
+              />
+            }
+          >
             <TouchableOpacity onPress={this.goToSettingsScreen}>
               <Ionicons name="settings-sharp" size={24} color="black" />
             </TouchableOpacity>
@@ -92,7 +149,6 @@ export class Profile extends Component {
       </ImageBackground>
     );
   }
-
 }
 
 const styles = StyleSheet.create({
@@ -112,15 +168,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
-    flex: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   bioTextContainer: {
     alignItems: 'center',
     width: '80%',
     borderRadius: 10,
-    height: '40%',
+    height: '20%',
   },
   detailsContainer: {
     flexDirection: 'row',
@@ -129,6 +184,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#70bdb8',
     width: '100%',
     borderRadius: 20,
+    height: '110%'
   },
   detail: {
     alignItems: 'center',
