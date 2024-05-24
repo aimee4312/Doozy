@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import NavBar from '../auth/NavigationBar';
@@ -9,10 +9,15 @@ class Timeline extends Component {
     super(props);
     this.state = {
       tasks: [],
+      refreshing: false, 
     };
   }
   
   componentDidMount() {
+    this.refreshTasks(); 
+  }
+
+  refreshTasks = () => {
     const currentUser = FIREBASE_AUTH.currentUser;
 
     if (currentUser) {
@@ -28,9 +33,18 @@ class Timeline extends Component {
         })
         .catch((error) => {
           console.error("Error fetching tasks: ", error);
+        })
+        .finally(() => {
+          this.setState({ refreshing: false }); 
         });
     }
   }
+
+  handleRefresh = () => {
+    this.setState({ refreshing: true }, () => {
+      this.refreshTasks();
+    });
+  };
 
   renderTask = ({ item }) => (
     <View style={styles.postContainer}>
@@ -46,7 +60,7 @@ class Timeline extends Component {
   );
 
   render() {
-    const { tasks } = this.state;
+    const { tasks, refreshing } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
   
     return (
@@ -61,6 +75,9 @@ class Timeline extends Component {
             renderItem={this.renderTask}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={{ flexGrow: 1 }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={this.handleRefresh} />
+            }
           />
           <NavBar navigation={this.props.navigation} style={styles.navBarContainer}></NavBar>
         </View>
