@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, addDoc, writeBatch } from "firebase/firestore";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl, TextInput, Button } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -125,36 +125,109 @@ export class Profile extends Component {
 
     if (currentUser) {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-      const friendsRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Friends');
+      const usernameDoc = doc(FIRESTORE_DB, "Usernames", friendUsername);
 
-      return getDoc(userProfileRef)
-        .then((docSnapshot) => {
-          if (docSnapshot.exists()) {
-            this.setState({ userProfile: docSnapshot.data() });
-          } else {
-            console.log("No such document!");
-          }
+      try {
+        const usernameDocSnap = await getDoc(usernameDoc);
+        const userDocSnap = await getDoc(userProfileRef);
 
-          return getDocs(friendsRef);
+        // Creating batch job for adding friend and adding you as an incoming friend request to said friend
+        const batch = writeBatch(FIRESTORE_DB);
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friendUsername);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + usernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
+        
+        batch.set(newFriendRef, {  // Self
+          relationship: "outgoing_friend_request"
         })
-        .then((querySnapshot) => {
-          const friends = [];
-          querySnapshot.forEach((doc) => {
-            friends.push({ id: doc.id, ...doc.data() });
-          });
-          this.setState({ friends });
+        batch.set(incomingFriendRef, {  // Friend
+          relationship: "incoming_friend_request"
         })
-        .catch((error) => {
-          console.error("Error fetching data: ", error);
-        });
+
+        await batch.commit();
+
+      } catch(error) {
+        console.error("Error adding friend request:", error);
+      }
     } else {
-      return Promise.resolve(); 
+      console.error("Current user not found.");
+    }
+  }
+
+  async acceptFriend(friend) {
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const usernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+
+      try {
+        const usernameDocSnap = await getDoc(usernameDoc);
+        const userDocSnap = await getDoc(userProfileRef);
+
+        // Creating batch job for adding friend and adding you as an incoming friend request to said friend
+        const batch = writeBatch(FIRESTORE_DB);
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + usernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
+        
+        batch.update(newFriendRef, {  // Self
+          relationship: "mutual"
+        })
+        batch.update(incomingFriendRef, {  // Friend
+          relationship: "mutual"
+        })
+
+        await batch.commit();
+
+        this.componentDidMount();
+
+      } catch(error) {
+        console.error("Error adding friend request:", error);
+      }
+    } else {
+      console.error("Current user not found.");
+    }
+  }
+
+  async rejectFriend(friend) {
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const usernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+
+      try {
+        const usernameDocSnap = await getDoc(usernameDoc);
+        const userDocSnap = await getDoc(userProfileRef);
+
+        // Creating batch job for adding friend and adding you as an incoming friend request to said friend
+        const batch = writeBatch(FIRESTORE_DB);
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + usernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
+        
+        batch.delete(newFriendRef);
+        batch.delete(incomingFriendRef);
+
+        await batch.commit();
+
+        this.componentDidMount();
+
+      } catch(error) {
+        console.error("Error adding friend request:", error);
+      }
+    } else {
+      console.error("Current user not found.");
     }
   }
 
   render() {
     const { userProfile, tasks, refreshing, friends } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
+
+    const mutualFriends = friends.filter(friend => friend.relationship == "mutual");
+    const pendingFriends = friends.filter(friend => friend.relationship == "incoming_friend_request");
 
     return (
       <ImageBackground
@@ -205,19 +278,46 @@ export class Profile extends Component {
                   onPress={() => this.addFriend()}
                   title="Add"
                   color="#007bff"
-                  style={styles.friendAddButton}
-              >
+                  style={styles.friendAddButton}>
                 <Text style={styles.friendAddButtonText}>Add</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.tasksContainer}>
               <View style={styles.grid}>
-                
-                {friends.map((friend, index) => (
+                {pendingFriends.map((friend, index) => (
+                  <View key={index} onPress={() => this.handleImagePress(friend)}>
+                    
+                    <View style={styles.incomingFriendRequest}>
+                      <View style={styles.friendRequest}>
+                        <Text style={styles.friendName}>{friend.id} wants to be friends</Text>
+                      </View>
+                      <TouchableOpacity
+                          onPress={() => this.acceptFriend(friend)}
+                          title="Accept"
+                          color="#98FB98"
+                          style={styles.acceptFriendButton}>
+                        <Text style={styles.friendAddButtonText}>Accept</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                          onPress={() => this.rejectFriend(friend)}
+                          title="Delete"
+                          color="#FA8072"
+                          style={styles.rejectFriendButton}>
+                        <Text style={styles.friendAddButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.tasksContainer}>
+              <View style={styles.grid}>
+                {mutualFriends.map((friend, index) => (
                   <View key={index} onPress={() => this.handleImagePress(friend)}>
                     <View style={styles.friendList}>
-                      <Text style={styles.friendName}>{friend.username}</Text>
+                      <Text style={styles.friendName}>{friend.id}</Text>
                     </View>
                   </View>
                 ))}
@@ -373,6 +473,35 @@ const styles = StyleSheet.create({
   friendName: {
     fontWeight: 'bold',
     fontSize: 20,
+  },
+  friendRequest: {
+    flexDirection: 'collumn',
+    padding: 15,
+    width: '60%',
+    backgroundColor: 'rgba(245, 252, 255, 0.8)',
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  incomingFriendRequest: {
+    flexDirection: 'row',
+  },
+  acceptFriendButton: {
+    width: '20%',
+    backgroundColor: '#98FB98',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: '#F5FCFF',
+    flexDirection: 'row',
+  },
+  rejectFriendButton: {
+    width: '20%',
+    backgroundColor: '#FA8072',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: '#F5FCFF',
+    flexDirection: 'row',
   },
 });
 
