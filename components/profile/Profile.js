@@ -229,6 +229,98 @@ export class Profile extends Component {
     const mutualFriends = friends.filter(friend => friend.relationship == "mutual");
     const pendingFriends = friends.filter(friend => friend.relationship == "incoming_friend_request");
 
+    var viewPosts = true;
+
+    function postTabClicked() {
+      console.log("postTabClicked");
+      viewPosts = true;
+    }
+
+    function friendsTabClicked() {
+      console.log("friendsTabClicked");
+      viewPosts = false;
+    }
+
+    function Post_Friend_Area() {
+      if (false) {
+        return (
+        <View style={styles.tasksContainer}>
+          <View style={styles.grid}>
+            {completedTasks.map((task, index) => (
+              <View key={index} onPress={() => this.handleImagePress(task)}>
+                <View style={styles.postContainer}>
+                  <Image source={{ uri: task.image }} style={styles.photo} />
+                  <View style={styles.postDescription}>
+                    <Text style={styles.taskTitle}>{task.name}</Text>
+                    <Text>{task.description}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )} else {
+        return (
+        <View>
+          <View style={styles.friendSearchContainer}>
+            <TextInput
+                placeholder="Username"
+                onChangeText={(friendUsername) => this.setState({ friendUsername })}
+                style={styles.friendSearchBox}
+            />
+            <TouchableOpacity
+                onPress={() => this.addFriend()}
+                title="Add"
+                color="#007bff"
+                style={styles.friendAddButton}>
+              <Text style={styles.friendAddButtonText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {pendingFriends.map((friend, index) => (
+                <View key={index} onPress={() => this.handleImagePress(friend)}>
+                  
+                  <View style={styles.incomingFriendRequest}>
+                    <View style={styles.friendRequest}>
+                      <Text style={styles.friendName}>{friend.id} wants to be friends</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => this.acceptFriend(friend)}
+                        title="Accept"
+                        color="#98FB98"
+                        style={styles.acceptFriendButton}>
+                      <Text style={styles.friendAddButtonText}>Accept</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => this.rejectFriend(friend)}
+                        title="Delete"
+                        color="#FA8072"
+                        style={styles.rejectFriendButton}>
+                      <Text style={styles.friendAddButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {mutualFriends.map((friend, index) => (
+                <View key={index} onPress={() => this.handleImagePress(friend)}>
+                  <View style={styles.friendList}>
+                    <Text style={styles.friendName}>{friend.id}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      )}
+    }
+
     return (
       <ImageBackground
         source={require('../../assets/background4.jpg')}
@@ -255,11 +347,11 @@ export class Profile extends Component {
                 <View style={styles.bioTextContainer}>
                   <Text style={styles.bioText}>{userProfile.name}</Text>
                   <View style={styles.detailsContainer}>
-                    <TouchableOpacity style={styles.detail} onPress={console.log("Posts button pressed")}>
+                    <TouchableOpacity style={styles.detail} onPress={() => (postTabClicked())}>
                       <Text style={styles.detailText}>Posts</Text>
                       <Text style={styles.detailStat}>{userProfile.posts}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.detail} onPress={console.log("Friends button pressed")}>
+                    <TouchableOpacity style={styles.detail} onPress={() => (friendsTabClicked())}>
                       <Text style={styles.detailText}>Friends</Text>
                       <Text style={styles.detailStat}>{userProfile.numFriends}</Text>
                     </TouchableOpacity>
@@ -268,62 +360,65 @@ export class Profile extends Component {
               </View>
             )}
 
-            <View style={styles.friendSearchContainer}>
-              <TextInput
-                  placeholder="Username"
-                  onChangeText={(friendUsername) => this.setState({ friendUsername })}
-                  style={styles.friendSearchBox}
-              />
-              <TouchableOpacity
-                  onPress={() => this.addFriend()}
-                  title="Add"
-                  color="#007bff"
-                  style={styles.friendAddButton}>
-                <Text style={styles.friendAddButtonText}>Add</Text>
-              </TouchableOpacity>
-            </View>
+            {/* <Post_Friend_Area /> */}
 
-            <View style={styles.tasksContainer}>
-              <View style={styles.grid}>
-                {pendingFriends.map((friend, index) => (
-                  <View key={index} onPress={() => this.handleImagePress(friend)}>
-                    
-                    <View style={styles.incomingFriendRequest}>
-                      <View style={styles.friendRequest}>
-                        <Text style={styles.friendName}>{friend.id} wants to be friends</Text>
+            <View>
+              <View style={styles.friendSearchContainer}>
+                <TextInput
+                    placeholder="Username"
+                    onChangeText={(friendUsername) => this.setState({ friendUsername })}
+                    style={styles.friendSearchBox}
+                />
+                <TouchableOpacity
+                    onPress={() => this.addFriend()}
+                    title="Add"
+                    color="#007bff"
+                    style={styles.friendAddButton}>
+                  <Text style={styles.friendAddButtonText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.tasksContainer}>
+                <View style={styles.grid}>
+                  {pendingFriends.map((friend, index) => (
+                    <View key={index} onPress={() => this.handleImagePress(friend)}>
+                      
+                      <View style={styles.incomingFriendRequest}>
+                        <View style={styles.friendRequest}>
+                          <Text style={styles.friendName}>{friend.id} wants to be friends</Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => this.acceptFriend(friend)}
+                            title="Accept"
+                            color="#98FB98"
+                            style={styles.acceptFriendButton}>
+                          <Text style={styles.friendAddButtonText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => this.rejectFriend(friend)}
+                            title="Delete"
+                            color="#FA8072"
+                            style={styles.rejectFriendButton}>
+                          <Text style={styles.friendAddButtonText}>Delete</Text>
+                        </TouchableOpacity>
                       </View>
-                      <TouchableOpacity
-                          onPress={() => this.acceptFriend(friend)}
-                          title="Accept"
-                          color="#98FB98"
-                          style={styles.acceptFriendButton}>
-                        <Text style={styles.friendAddButtonText}>Accept</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                          onPress={() => this.rejectFriend(friend)}
-                          title="Delete"
-                          color="#FA8072"
-                          style={styles.rejectFriendButton}>
-                        <Text style={styles.friendAddButtonText}>Delete</Text>
-                      </TouchableOpacity>
                     </View>
-                  </View>
-                ))}
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.tasksContainer}>
+                <View style={styles.grid}>
+                  {mutualFriends.map((friend, index) => (
+                    <View key={index} onPress={() => this.handleImagePress(friend)}>
+                      <View style={styles.friendList}>
+                        <Text style={styles.friendName}>{friend.id}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
               </View>
             </View>
-
-            <View style={styles.tasksContainer}>
-              <View style={styles.grid}>
-                {mutualFriends.map((friend, index) => (
-                  <View key={index} onPress={() => this.handleImagePress(friend)}>
-                    <View style={styles.friendList}>
-                      <Text style={styles.friendName}>{friend.id}</Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-
 
             <View style={styles.tasksContainer}>
               <View style={styles.grid}>
