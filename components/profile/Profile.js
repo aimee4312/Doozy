@@ -159,24 +159,42 @@ export class Profile extends Component {
 
     if (currentUser) {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-      const usernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+      const firendUsernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
 
       try {
-        const usernameDocSnap = await getDoc(usernameDoc);
+        const friendUsernameDocSnap = await getDoc(firendUsernameDoc);
         const userDocSnap = await getDoc(userProfileRef);
+
+        const friendProfileRef = doc(FIRESTORE_DB, 'Users', friendUsernameDocSnap.data().uid);
+
+        const friendProfileDoc = await transaction.get(friendProfileRef);
+        const userProfileDoc = await transaction.get(userProfileRef);
+    
+        // Incrementing current user's friend count
+        const userProfileData = userProfileDoc.data();
+        let userNumFriends = userProfileData.numFriends;
+        userNumFriends += 1;
+
+        // Incrementing the friend's friend count
+        const friendProfileData = friendProfileDoc.data();
+        let friendNumFriends = friendProfileData.numFriends;
+        friendNumFriends += 1;
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + friendUsernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
 
         // Creating batch job for adding friend and adding you as an incoming friend request to said friend
         const batch = writeBatch(FIRESTORE_DB);
 
-        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
-        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + usernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
-        
         batch.update(newFriendRef, {  // Self
           relationship: "mutual"
         })
         batch.update(incomingFriendRef, {  // Friend
           relationship: "mutual"
         })
+
+        batch.update(userProfileRef, { numFriends: userNumFriends });
+        batch.update(friendProfileRef, { numFriends: friendNumFriends });
 
         await batch.commit();
 
@@ -363,6 +381,9 @@ export class Profile extends Component {
             {/* <Post_Friend_Area /> */}
 
             <View>
+              <View style={styles.lableTextBox}>
+                <Text style={styles.friendAddButtonText}>Friends</Text>
+              </View>
               <View style={styles.friendSearchContainer}>
                 <TextInput
                     placeholder="Username"
@@ -420,6 +441,10 @@ export class Profile extends Component {
               </View>
             </View>
 
+            <View style={styles.lableTextPostsBox}>
+              <Text style={styles.friendAddButtonText}>Posts</Text>
+            </View>
+
             <View style={styles.tasksContainer}>
               <View style={styles.grid}>
                 {completedTasks.map((task, index) => (
@@ -444,7 +469,7 @@ export class Profile extends Component {
   }
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
     flex: 1,
   },
@@ -598,6 +623,20 @@ const styles = StyleSheet.create({
     borderColor: '#F5FCFF',
     flexDirection: 'row',
   },
+  lableTextBox: {
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(200, 200, 200, 0.8)',
+    margin: 10,
+    marginBottom: 0,
+  }, 
+  lableTextPostsBox: {
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(200, 200, 200, 0.8)',
+    margin: 10,
+
+  }
 });
 
 export default Profile;
