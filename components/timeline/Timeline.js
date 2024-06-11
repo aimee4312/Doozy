@@ -45,7 +45,7 @@ class Timeline extends Component {
           .then((querySnapshot) => {
             const newTasks = tasks;
             querySnapshot.forEach((doc) => {
-              newTasks.push({ id: doc.id, ...doc.data() });
+              newTasks.push({friend_username: friend.id, id: doc.id, ...doc.data() });
             });
             this.setState({ tasks: newTasks });
           })
@@ -68,6 +68,7 @@ class Timeline extends Component {
 
   renderTask = ({ item }) => (
     <View style={styles.postContainer}>
+      <Text style={styles.postUsername}>{item.friend_username}</Text>
       <Image source={{ uri: item.image }} style={styles.postImage} />
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
     marginTop: 40,
     backgroundColor: 'rgba(249, 249, 249, 0.7)',
-    borderRadius: 10,
+    borderRadius: 0,
     overflow: 'hidden',
     elevation: 3,
   },
@@ -146,6 +147,12 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     width: '100%',
+  },
+  postUsername: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    padding: 5,
+    margin: 3,
   },
 });
 

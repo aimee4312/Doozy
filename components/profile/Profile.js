@@ -158,26 +158,23 @@ export class Profile extends Component {
     const currentUser = FIREBASE_AUTH.currentUser;
 
     if (currentUser) {
-      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-      const firendUsernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
-
       try {
-        const friendUsernameDocSnap = await getDoc(firendUsernameDoc);
-        const userDocSnap = await getDoc(userProfileRef);
+        // self
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
 
+        // Friend
+        const firendUsernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+        const friendUsernameDocSnap = await getDoc(firendUsernameDoc);
         const friendProfileRef = doc(FIRESTORE_DB, 'Users', friendUsernameDocSnap.data().uid);
 
-        const friendProfileDoc = await transaction.get(friendProfileRef);
-        const userProfileDoc = await transaction.get(userProfileRef);
-    
         // Incrementing current user's friend count
-        const userProfileData = userProfileDoc.data();
-        let userNumFriends = userProfileData.numFriends;
+        const userDocSnap = await getDoc(userProfileRef);
+        let userNumFriends = userDocSnap.data().numFriends;
         userNumFriends += 1;
 
         // Incrementing the friend's friend count
-        const friendProfileData = friendProfileDoc.data();
-        let friendNumFriends = friendProfileData.numFriends;
+        const friendProfileDoc = await getDoc(friendProfileRef);
+        let friendNumFriends = friendProfileDoc.data().numFriends;
         friendNumFriends += 1;
 
         const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
