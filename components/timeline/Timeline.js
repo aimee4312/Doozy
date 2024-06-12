@@ -17,26 +17,46 @@ class Timeline extends Component {
     this.refreshTasks(); 
   }
 
-  refreshTasks = () => {
+  async refreshTasks() {
+    const emptyTasks = [];
+    this.setState({ tasks: emptyTasks });
+
+
     const currentUser = FIREBASE_AUTH.currentUser;
 
     if (currentUser) {
-      const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+      const friendsRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Friends');
 
-      getDocs(tasksRef)
-        .then((querySnapshot) => {
-          const tasks = [];
-          querySnapshot.forEach((doc) => {
-            tasks.push({ id: doc.id, ...doc.data() });
-          });
-          this.setState({ tasks });
-        })
-        .catch((error) => {
-          console.error("Error fetching tasks: ", error);
-        })
-        .finally(() => {
-          this.setState({ refreshing: false }); 
+      try {
+        const querySnapshot = await getDocs(friendsRef);
+        const friends = [];
+        querySnapshot.forEach((doc) => {
+          if (doc.data().relationship == "mutual") {
+            friends.push({ id: doc.id, ...doc.data() });
+          }
         });
+        for (const friend of friends) {
+          const { tasks } = this.state;
+          const usernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+          const usernameDocSnap = await getDoc(usernameDoc);
+          const tasksRef = collection(FIRESTORE_DB, 'Users', usernameDocSnap.data().uid, 'Tasks');
+
+          getDocs(tasksRef)
+          .then((querySnapshot) => {
+            const newTasks = tasks;
+            querySnapshot.forEach((doc) => {
+              newTasks.push({friend_username: friend.id, id: doc.id, ...doc.data() });
+            });
+            this.setState({ tasks: newTasks });
+          })
+          .catch((error) => {
+            console.error("Error fetching tasks: ", error);
+          })
+        }
+      } catch(error) {
+        console.error("Error fetching tasks: ", error);
+      }
+      this.setState({ refreshing: false });
     }
   }
 
@@ -48,6 +68,7 @@ class Timeline extends Component {
 
   renderTask = ({ item }) => (
     <View style={styles.postContainer}>
+      <Text style={styles.postUsername}>{item.friend_username}</Text>
       <Image source={{ uri: item.image }} style={styles.postImage} />
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>
@@ -98,7 +119,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
     marginTop: 40,
     backgroundColor: 'rgba(249, 249, 249, 0.7)',
-    borderRadius: 10,
+    borderRadius: 0,
     overflow: 'hidden',
     elevation: 3,
   },
@@ -126,6 +147,12 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     width: '100%',
+  },
+  postUsername: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    padding: 5,
+    margin: 3,
   },
 });
 

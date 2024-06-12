@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl } from 'react-native';
+import { doc, getDoc, collection, getDocs, addDoc, writeBatch } from "firebase/firestore";
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl, TextInput, Button } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
@@ -14,12 +14,16 @@ export class Profile extends Component {
       userProfile: null,
       tasks: [],
       refreshing: false,
+      friendUsername: '',
+      friends: [],
     };
   }
 
   componentDidMount() {
     this.focusListener = this.props.navigation.addListener('focus', this.fetchData);
     this.fetchData();
+    this.focusListener = this.props.navigation.addListener('focusFriends', this.fetchDataFriends);
+    this.fetchDataFriends();
   }
 
   componentWillUnmount() {
@@ -58,6 +62,38 @@ export class Profile extends Component {
     }
   }
 
+  fetchDataFriends = () => {
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const friendsRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Friends');
+
+      return getDoc(userProfileRef)
+        .then((docSnapshot) => {
+          if (docSnapshot.exists()) {
+            this.setState({ userProfile: docSnapshot.data() });
+          } else {
+            console.log("No such document!");
+          }
+
+          return getDocs(friendsRef);
+        })
+        .then((querySnapshot) => {
+          const friends = [];
+          querySnapshot.forEach((doc) => {
+            friends.push({ id: doc.id, ...doc.data() });
+          });
+          this.setState({ friends });
+        })
+        .catch((error) => {
+          console.error("Error fetching data: ", error);
+        });
+    } else {
+      return Promise.resolve(); 
+    }
+  }
+
   onRefresh = () => {
     this.setState({ refreshing: true });
     this.fetchData().finally(() => {
@@ -82,9 +118,223 @@ export class Profile extends Component {
     this.props.navigation.navigate('Settings');
   }
 
+  async addFriend() {
+    const { friendUsername } = this.state;
+
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const usernameDoc = doc(FIRESTORE_DB, "Usernames", friendUsername);
+
+      try {
+        const usernameDocSnap = await getDoc(usernameDoc);
+        const userDocSnap = await getDoc(userProfileRef);
+
+        // Creating batch job for adding friend and adding you as an incoming friend request to said friend
+        const batch = writeBatch(FIRESTORE_DB);
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friendUsername);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + usernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
+        
+        batch.set(newFriendRef, {  // Self
+          relationship: "outgoing_friend_request"
+        })
+        batch.set(incomingFriendRef, {  // Friend
+          relationship: "incoming_friend_request"
+        })
+
+        await batch.commit();
+
+      } catch(error) {
+        console.error("Error adding friend request:", error);
+      }
+    } else {
+      console.error("Current user not found.");
+    }
+  }
+
+  async acceptFriend(friend) {
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      try {
+        // self
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+
+        // Friend
+        const firendUsernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+        const friendUsernameDocSnap = await getDoc(firendUsernameDoc);
+        const friendProfileRef = doc(FIRESTORE_DB, 'Users', friendUsernameDocSnap.data().uid);
+
+        // Incrementing current user's friend count
+        const userDocSnap = await getDoc(userProfileRef);
+        let userNumFriends = userDocSnap.data().numFriends;
+        userNumFriends += 1;
+
+        // Incrementing the friend's friend count
+        const friendProfileDoc = await getDoc(friendProfileRef);
+        let friendNumFriends = friendProfileDoc.data().numFriends;
+        friendNumFriends += 1;
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + friendUsernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
+
+        // Creating batch job for adding friend and adding you as an incoming friend request to said friend
+        const batch = writeBatch(FIRESTORE_DB);
+
+        batch.update(newFriendRef, {  // Self
+          relationship: "mutual"
+        })
+        batch.update(incomingFriendRef, {  // Friend
+          relationship: "mutual"
+        })
+
+        batch.update(userProfileRef, { numFriends: userNumFriends });
+        batch.update(friendProfileRef, { numFriends: friendNumFriends });
+
+        await batch.commit();
+
+        this.componentDidMount();
+
+      } catch(error) {
+        console.error("Error adding friend request:", error);
+      }
+    } else {
+      console.error("Current user not found.");
+    }
+  }
+
+  async rejectFriend(friend) {
+    const currentUser = FIREBASE_AUTH.currentUser;
+
+    if (currentUser) {
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const usernameDoc = doc(FIRESTORE_DB, "Usernames", friend.id);
+
+      try {
+        const usernameDocSnap = await getDoc(usernameDoc);
+        const userDocSnap = await getDoc(userProfileRef);
+
+        // Creating batch job for adding friend and adding you as an incoming friend request to said friend
+        const batch = writeBatch(FIRESTORE_DB);
+
+        const newFriendRef = doc(FIRESTORE_DB, 'Users/' + currentUser.uid + '/Friends', friend.id);
+        const incomingFriendRef = doc(FIRESTORE_DB, 'Users/' + usernameDocSnap.data().uid + '/Friends', userDocSnap.data().username);
+        
+        batch.delete(newFriendRef);
+        batch.delete(incomingFriendRef);
+
+        await batch.commit();
+
+        this.componentDidMount();
+
+      } catch(error) {
+        console.error("Error adding friend request:", error);
+      }
+    } else {
+      console.error("Current user not found.");
+    }
+  }
+
   render() {
-    const { userProfile, tasks, refreshing } = this.state;
+    const { userProfile, tasks, refreshing, friends } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
+
+    const mutualFriends = friends.filter(friend => friend.relationship == "mutual");
+    const pendingFriends = friends.filter(friend => friend.relationship == "incoming_friend_request");
+
+    var viewPosts = true;
+
+    function postTabClicked() {
+      console.log("postTabClicked");
+      viewPosts = true;
+    }
+
+    function friendsTabClicked() {
+      console.log("friendsTabClicked");
+      viewPosts = false;
+    }
+
+    function Post_Friend_Area() {
+      if (false) {
+        return (
+        <View style={styles.tasksContainer}>
+          <View style={styles.grid}>
+            {completedTasks.map((task, index) => (
+              <View key={index} onPress={() => this.handleImagePress(task)}>
+                <View style={styles.postContainer}>
+                  <Image source={{ uri: task.image }} style={styles.photo} />
+                  <View style={styles.postDescription}>
+                    <Text style={styles.taskTitle}>{task.name}</Text>
+                    <Text>{task.description}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )} else {
+        return (
+        <View>
+          <View style={styles.friendSearchContainer}>
+            <TextInput
+                placeholder="Username"
+                onChangeText={(friendUsername) => this.setState({ friendUsername })}
+                style={styles.friendSearchBox}
+            />
+            <TouchableOpacity
+                onPress={() => this.addFriend()}
+                title="Add"
+                color="#007bff"
+                style={styles.friendAddButton}>
+              <Text style={styles.friendAddButtonText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {pendingFriends.map((friend, index) => (
+                <View key={index} onPress={() => this.handleImagePress(friend)}>
+                  
+                  <View style={styles.incomingFriendRequest}>
+                    <View style={styles.friendRequest}>
+                      <Text style={styles.friendName}>{friend.id} wants to be friends</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => this.acceptFriend(friend)}
+                        title="Accept"
+                        color="#98FB98"
+                        style={styles.acceptFriendButton}>
+                      <Text style={styles.friendAddButtonText}>Accept</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => this.rejectFriend(friend)}
+                        title="Delete"
+                        color="#FA8072"
+                        style={styles.rejectFriendButton}>
+                      <Text style={styles.friendAddButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {mutualFriends.map((friend, index) => (
+                <View key={index} onPress={() => this.handleImagePress(friend)}>
+                  <View style={styles.friendList}>
+                    <Text style={styles.friendName}>{friend.id}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      )}
+    }
 
     return (
       <ImageBackground
@@ -112,18 +362,85 @@ export class Profile extends Component {
                 <View style={styles.bioTextContainer}>
                   <Text style={styles.bioText}>{userProfile.name}</Text>
                   <View style={styles.detailsContainer}>
-                    <View style={styles.detail}>
-                      <Text style={styles.detailText}>Friends</Text>
-                      <Text style={styles.detailStat}>{userProfile.friends}</Text>
-                    </View>
-                    <View style={styles.detail}>
+                    <TouchableOpacity style={styles.detail} onPress={() => (postTabClicked())}>
                       <Text style={styles.detailText}>Posts</Text>
                       <Text style={styles.detailStat}>{userProfile.posts}</Text>
-                    </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.detail} onPress={() => (friendsTabClicked())}>
+                      <Text style={styles.detailText}>Friends</Text>
+                      <Text style={styles.detailStat}>{userProfile.numFriends}</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
             )}
+
+            {/* <Post_Friend_Area /> */}
+
+            <View>
+              <View style={styles.lableTextBox}>
+                <Text style={styles.friendAddButtonText}>Friends</Text>
+              </View>
+              <View style={styles.friendSearchContainer}>
+                <TextInput
+                    placeholder="Username"
+                    onChangeText={(friendUsername) => this.setState({ friendUsername })}
+                    style={styles.friendSearchBox}
+                />
+                <TouchableOpacity
+                    onPress={() => this.addFriend()}
+                    title="Add"
+                    color="#007bff"
+                    style={styles.friendAddButton}>
+                  <Text style={styles.friendAddButtonText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.tasksContainer}>
+                <View style={styles.grid}>
+                  {pendingFriends.map((friend, index) => (
+                    <View key={index} onPress={() => this.handleImagePress(friend)}>
+                      
+                      <View style={styles.incomingFriendRequest}>
+                        <View style={styles.friendRequest}>
+                          <Text style={styles.friendName}>{friend.id} wants to be friends</Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => this.acceptFriend(friend)}
+                            title="Accept"
+                            color="#98FB98"
+                            style={styles.acceptFriendButton}>
+                          <Text style={styles.friendAddButtonText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => this.rejectFriend(friend)}
+                            title="Delete"
+                            color="#FA8072"
+                            style={styles.rejectFriendButton}>
+                          <Text style={styles.friendAddButtonText}>Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.tasksContainer}>
+                <View style={styles.grid}>
+                  {mutualFriends.map((friend, index) => (
+                    <View key={index} onPress={() => this.handleImagePress(friend)}>
+                      <View style={styles.friendList}>
+                        <Text style={styles.friendName}>{friend.id}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.lableTextPostsBox}>
+              <Text style={styles.friendAddButtonText}>Posts</Text>
+            </View>
 
             <View style={styles.tasksContainer}>
               <View style={styles.grid}>
@@ -140,6 +457,7 @@ export class Profile extends Component {
                 ))}
               </View>
             </View>
+
           </ScrollView>
           <NavBar navigation={this.props.navigation}></NavBar>
         </SafeAreaView>
@@ -148,7 +466,7 @@ export class Profile extends Component {
   }
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
     flex: 1,
   },
@@ -224,7 +542,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   tasksContainer: {
-    padding: 10,
+    paddingHorizontal: 10,
     borderRadius: 10,
   },
   taskTitle: {
@@ -232,6 +550,90 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: '20%',
   },
+  friendSearchContainer: {
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    borderRadius: 10,
+    flexDirection: 'row',
+  },
+  friendSearchBox: {
+    width: '80%',
+    backgroundColor: 'rgba(245, 252, 255, 0.8)',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: 'F5FCFF',
+    flexDirection: 'row',
+  },
+  friendAddButton: {
+    width: '20%',
+    backgroundColor: 'rgba(245, 252, 255, 0.8)',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: 'F5FCFF',
+    flexDirection: 'row',
+  },
+  friendAddButtonText: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#000000',
+  },
+  friendList: {
+    flexDirection: 'collumn',
+    padding: 15,
+    width: '100%',
+    backgroundColor: 'rgba(245, 252, 255, 0.8)',
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  friendName: {
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  friendRequest: {
+    flexDirection: 'collumn',
+    padding: 15,
+    width: '60%',
+    backgroundColor: 'rgba(245, 252, 255, 0.8)',
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  incomingFriendRequest: {
+    flexDirection: 'row',
+  },
+  acceptFriendButton: {
+    width: '20%',
+    backgroundColor: '#98FB98',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: '#F5FCFF',
+    flexDirection: 'row',
+  },
+  rejectFriendButton: {
+    width: '20%',
+    backgroundColor: '#FA8072',
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 20,
+    borderColor: '#F5FCFF',
+    flexDirection: 'row',
+  },
+  lableTextBox: {
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(200, 200, 200, 0.8)',
+    margin: 10,
+    marginBottom: 0,
+  }, 
+  lableTextPostsBox: {
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(200, 200, 200, 0.8)',
+    margin: 10,
+
+  }
 });
 
 export default Profile;

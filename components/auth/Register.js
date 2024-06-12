@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendEmailVerification, deleteUser } from 'firebase/auth';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 
 class Register extends Component {
@@ -9,6 +9,7 @@ class Register extends Component {
         super(props);
         this.state = {
             name: '',
+            username: '',
             email: '',
             password: '',
             emailSent: false,
@@ -17,7 +18,7 @@ class Register extends Component {
     }
 
     async onSignUp() {
-        const { name, email, password } = this.state;
+        const { name, username, email, password } = this.state;
         try {
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
@@ -31,15 +32,37 @@ class Register extends Component {
             }
 
             const userRef = doc(FIRESTORE_DB, "Users", user.uid);
-            await setDoc(userRef, {
-                name: name,
-                email: email,
-            });
-            console.log("User information stored in Firestore successfully!");
+            const usernameDoc = doc(FIRESTORE_DB, "Usernames", username);
 
-            this.setState({ emailSent: true });
+            // Adds the user and username to the firebase documents as a batch job, and deletes the user upon failure
+            try {
+                const batch = writeBatch(FIRESTORE_DB);
+                batch.set(userRef, {
+                    name: name,
+                    email: email,
+                    username: username,
+                    posts: 0,
+                    numFriends: 0,
+                });
+                batch.set(usernameDoc, { uid: user.uid });
+
+                await batch.commit();
+
+                console.log("User information stored in Firestore successfully!");
+                this.setState({ emailSent: true });
+
+                this.props.navigation.navigate('Profile');
+            } catch (error) {
+                console.error("Error storing user information: ", error);
+                deleteUser(user).then(() => {
+                    console.log("User deleted sucsessfully");
+                  }).catch((error) => {
+                    console.error("Error deleting user: ", error);
+                  });
+            }
 
         } catch (error) {
+
             console.error("Error signing up and storing user information: ", error);
         }
     }
@@ -74,6 +97,12 @@ class Register extends Component {
                             <TextInput
                                 placeholder="Name"
                                 onChangeText={(name) => this.setState({ name })}
+                                style={styles.textBox}
+                            />
+                            <Text style={styles.label}>Username</Text>
+                            <TextInput
+                                placeholder="Username"
+                                onChangeText={(username) => this.setState({ username })}
                                 style={styles.textBox}
                             />
                             <Text style={styles.label}>Email</Text>
