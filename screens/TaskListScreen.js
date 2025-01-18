@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Task from '../components/task-page/Task'
 import TaskCreation from '../components/task-page/TaskCreation'
 import { doc, collection, addDoc, getDocs, deleteDoc, updateDoc, runTransaction} from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import { MenuProvider } from 'react-native-popup-menu';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -50,19 +50,27 @@ const TaskListScreen = (props) => {
     // }
 
     const addImage = async () => {
+        try {
         let _image = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
         });
-        console.log(JSON.stringify(_image));
-
 
         if (_image.assets && !_image.cancelled) {
-            return _image.assets[0].uri;
+            console.log("uri::: " + _image.assets[0].uri);
+            const { uri } = _image.assets[0];
+            const fileName = uri.split('/').pop();
+            const uploadResp = await uploadToFirebase(uri, fileName, (progress) =>
+                console.log(progress)
+            );
+            console.log(uploadResp);
+            return uploadResp.downloadUrl;
         }
-        return null;
+    } catch (e) {
+        Alert.alert("Error Uploading Image " + e.message);
+    }
     };
 
     const completeTask = async  (index, complete) => {

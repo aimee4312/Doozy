@@ -8,9 +8,10 @@ import Modal from "react-native-modal";
 import CustomDropDown from './CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
 import { doc, collection, addDoc, getDocs, runTransaction } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
+
 
 
 const TaskCreation = forwardRef(( props, ref) => {
@@ -46,7 +47,7 @@ const TaskCreation = forwardRef(( props, ref) => {
     const screenHeight = Dimensions.get('window').height;
     const modalHeight = screenHeight * 0.75;
 
-    const storeTask = async () => {
+    const storeTask = async (imageURI) => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
             
@@ -61,7 +62,7 @@ const TaskCreation = forwardRef(( props, ref) => {
                     priority: selectedPriority,
                     reminders: selectedReminders,
                     repeatEnds: dateRepeatEnds,
-                    image: image,
+                    image: imageURI,
                 });
                 await runTransaction(FIRESTORE_DB, async (transaction) => {
                     const userProfileDoc = await transaction.get(userProfileRef);
@@ -83,19 +84,57 @@ const TaskCreation = forwardRef(( props, ref) => {
 
     }
 
-    const addImage = async () => {
+    const uploadImage = async () => {
+        const { uri } = image;
+        const filename = uri.substring(uri.lastIndexOf('/') + 1);
+        const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+        setUploading(true);
+        setTransferred(0);
+        const task = storage()
+          .ref(filename)
+          .putFile(uploadUri);
+        // set progress state
+        task.on('state_changed', snapshot => {
+          setTransferred(
+            Math.round(snapshot.bytesTransferred / snapshot.totalBytes) * 10000
+          );
+        });
+        try {
+          await task;
+        } catch (e) {
+          console.error(e);
+        }
+        setUploading(false);
+        Alert.alert(
+          'Photo uploaded!',
+          'Your photo has been uploaded to Firebase Cloud Storage!'
+        );
+        setImage(null);
+      };
+
+
+      const addImage = async () => {
+        try {
         let _image = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
         });
-        console.log(JSON.stringify(_image));
+
         if (_image.assets && !_image.cancelled) {
-            setImage(_image.assets[0].uri);
-            return null;
+            console.log("uri::: " + _image.assets[0].uri);
+            const { uri } = _image.assets[0];
+            const fileName = uri.split('/').pop();
+            const uploadResp = await uploadToFirebase(uri, fileName, (progress) =>
+                console.log(progress)
+            );
+            console.log(uploadResp);
+            return uploadResp.downloadUrl;
         }
-        return true;
+    } catch (e) {
+        Alert.alert("Error Uploading Image " + e.message);
+    }
     };
 
     const reminderNoTime = [
@@ -189,12 +228,17 @@ const TaskCreation = forwardRef(( props, ref) => {
     const handleSubmitHelper = async () => {
         if (newTask.length !== 0) {
             if (isCompleted) {
-                const cancelled = await addImage();
-                if (cancelled) {
+                console.log("hieefiewof");
+                const imageURI = await addImage();
+                console.log(imageURI);
+                if (!imageURI) {
                     return;
                 }
+                storeTask(imageURI);
             }
-            storeTask();
+            else {
+                storeTask(null);
+            }
         }
         callSubmitHandler();
         setNewTask('');
