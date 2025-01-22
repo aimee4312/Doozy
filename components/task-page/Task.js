@@ -1,6 +1,6 @@
 import React, {useState, useRef} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {GestureHandlerRootView} from 'react-native-gesture-handler'
 
 const Task = (props) => {
@@ -44,7 +44,7 @@ const Task = (props) => {
   
     return (
         <GestureHandlerRootView>
-            <Swipeable 
+            <Swipeable
                 ref={rowRef}
                 renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
                 onSwipeableWillOpen={onSwipeOpen}

@@ -164,15 +164,18 @@ const TaskListScreen = (props) => {
     };
 
     const DismissKeyboard = ({ children }) => (
-        <TouchableWithoutFeedback onPress={() => childRef.current.closeKeyboard()}>
+        <TouchableWithoutFeedback onPress={() => {
+            if (swipedCardRef) swipedCardRef.current.close();
+            childRef.current.closeKeyboard();
+            }}>
             {children}
         </TouchableWithoutFeedback>
         );
 
     return (
         <MenuProvider>
+            <DismissKeyboard>
             <View style={styles.container}>
-                <DismissKeyboard>
                     <ScrollView style={styles.ScrollView}>
                 {taskItems.length !== 0 && <View style={styles.tasksContainer}>
                     <Text style={styles.sectionTitle}>Tasks</Text>
@@ -220,9 +223,9 @@ const TaskListScreen = (props) => {
                 </View>}
                 <View style={{paddingBottom: 100}} />
                 </ScrollView>
-                </DismissKeyboard>
                 <TaskCreation ref={childRef} callSubmitHandler={fetchData} nav={props.navigation}/>
             </View>
+            </DismissKeyboard>
             </MenuProvider>
     );
 }
