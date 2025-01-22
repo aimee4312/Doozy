@@ -68,9 +68,11 @@ const TaskCreation = forwardRef(( props, ref) => {
                     const userProfileDoc = await transaction.get(userProfileRef);
     
                     const userProfileData = userProfileDoc.data();
-                    let posts = userProfileData.posts;
-    
-                    posts = userProfileData.posts + 1;
+                    
+                    if (isCompleted) {
+                        let posts = userProfileData.posts;
+                        posts = userProfileData.posts + 1;
+                    }
 
                     transaction.update(userProfileRef, { posts });
                 });
