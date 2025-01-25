@@ -164,69 +164,64 @@ const TaskListScreen = (props) => {
     };
 
     const DismissKeyboard = ({ children }) => (
-        <TouchableWithoutFeedback onPress={() => {
-            if (swipedCardRef) swipedCardRef.current.close();
-            childRef.current.closeKeyboard();
-            }}>
+        <TouchableWithoutFeedback onPress={() => {childRef.current.closeKeyboard()}}>
             {children}
         </TouchableWithoutFeedback>
         );
 
     return (
         <MenuProvider>
-            <DismissKeyboard>
-            <View style={styles.container}>
-                    <ScrollView style={styles.ScrollView}>
-                {taskItems.length !== 0 && <View style={styles.tasksContainer}>
-                    <Text style={styles.sectionTitle}>Tasks</Text>
-                    <View style={styles.tasks}>
-                    {   
-                        taskItems.map((task, index) => {
-                            return(
-                                <View key={index}>
-                                    <Task 
-                                        text={task.name} 
-                                        tick={completeTask}
-                                        i={index}
-                                        complete={false} 
-                                        deleteItem={deleteItem}
-                                        onOpen={onOpen}
-                                        onClose={onClose}
-                                    />
+            <TouchableWithoutFeedback onPress={() => {if (swipedCardRef) swipedCardRef.current.close();}}>
+                <View style={styles.container}>
+                    <DismissKeyboard>
+                        <ScrollView style={styles.ScrollView}>
+                            {taskItems.length !== 0 && <View style={styles.tasksContainer}>
+                                <Text style={styles.sectionTitle}>Tasks</Text>
+                                <View style={styles.tasks}>
+                                    {taskItems.map((task, index) => {
+                                        return(
+                                            <View key={index}>
+                                                <Task 
+                                                text={task.name} 
+                                                tick={completeTask}
+                                                i={index}
+                                                complete={false} 
+                                                deleteItem={deleteItem}
+                                                onOpen={onOpen}
+                                                onClose={onClose}
+                                                />
+                                            </View>
+                                        )
+                                    })}
                                 </View>
-                            )
-                        })
-                    }
-                    </View>
-                </View>}
-                {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
-                    <Text style={styles.sectionTitle}>Completed</Text>
-                    <View style={styles.tasks}>
-                    {   
-                        completedTaskItems.map((task, index) => {
-                            return(
-                                <View key={index}>
-                                    <Task 
-                                        text={task.name} 
-                                        tick={completeTask} 
-                                        i={index} 
-                                        complete={true} 
-                                        deleteItem={deleteItem}
-                                        onOpen={onOpen}
-                                        onClose={onClose}
-                                    />
+                            </View>}
+                            {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
+                                <Text style={styles.sectionTitle}>Completed</Text>
+                                <View style={styles.tasks}>
+                                    {completedTaskItems.map((task, index) => {
+                                        return(
+                                            <View key={index}>
+                                                <Task 
+                                                text={task.name} 
+                                                tick={completeTask} 
+                                                i={index} 
+                                                complete={true} 
+                                                deleteItem={deleteItem}
+                                                onOpen={onOpen}
+                                                onClose={onClose}
+                                                />
+                                            </View>
+                                        )
+                                    })}
                                 </View>
-                            )
-                        })
-                    }
-                    </View>
-                </View>}
-                <View style={{paddingBottom: 100}} />
-                </ScrollView>
-                <TaskCreation ref={childRef} callSubmitHandler={fetchData} nav={props.navigation}/>
-            </View>
-            </DismissKeyboard>
-            </MenuProvider>
+                            </View>}
+                            <View style={{paddingBottom: 100}} />
+                        </ScrollView>
+                    </DismissKeyboard>
+                    <TaskCreation ref={childRef} callSubmitHandler={fetchData} nav={props.navigation}/>
+                </View>
+            </TouchableWithoutFeedback>
+        </MenuProvider>
     );
 }
 
