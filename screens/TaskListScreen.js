@@ -2,10 +2,12 @@ import React, { createContext, useContext, useState, useRef, forwardRef, useEffe
 import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Task from '../components/task-page/Task'
 import TaskCreation from '../components/task-page/TaskCreation'
-import { doc, collection, addDoc, getDocs, deleteDoc, updateDoc, runTransaction} from 'firebase/firestore';
+import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction} from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import { MenuProvider } from 'react-native-popup-menu';
 import * as ImagePicker from 'expo-image-picker';
+import { getStorage, ref, deleteObject } from "firebase/storage";
+
 
 const TaskListScreen = (props) => {
     
@@ -78,38 +80,73 @@ const TaskListScreen = (props) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         if (!complete) {
-            const imageURI = await addImage();
-            if (!imageURI) {
-                return;
+            try {
+                const imageURI = await addImage();
+                if (!imageURI) {
+                    return;
+                }
+                docId = taskItems[index].id;
+                const docRef = doc(tasksRef, docId);
+                await updateDoc(docRef, {
+                    "completed": true,
+                    image: imageURI,
+                })
+                .then(() => {
+                    let itemsCopy = [...taskItems];
+                    let completedItem = taskItems[index];
+                    itemsCopy.splice(index, 1);
+                    setTaskItems(itemsCopy);
+                    setCompletedTaskItems([...completedTaskItems, completedItem]);
+                })
+                await runTransaction(FIRESTORE_DB, async (transaction) => {
+                    const userProfileDoc = await transaction.get(userProfileRef);
+                    const userProfileData = userProfileDoc.data();
+                    let posts = userProfileData.posts || [];
+                    posts = userProfileData.posts + 1;
+                    transaction.update(userProfileRef, { posts });
+                })
+            } catch (error) {
+                console.error('Error updating task completion: ', error);
             }
-            docId = taskItems[index].id;
-            const docRef = doc(tasksRef, docId);
-            updateDoc(docRef, {
-                "completed": true,
-                image: imageURI,
-            }).then (() => {
-                let itemsCopy = [...taskItems];
-                let completedItem = taskItems[index];
-                itemsCopy.splice(index, 1);
-                setTaskItems(itemsCopy);
-                setCompletedTaskItems([...completedTaskItems, completedItem]);
-            });
         }
         else {
             docId = completedTaskItems[index].id;
             const docRef = doc(tasksRef, docId);
-            updateDoc(docRef, {
-                "completed": false,
-                "image": null
-            }).then (() => {
-            let itemsCopy = [...completedTaskItems];
-            let incompletedItem = completedTaskItems[index];
-            itemsCopy.splice(index, 1);
-            setCompletedTaskItems(itemsCopy);
-            setTaskItems([...taskItems, incompletedItem]);
-        });
+            try {
+                await getDoc(docRef)
+                .then((docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const image = data.image;
+                    if (image) {
+                        const imageRef = ref(getStorage(), image);
+                        deleteObject(imageRef);
+                    }
+                }
+                })
+                await updateDoc(docRef, {
+                    "completed": false,
+                    "image": null
+                })
+                .then(() => {
+                let itemsCopy = [...completedTaskItems];
+                let incompletedItem = completedTaskItems[index];
+                itemsCopy.splice(index, 1);
+                setCompletedTaskItems(itemsCopy);
+                setTaskItems([...taskItems, incompletedItem]);
+                })
+                await runTransaction(FIRESTORE_DB, async (transaction) => {
+                    const userProfileDoc = await transaction.get(userProfileRef);
+                    const userProfileData = userProfileDoc.data();
+                    let posts = userProfileData.posts || [];
+                    posts = userProfileData.posts - 1;
+                    transaction.update(userProfileRef, { posts });
+                })
+            } catch (error) {
+                console.error('Error updating task completion: ', error);
+            }
+        }
     }
- }
 
     const deleteItem = async (index, complete) => {
         let docId;
@@ -122,7 +159,15 @@ const TaskListScreen = (props) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const docRef = doc(tasksRef, docId);
+        let image = null;
         try {
+            await getDoc(docRef)
+            .then((docSnap) => {
+              if (docSnap.exists()) {
+                const data = docSnap.data();
+                image = data.image;
+              }
+            })
             await deleteDoc(docRef)
                 .then(() => {
                     if (!complete) {
@@ -133,6 +178,10 @@ const TaskListScreen = (props) => {
                         const updatedCompletedTaskItems = [...completedTaskItems];
                         updatedCompletedTaskItems.splice(index, 1);
                         setCompletedTaskItems(updatedCompletedTaskItems);
+                        if (image) {
+                            const imageRef = ref(getStorage(), image);
+                            deleteObject(imageRef);
+                        }
                     }
                 })
             await runTransaction(FIRESTORE_DB, async (transaction) => {
@@ -215,7 +264,7 @@ const TaskListScreen = (props) => {
                                     })}
                                 </View>
                             </View>}
-                            <View style={{paddingBottom: 100}} />
+                            {/* <View style={{paddingBottom: 300}} /> */}
                         </ScrollView>
                     </DismissKeyboard>
                     <TaskCreation ref={childRef} callSubmitHandler={fetchData} nav={props.navigation}/>
@@ -228,7 +277,7 @@ const TaskListScreen = (props) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: 0,
+        marginTop: 50,
     },
     scrollView: {
         

@@ -72,9 +72,10 @@ const TaskCreation = forwardRef(( props, ref) => {
                     if (isCompleted) {
                         let posts = userProfileData.posts;
                         posts = userProfileData.posts + 1;
+                        transaction.update(userProfileRef, { posts });
                     }
 
-                    transaction.update(userProfileRef, { posts });
+                    
                 });
 
             } catch (error) {
@@ -423,9 +424,10 @@ const TaskCreation = forwardRef(( props, ref) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        flexDirection: 'column-reverse',
-        marginBottom: 0,
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
     },
     writeTaskWrapper: {
         width: '100%',
