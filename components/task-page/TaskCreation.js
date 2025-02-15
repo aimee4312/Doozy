@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
-import CustomDropDown from './CustomDropDown';
+import CustomDropDown from './PopUpMenus/CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
 import { doc, collection, addDoc, getDocs, runTransaction } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';

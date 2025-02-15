@@ -3,8 +3,7 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedba
 
 const CustomPopupMenu = ({ isVisible, onClose, menuOptions, selectedOptions, setSelectedOptions, buttonHeight }) => {
 
-    const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .25 + buttonHeight );
-    
+    const totalButtonHeight = Dimensions.get('window').height - buttonHeight;
 
     const handleOptionSelect = (index) => {
       // Toggle selection state of the option

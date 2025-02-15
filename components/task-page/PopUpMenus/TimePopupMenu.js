@@ -4,7 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeight }) => {
 
-    const totalButtonHeight = Dimensions.get('window').height - (Dimensions.get('window').height * .25 + buttonHeight);
+    const totalButtonHeight = Dimensions.get('window').height - ( buttonHeight);
 
     const onChange = (event, newTime) => {
         if (newTime !== undefined) {

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity} from 'react-native';
-import CustomPopupMenu from './CustomPopupMenu';
-import TimePopupMenu from './TimePopupMenu';
-import RepeatEndsModal from './RepeatEndsModal';
-import ScheduleBuilder from './ScheduleBuilder';
+import CustomPopupMenu from './PopUpMenus/CustomPopupMenu';
+import TimePopupMenu from './PopUpMenus/TimePopupMenu';
+import RepeatEndsModal from './PopUpMenus/RepeatEndsModal';
+import ScheduleBuilder from './PopUpMenus/ScheduleBuilder';
 
 const ScheduleMenu = ( props ) => {
 
@@ -31,12 +31,21 @@ const ScheduleMenu = ( props ) => {
     const [isRepeatEndsModalVisible, setIsRepeatEndsModalVisible] = useState(false);
     const [isTimeMenuVisible, setIsTimeMenuVisible] = useState(false);
 
+    const reminderMenuRef = useRef(null);
+    const timeMenuRef = useRef(null);
+
     const handleDateSelect = (date) => {
         setTempSelectedDate(date.dateString);
       };
 
   const toggleReminderMenu = () => {
+    if (reminderMenuRef.current) {
+        reminderMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
+            setReminderButtonHeight(pageY);
+        });
+    }
     setIsReminderMenuVisible(!isReminderMenuVisible);
+    
   };
 
   const toggleRepeatMenu = () => {
@@ -48,6 +57,11 @@ const ScheduleMenu = ( props ) => {
   };
 
   const toggleTimeMenu = () => {
+    if (timeMenuRef.current) {
+        timeMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
+            setTimeButtonHeight(pageY);
+        });
+    }
     setIsTimeMenuVisible(!isTimeMenuVisible);
     if(!isTempTime) {
         setIsTempTime(true);
@@ -100,10 +114,10 @@ const changeReminderString = () => {
         setTempReminderString("None");
     }
     else if (tempSelectedReminders.length === 1) {
-        setTempReminderString(isTime ? reminderWithTime[tempSelectedReminders[0]].label : reminderNoTime[tempSelectedReminders[0]].label);
+        setTempReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label : reminderNoTime[tempSelectedReminders[0]].label);
     }
     else {
-        setTempReminderString(isTime ? reminderWithTime[tempSelectedReminders[0]].label + ",..." : reminderNoTime[tempSelectedReminders[0]].label + ",...");
+        setTempReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label + ",..." : reminderNoTime[tempSelectedReminders[0]].label + ",...");
     }
 }
 
@@ -169,10 +183,9 @@ const changeRepeatString = () => {
                 <ScheduleBuilder selectedDate={tempSelectedDate} handleDateSelect={handleDateSelect} />
             </View>
             <View style={{ flex: .4 }}>
-            <TouchableHighlight onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]} onLayout={(event) => {
-                event.target.measure((x, y, width, height, pageX, pageY) => {
-                setTimeButtonHeight(pageY);
-                })
+            <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]} onLayout={(event) => {
+                 const {x, y, width, height} = event.nativeEvent.layout;
+                 
             }}>
                 <View style={styles.menuButtonWrapper}>
                     <Text style={styles.menuText}>Time</Text>
@@ -184,10 +197,10 @@ const changeRepeatString = () => {
                     </View>
                 </View>
             </TouchableHighlight>
-            <TouchableHighlight onPress={toggleReminderMenu} style={styles.menuButton} onLayout={(event) => {
-                event.target.measure((x, y, width, height, pageX, pageY) => {
-                setReminderButtonHeight(pageY);
-                })
+            <TouchableHighlight ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton} onLayout={(event) => {
+                const {x, y, width, height, pageY} = event.nativeEvent.layout;
+                setReminderButtonHeight(height);
+                
             }}>
                 <View style={styles.menuButtonWrapper}>
                     <Text style={styles.menuText}>Reminder</Text>
