@@ -184,16 +184,18 @@ const TaskListScreen = (props) => {
                         }
                     }
                 })
-            await runTransaction(FIRESTORE_DB, async (transaction) => {
-                const userProfileDoc = await transaction.get(userProfileRef);
+            if (complete) {
+                await runTransaction(FIRESTORE_DB, async (transaction) => {
+                    const userProfileDoc = await transaction.get(userProfileRef);
 
-                const userProfileData = userProfileDoc.data();
-                let posts = userProfileData.posts || [];
+                    const userProfileData = userProfileDoc.data();
+                    let posts = userProfileData.posts || [];
 
-                posts = userProfileData.posts - 1;
+                    posts = userProfileData.posts - 1;
 
-                transaction.update(userProfileRef, { posts });
-            });
+                    transaction.update(userProfileRef, { posts });
+                });
+            }
             } catch (error) {
             console.error('Error deleting document: ', error);
         };

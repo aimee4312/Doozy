@@ -35,7 +35,7 @@ const ScheduleMenu = ( props ) => {
     const timeMenuRef = useRef(null);
 
     const handleDateSelect = (date) => {
-        setTempSelectedDate(date.dateString);
+        setTempSelectedDate(date);
       };
 
   const toggleReminderMenu = () => {
@@ -180,7 +180,7 @@ const changeRepeatString = () => {
                 </View>
             </View>
             <View style={{ flex: .7 }}>
-                <ScheduleBuilder selectedDate={tempSelectedDate} handleDateSelect={handleDateSelect} />
+                <ScheduleBuilder selectedDate={tempSelectedDate.dateString} handleDateSelect={handleDateSelect} />
             </View>
             <View style={{ flex: .4 }}>
             <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]} onLayout={(event) => {

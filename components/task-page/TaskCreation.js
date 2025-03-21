@@ -7,7 +7,7 @@ import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './PopUpMenus/CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
-import { doc, collection, addDoc, getDocs, runTransaction } from 'firebase/firestore';
+import { doc, collection, addDoc, getDocs, runTransaction, writeBatch } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
@@ -48,72 +48,43 @@ const TaskCreation = forwardRef(( props, ref) => {
     const modalHeight = screenHeight * 0.75;
 
     const storeTask = async (imageURI) => {
-        if (currentUser) {
+        if (!currentUser) {
+            console.error("Current user not found.");
+            return;
+        }
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-            
             const tasksRef = collection(userProfileRef, 'Tasks');
             try {
-                await addDoc(tasksRef, {
+                const batch = writeBatch(FIRESTORE_DB);
+
+                // Add task
+                const newTaskRef = doc(tasksRef);
+                batch.set(newTaskRef, {
                     name: newTask,
                     description: newDescription,
                     completed: isCompleted,
                     date: selectedDate,
-                    time: isTime ? time : null,
+                    isTime: isTime,
                     priority: selectedPriority,
                     reminders: selectedReminders,
+                    repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
                     image: imageURI,
                 });
-                await runTransaction(FIRESTORE_DB, async (transaction) => {
-                    const userProfileDoc = await transaction.get(userProfileRef);
-    
-                    const userProfileData = userProfileDoc.data();
-                    
-                    if (isCompleted) {
-                        let posts = userProfileData.posts;
-                        posts = userProfileData.posts + 1;
-                        transaction.update(userProfileRef, { posts });
-                    }
 
-                    
-                });
+                // Update posts count if task is completed
+                if (isCompleted) {
+                    batch.update(userProfileRef, {
+                        posts: increment(1)
+                    });
+                }
+
+                await batch.commit();
 
             } catch (error) {
                 console.error("Error storing task:", error);
             }
-        } else {
-            console.error("Current user not found.");
-        }
-
     }
-
-    const uploadImage = async () => {
-        const { uri } = image;
-        const filename = uri.substring(uri.lastIndexOf('/') + 1);
-        const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
-        setUploading(true);
-        setTransferred(0);
-        const task = storage()
-          .ref(filename)
-          .putFile(uploadUri);
-        // set progress state
-        task.on('state_changed', snapshot => {
-          setTransferred(
-            Math.round(snapshot.bytesTransferred / snapshot.totalBytes) * 10000
-          );
-        });
-        try {
-          await task;
-        } catch (e) {
-          console.error(e);
-        }
-        setUploading(false);
-        Alert.alert(
-          'Photo uploaded!',
-          'Your photo has been uploaded to Firebase Cloud Storage!'
-        );
-        setImage(null);
-      };
 
 
       const addImage = async () => {
