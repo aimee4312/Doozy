@@ -55,11 +55,7 @@ const TaskCreation = forwardRef(( props, ref) => {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
             const tasksRef = collection(userProfileRef, 'Tasks');
             try {
-                const batch = writeBatch(FIRESTORE_DB);
-
-                // Add task
-                const newTaskRef = doc(tasksRef);
-                batch.set(newTaskRef, {
+                await addDoc(tasksRef, {
                     name: newTask,
                     description: newDescription,
                     completed: isCompleted,
@@ -72,14 +68,19 @@ const TaskCreation = forwardRef(( props, ref) => {
                     image: imageURI,
                 });
 
-                // Update posts count if task is completed
-                if (isCompleted) {
-                    batch.update(userProfileRef, {
-                        posts: increment(1)
-                    });
-                }
+                await runTransaction(FIRESTORE_DB, async (transaction) => {
+                    const userProfileDoc = await transaction.get(userProfileRef);
+    
+                    const userProfileData = userProfileDoc.data();
+                    
+                    if (isCompleted) {
+                        let posts = userProfileData.posts;
+                        posts = userProfileData.posts + 1;
+                        transaction.update(userProfileRef, { posts });
+                    }
 
-                await batch.commit();
+                    
+                });
 
             } catch (error) {
                 console.error("Error storing task:", error);
