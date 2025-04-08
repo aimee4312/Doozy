@@ -11,7 +11,13 @@ const ScheduleMenu = ( props ) => {
     const getTodayDate = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return today.toISOString().split('T')[0]; // Returns date in YYYY-MM-DD format
+        return {
+            day: today.getDate(),
+            month: today.getMonth() + 1,
+            year: today.getFullYear(),
+            timestamp: today.getTime(),
+            dateString: today.toISOString().split('T')[0],
+          };
       };
     const {isCalendarModalVisible, setCalendarModalVisible, selectedDate, setSelectedDate, time, setTime, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds, reminderString, setReminderString, repeatString, setRepeatString, reminderNoTime, reminderWithTime, repeat} = props;
 
@@ -134,8 +140,20 @@ const changeRepeatString = () => {
 }
 
     const handleSaveChanges = () => {
+        if (isTempTime) {
+            
+            const date = new Date(tempSelectedDate.timestamp);
+            tempSelectedDate.timestamp = new Date(
+                date.getUTCFullYear(), 
+                date.getUTCMonth(), 
+                date.getUTCDate(),  
+                tempTime.getHours(), 
+                tempTime.getMinutes(),
+                0,
+                0,
+              );
+        }
         setSelectedDate(tempSelectedDate);
-        setTime(tempTime);
         setIsTime(isTempTime);
         setSelectedReminders(tempSelectedReminders);
         setSelectedRepeat(tempSelectedRepeat);
