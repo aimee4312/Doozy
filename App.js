@@ -12,6 +12,7 @@ import TimelineScreen from './components/timeline/Timeline';
 import TaskListScreen from './screens/TaskListScreen';
 import TaskDetailsScreen from './components/profile/TaskDetails';
 import AddTaskScreen from './components/tasks/Task_db';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
 
@@ -36,22 +37,24 @@ class App extends Component {
   render() {
     const { loggedIn } = this.state;
     return (
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName={loggedIn ? "Profile" : "Landing"}
-          screenOptions={{ animationEnabled: false }}
-        >
-          <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }}/>
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
-          <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }}/>
-          <Stack.Screen name="TaskList" component={TaskListScreen} options={{ headerShown: false }}/>
-          <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }}/>
-          <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
-          <Stack.Screen name="AddTask" component={AddTaskScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName={loggedIn ? "Profile" : "Landing"}
+            screenOptions={{ animationEnabled: false }}
+          >
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="TaskList" component={TaskListScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
+            <Stack.Screen name="AddTask" component={AddTaskScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
     );
   }
 }

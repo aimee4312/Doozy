@@ -43,18 +43,18 @@ const Task = (props) => {
     }
   
     return (
-        <GestureHandlerRootView>
-            <Swipeable
-                ref={rowRef}
-                renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
-                onSwipeableWillOpen={onSwipeOpen}
-                onSwipeableWillClose={onSwipeClose}>
+        <Swipeable
+        ref={rowRef}
+        renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
+        onSwipeableWillOpen={() => onSwipeOpen(rowRef)}
+        onSwipeableWillClose={() => onSwipeClose(rowRef)}
+        simultaneousHandlers={rowRef}
+      >
                 <View style={styles.item}>
                     <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}></TouchableOpacity>
                     <Text style={styles.itemText}>{text}</Text>
                 </View>
             </Swipeable>
-        </GestureHandlerRootView>
     )
 }
 

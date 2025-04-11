@@ -53,7 +53,8 @@
     "react-test-renderer": "^18.2.0",
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "@shopify/flash-list": "1.7.3"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

@@ -17,28 +17,36 @@ class Timeline extends Component {
     this.refreshTasks(); 
   }
 
-  refreshTasks = () => {
+  refreshTasks = async () => {
     const currentUser = FIREBASE_AUTH.currentUser;
-
-    if (currentUser) {
+    let isMounted = true; // Add a flag to track if the component is mounted
+  
+    if (!currentUser) return;
+  
+    try {
       const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
-
-      getDocs(tasksRef)
-        .then((querySnapshot) => {
-          const tasks = [];
-          querySnapshot.forEach((doc) => {
-            tasks.push({ id: doc.id, ...doc.data() });
-          });
-          this.setState({ tasks });
-        })
-        .catch((error) => {
-          console.error("Error fetching tasks: ", error);
-        })
-        .finally(() => {
-          this.setState({ refreshing: false }); 
-        });
+      const querySnapshot = await getDocs(tasksRef);
+  
+      if (!isMounted) return; // Prevent state updates if unmounted
+  
+      const tasks = [];
+      querySnapshot.forEach((doc) => {
+        tasks.push({ id: doc.id, ...doc.data() });
+      });
+  
+      this.setState({ tasks });
+    } catch (error) {
+      console.error("Error fetching tasks: ", error);
+    } finally {
+      if (isMounted) {
+        this.setState({ refreshing: false });
+      }
     }
-  }
+  
+    return () => {
+      isMounted = false; // Set flag to false when unmounting
+    };
+  };
 
   handleRefresh = () => {
     this.setState({ refreshing: true }, () => {
