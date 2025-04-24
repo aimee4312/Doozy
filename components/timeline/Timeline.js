@@ -60,7 +60,7 @@ class Timeline extends Component {
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>
           <Text style={styles.taskName}>{item.name}</Text>
-          <Text style={styles.taskDate}>{item.date}</Text>
+          <Text style={styles.taskDate}>{item.date.dateString}</Text>
         </View>
         <Text style={styles.taskDescription}>{item.description}</Text>
       </View>

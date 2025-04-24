@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect } from 'react';
 import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -11,9 +11,16 @@ class Register extends Component {
             name: '',
             email: '',
             password: '',
-            emailSent: false,
         };
         this.onSignUp = this.onSignUp.bind(this);
+    }
+
+    componentDidMount() {
+        FIREBASE_AUTH.onAuthStateChanged((user)=>{
+            if (user) {
+                this.props.navigation.reset({index: 0, routes: [{name:"TaskList"}]});
+            }
+        })
     }
 
     async onSignUp() {
@@ -22,22 +29,12 @@ class Register extends Component {
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
 
-            await sendEmailVerification(user);
-            console.log("Email sent!");
-
-            while (!user.emailVerified) {
-                await user.reload();
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-
             const userRef = doc(FIRESTORE_DB, "Users", user.uid);
             await setDoc(userRef, {
                 name: name,
                 email: email,
             });
             console.log("User information stored in Firestore successfully!");
-
-            this.setState({ emailSent: true });
 
         } catch (error) {
             console.error("Error signing up and storing user information: ", error);
@@ -95,7 +92,6 @@ class Register extends Component {
                                 title="Sign Up"
                                 color="#007bff"
                             />
-                            {this.state.emailSent && <Text style={styles.successMessage}>Email sent! Check your inbox.</Text>}
                             <Button
                                 onPress={this.goToLoginScreen}
                                 title="Already have an account?"
