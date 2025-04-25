@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -7,7 +7,7 @@ import Swiper from 'react-native-swiper';
 import Modal from "react-native-modal";
 import CustomDropDown from './PopUpMenus/CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
-import { doc, collection, addDoc, getDocs, runTransaction, writeBatch } from 'firebase/firestore';
+import { doc, collection, addDoc, runTransaction } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';

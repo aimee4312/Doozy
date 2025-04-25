@@ -18,45 +18,47 @@ export class Profile extends Component {
   }
 
   componentDidMount() {
-    this.focusListener = this.props.navigation.addListener('focus', this.fetchData);
     this.fetchData();
   }
 
-  componentWillUnmount() {
-    this.focusListener();
-  }
-
-  fetchData = () => {
+  fetchData = async () => {
     const currentUser = FIREBASE_AUTH.currentUser;
+    let isMounted = true;
 
-    if (currentUser) {
+    if (!currentUser) return;
+
+    try {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
       const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+      
+      if (!isMounted) return;
 
-      return getDoc(userProfileRef)
-        .then((docSnapshot) => {
-          if (docSnapshot.exists()) {
-            this.setState({ userProfile: docSnapshot.data() });
-          } else {
-            console.log("No such document!");
-          }
+      const docSnapshot = await getDoc(userProfileRef)
+      if (docSnapshot.exists()) {
+        console.log(docSnapshot);
+        this.setState({ userProfile: docSnapshot.data() });
+      } else {
+        console.log("No such document!");
+      }
 
-          return getDocs(tasksRef);
-        })
-        .then((querySnapshot) => {
-          const tasks = [];
-          querySnapshot.forEach((doc) => {
-            tasks.push({ id: doc.id, ...doc.data() });
-          });
-          this.setState({ tasks });
-        })
-        .catch((error) => {
-          console.error("Error fetching data: ", error);
-        });
-    } else {
-      return Promise.resolve(); 
-    }
+      const querySnapshot = await getDocs(tasksRef);
+      console.log(querySnapshot);
+      const tasks = [];
+      querySnapshot.forEach((doc) => {
+        tasks.push({ id: doc.id, ...doc.data() });
+      });
+      this.setState({ tasks });
+    } catch (error) {
+      console.error("Error fetching posts: ", error);
+    } finally {
+      if (isMounted) {
+        this.setState({ refreshing: false });
+      }
   }
+  return () => {
+    isMounted = false; // Set flag to false when unmounting
+  };
+}
 
   onRefresh = () => {
     this.setState({ refreshing: true });
@@ -108,7 +110,7 @@ export class Profile extends Component {
             </TouchableOpacity>
             {userProfile && (
               <View style={styles.content}>
-                <UploadImage />
+                <UploadImage refreshing={refreshing} />
                 <View style={styles.bioTextContainer}>
                   <Text style={styles.bioText}>{userProfile.name}</Text>
                   <View style={styles.detailsContainer}>

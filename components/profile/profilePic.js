@@ -6,14 +6,14 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 
 
-export default function UploadImage() {
+export default function UploadImage({ refreshing }) {
     const [image, setImage] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const currentUser = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
         fetchUserProfile();
-    }, [userProfile]);
+    }, [refreshing]);
 
     const fetchUserProfile = async () => {
         if (currentUser) {

@@ -33,6 +33,7 @@ class Register extends Component {
             await setDoc(userRef, {
                 name: name,
                 email: email,
+                posts: 0,
             });
             console.log("User information stored in Firestore successfully!");
 
