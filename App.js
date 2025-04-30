@@ -12,6 +12,7 @@ import TimelineScreen from './components/timeline/Timeline';
 import TaskListScreen from './screens/TaskListScreen';
 import TaskDetailsScreen from './components/profile/TaskDetails';
 import AddTaskScreen from './components/tasks/Task_db';
+import FriendsScreen from './screens/Friends';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
@@ -52,6 +53,7 @@ class App extends Component {
             <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }}/>
             <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
             <Stack.Screen name="AddTask" component={AddTaskScreen} />
+            <Stack.Screen name="Friends" component={FriendsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </GestureHandlerRootView>

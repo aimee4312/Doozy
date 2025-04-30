@@ -84,6 +84,10 @@ export class Profile extends Component {
     this.props.navigation.navigate('Settings');
   }
 
+  goToFriendsScreen = () => {
+    this.props.navigation.navigate('Friends');
+  }
+
   render() {
     const { userProfile, tasks, refreshing } = this.state;
     const completedTasks = tasks.filter(task => task.completed);
@@ -95,6 +99,12 @@ export class Profile extends Component {
         resizeMode="cover"
       >
         <SafeAreaView style={styles.container}>
+          <TouchableOpacity onPress={this.goToSettingsScreen} style={styles.settingsButton}>
+              <Ionicons name="settings-sharp" size={32} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={this.goToFriendsScreen} style={styles.friendsButton}>
+              <Ionicons name="people-outline" size={32} color="black" />
+            </TouchableOpacity>
           <ScrollView 
             style={styles.scrollView} 
             contentContainerStyle={styles.scrollContent}
@@ -105,9 +115,6 @@ export class Profile extends Component {
               />
             }
           >
-            <TouchableOpacity onPress={this.goToSettingsScreen}>
-              <Ionicons name="settings-sharp" size={24} color="black" />
-            </TouchableOpacity>
             {userProfile && (
               <View style={styles.content}>
                 <UploadImage refreshing={refreshing} />
@@ -153,6 +160,28 @@ export class Profile extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  settingsButton: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    left: 0,
+    top: 40,
+    width: 50,
+    height: 50,
+    marginLeft: 10,
+    zIndex: 9999,
+  },
+  friendsButton: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    right: 0,
+    top: 40,
+    width: 50,
+    height: 50,
+    marginRight: 10,
+    zIndex: 9999,
   },
   scrollView: {
     flex: 1,

@@ -10,6 +10,7 @@ class Register extends Component {
         this.state = {
             name: '',
             email: '',
+            username: '',
             password: '',
         };
         this.onSignUp = this.onSignUp.bind(this);
@@ -24,7 +25,7 @@ class Register extends Component {
     }
 
     async onSignUp() {
-        const { name, email, password } = this.state;
+        const { name, email, username, password } = this.state;
         try {
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
@@ -33,6 +34,7 @@ class Register extends Component {
             await setDoc(userRef, {
                 name: name,
                 email: email,
+                username: username,
                 posts: 0,
             });
             console.log("User information stored in Firestore successfully!");
@@ -80,6 +82,12 @@ class Register extends Component {
                                 onChangeText={(email) => this.setState({ email })}
                                 style={styles.textBox}
                                 keyboardType="email-address"
+                            />
+                            <Text style={styles.label}>Username</Text>
+                            <TextInput
+                                placeholder="Username"
+                                onChangeText={(username) => this.setState({ username })}
+                                style={styles.textBox}
                             />
                             <Text style={styles.label}>Password</Text>
                             <TextInput
