@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Image, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase, FIREBASE_STORAGE} from '../../firebaseConfig';
+import { doc, updateDoc, getDoc, writeBatch, getDocs } from 'firebase/firestore';
 
 
 export default function UploadImage({ refreshing }) {
@@ -32,27 +32,71 @@ export default function UploadImage({ refreshing }) {
     };
 
     const addImage = async () => {
-        let _image = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-        console.log(JSON.stringify(_image));
-        if (!_image.cancelled) {
-            setImage(_image.assets[0].uri);
-            updateProfilePicture(_image.assets[0].uri);
+        try {
+            let _image = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+            });
+
+            if (_image.assets && !_image.cancelled) {
+                const { uri } = _image.assets[0];
+                const fileName = uri.split('/').pop();
+                console.log(fileName);
+                const uploadResp = await uploadToFirebase(uri, `profilePics/${fileName}`, (progress) =>
+                    console.log(progress)
+                );
+                await updateProfilePicture(uploadResp.downloadUrl);
+            }
+        } catch (e) {
+            Alert.alert("Error Uploading Image " + e.message);
         }
     };
 
-    const updateProfilePicture = async (uri) => {
+
+    const updateProfilePicture = async (downloadUrl) => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-
-            try {
-                await updateDoc(userProfileRef, {
-                    profilePic: uri,
+            const userFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
+            const userFriendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'SentRequests');
+            try { //I have to update it in Users, for each AllFriends/AllFriends/currentUserId, for each ownRequests/FriendRequests/currentUserId
+                if (!downloadUrl) {
+                    throw new Error("Image Not Found");
+                }
+                const batch = writeBatch(FIRESTORE_DB);
+                batch.update(userProfileRef, {
+                    profilePic: downloadUrl,
                 });
+                // update profile pic on each friend's allFriends
+                if (userFriendsRef) {
+                    const AllFriendsSnapshot = await getDocs(userFriendsRef);
+                    AllFriendsSnapshot.forEach((friendDoc) => {
+                        const friendData = friendDoc.data();
+                        const friendDataRef = doc(FIRESTORE_DB, 'Requests', friendData.uid, 'AllFriends', currentUser.uid);
+                        if (!friendDataRef) {
+                            throw new Error("Friends are not mutual");
+                        }
+                        batch.update(friendDataRef, {
+                            profilePic: downloadUrl,
+                        });
+                    })
+                }
+                if (userFriendsReqRef) {
+                    const ReqFriendsSnapshot = await getDocs(userFriendsReqRef);
+                    ReqFriendsSnapshot.forEach((reqFriendDoc) => {
+                        const reqFriendData = reqFriendDoc.data();
+                        const reqFriendDataRef = doc(FIRESTORE_DB, 'Requests', reqFriendData.uid, 'FriendRequests', currentUser.uid);
+                        if (!reqFriendDataRef) {
+                            throw new Error("Friends are not mutually requested");
+                        }
+                        batch.update(reqFriendDataRef, {
+                            profilePic: downloadUrl,
+                        });
+                    })
+                }
+                await batch.commit()
+                // update profile pic on each SentRequests
                 console.log('Profile picture updated successfully!');
             } catch (error) {
                 console.error('Error updating profile picture: ', error);

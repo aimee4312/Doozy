@@ -16,14 +16,6 @@ class Register extends Component {
         this.onSignUp = this.onSignUp.bind(this);
     }
 
-    componentDidMount() {
-        FIREBASE_AUTH.onAuthStateChanged((user)=>{
-            if (user) {
-                this.props.navigation.reset({index: 0, routes: [{name:"TaskList"}]});
-            }
-        })
-    }
-
     async onSignUp() {
         const { name, email, username, password } = this.state;
         try {
@@ -36,6 +28,7 @@ class Register extends Component {
                 email: email,
                 username: username,
                 posts: 0,
+                profilePic: "https://firebasestorage.googleapis.com/v0/b/doozy-3d54c.appspot.com/o/profilePics%2Fdefault.jpg?alt=media&token=c4b20aae-830c-4d47-aa90-2a3ebd6e16fb"
             });
             console.log("User information stored in Firestore successfully!");
 

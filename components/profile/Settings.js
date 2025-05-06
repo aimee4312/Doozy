@@ -84,7 +84,6 @@ export default function Settings() {
         signOut(FIREBASE_AUTH)
         .then(() => {
             console.log("User signed out");
-            navigation.navigate('Landing');
         })
         .catch(error => {
             console.error("Error signing out: ", error);

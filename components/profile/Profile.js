@@ -35,14 +35,12 @@ export class Profile extends Component {
 
       const docSnapshot = await getDoc(userProfileRef)
       if (docSnapshot.exists()) {
-        console.log(docSnapshot);
         this.setState({ userProfile: docSnapshot.data() });
       } else {
         console.log("No such document!");
       }
 
       const querySnapshot = await getDocs(tasksRef);
-      console.log(querySnapshot);
       const tasks = [];
       querySnapshot.forEach((doc) => {
         tasks.push({ id: doc.id, ...doc.data() });

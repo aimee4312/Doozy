@@ -18,7 +18,6 @@ class Login extends Component {
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
             .then((result) => {
                 console.log(result);
-                this.props.navigation.navigate('TaskList');
             })
             .catch((error) => {
                 console.log(error);

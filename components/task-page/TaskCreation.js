@@ -98,13 +98,11 @@ const TaskCreation = forwardRef(( props, ref) => {
         });
 
         if (_image.assets && !_image.cancelled) {
-            console.log("uri::: " + _image.assets[0].uri);
             const { uri } = _image.assets[0];
             const fileName = uri.split('/').pop();
-            const uploadResp = await uploadToFirebase(uri, fileName, (progress) =>
+            const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
                 console.log(progress)
             );
-            console.log(uploadResp);
             return uploadResp.downloadUrl;
         }
     } catch (e) {
