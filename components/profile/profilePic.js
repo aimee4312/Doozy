@@ -3,7 +3,8 @@ import { Image, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase, FIREBASE_STORAGE} from '../../firebaseConfig';
-import { doc, updateDoc, getDoc, writeBatch, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, writeBatch, getDocs, collection, deleteDoc } from 'firebase/firestore';
+import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/storage'
 
 
 export default function UploadImage({ refreshing }) {
@@ -13,7 +14,7 @@ export default function UploadImage({ refreshing }) {
 
     useEffect(() => {
         fetchUserProfile();
-    }, [refreshing]);
+    }, [refreshing, image]);
 
     const fetchUserProfile = async () => {
         if (currentUser) {
@@ -30,6 +31,14 @@ export default function UploadImage({ refreshing }) {
             }
         }
     };
+
+    function getStoragePathFromUrl(url) {
+        // Extract the part after '/o/' and before '?'
+        const match = url.match(/\/o\/([^?]+)/);
+        if (!match) return null;
+        // URL-decode the path
+        return decodeURIComponent(match[1]);
+      }
 
     const addImage = async () => {
         try {
@@ -65,6 +74,11 @@ export default function UploadImage({ refreshing }) {
                     throw new Error("Image Not Found");
                 }
                 const batch = writeBatch(FIRESTORE_DB);
+                const userSnapshot = await getDoc(userProfileRef);
+                let prevProfilePic = ''
+                if (userSnapshot) {
+                    prevProfilePic = userSnapshot.data().profilePic;
+                }
                 batch.update(userProfileRef, {
                     profilePic: downloadUrl,
                 });
@@ -72,8 +86,8 @@ export default function UploadImage({ refreshing }) {
                 if (userFriendsRef) {
                     const AllFriendsSnapshot = await getDocs(userFriendsRef);
                     AllFriendsSnapshot.forEach((friendDoc) => {
-                        const friendData = friendDoc.data();
-                        const friendDataRef = doc(FIRESTORE_DB, 'Requests', friendData.uid, 'AllFriends', currentUser.uid);
+                        const friendId = friendDoc.id
+                        const friendDataRef = doc(FIRESTORE_DB, 'Requests', friendId, 'AllFriends', currentUser.uid);
                         if (!friendDataRef) {
                             throw new Error("Friends are not mutual");
                         }
@@ -85,8 +99,9 @@ export default function UploadImage({ refreshing }) {
                 if (userFriendsReqRef) {
                     const ReqFriendsSnapshot = await getDocs(userFriendsReqRef);
                     ReqFriendsSnapshot.forEach((reqFriendDoc) => {
-                        const reqFriendData = reqFriendDoc.data();
-                        const reqFriendDataRef = doc(FIRESTORE_DB, 'Requests', reqFriendData.uid, 'FriendRequests', currentUser.uid);
+                        const reqFriendId = reqFriendDoc.id;
+                        console.log(reqFriendId);
+                        const reqFriendDataRef = doc(FIRESTORE_DB, 'Requests', reqFriendId, 'FriendRequests', currentUser.uid);
                         if (!reqFriendDataRef) {
                             throw new Error("Friends are not mutually requested");
                         }
@@ -96,6 +111,10 @@ export default function UploadImage({ refreshing }) {
                     })
                 }
                 await batch.commit()
+                const storagePath = getStoragePathFromUrl(prevProfilePic);
+                const profilePicRef = ref(getStorage(), storagePath);
+                deleteObject(profilePicRef);
+                setImage(downloadUrl);
                 // update profile pic on each SentRequests
                 console.log('Profile picture updated successfully!');
             } catch (error) {
