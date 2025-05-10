@@ -99,8 +99,7 @@ export default function UploadImage({ refreshing }) {
                 if (userFriendsReqRef) {
                     const ReqFriendsSnapshot = await getDocs(userFriendsReqRef);
                     ReqFriendsSnapshot.forEach((reqFriendDoc) => {
-                        const reqFriendId = reqFriendDoc.id;
-                        console.log(reqFriendId);
+                        const reqFriendId = reqFriendDoc.id;    
                         const reqFriendDataRef = doc(FIRESTORE_DB, 'Requests', reqFriendId, 'FriendRequests', currentUser.uid);
                         if (!reqFriendDataRef) {
                             throw new Error("Friends are not mutually requested");
