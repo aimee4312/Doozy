@@ -17,7 +17,7 @@ const FriendsScreen = () => {
    useEffect(() => {
            fetchFriends();
            fetchRequests();
-       }, [page]); // maybe put page in there
+       }, [page]); // change to onSnapshot
 
 
    const fetchFriends = async() => {
@@ -76,7 +76,6 @@ const FriendsScreen = () => {
             const batch = writeBatch(FIRESTORE_DB);
             const userSnap = await getDoc(userProfileRef);
             const userData = userSnap.data()
-            console.log(userSnap.data());
             batch.set(allFriendProfileRef, {name: friend.name, username: friend.username, profilePic: friend.profilePic});
             batch.set(currUserAllFriendsRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
             batch.delete(friendReqProfileRef);
@@ -89,6 +88,22 @@ const FriendsScreen = () => {
     }
 
 
+    const deleteRequest = async (friend) => {
+        if (!currentUser) return;
+        const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "FriendRequests", friend.id);
+        const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", friend.id, "SentRequests", currentUser.uid);
+
+        try {
+           const batch = writeBatch(FIRESTORE_DB);
+           batch.delete(friendReqProfileRef);
+           batch.delete(currUserSentReqRef);
+           await batch.commit();
+        } catch(error) {
+            console.error("Error deleting request:", error);
+        }
+    }
+
+
    const ProfileCard = ({ item }) => (
        <View style={styles.profileCard}>
            <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
@@ -97,9 +112,16 @@ const FriendsScreen = () => {
                <Text style={styles.usernameText}> {item.username} </Text>
            </View>
             {page === "add-friends-page" && 
-            (<TouchableOpacity style={styles.addFriendIcon} onPress={() => {addFriend(item)}}>
-                <Ionicons name="person-add" size={28} color="black"/>
-            </TouchableOpacity>)}
+            (<View style={styles.requestConfirmationButtons}>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => {deleteRequest(item)}}>
+                    <Text style={styles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmButton} onPress={() => {addFriend(item)}}>
+                    <Text style={styles.confirmButtonText}>Confirm</Text>
+                </TouchableOpacity>
+            </View>
+            )}
+
        </View>
    );
 
@@ -167,10 +189,38 @@ const styles = StyleSheet.create ({
        fontSize: 14,
        color: "grey",
    },
-   addFriendIcon: {
-        paddingRight: 15,
+   requestConfirmationButtons: {
+        flexDirection: "row",
+        marginLeft: "auto",
+   },
+   confirmButton: {
+        marginRight: 15,
         marginLeft: 'auto',
+        padding: 5,
+        width: 80,
+        backgroundColor: "blue",
+        borderRadius: 20,
+        borderWidth: 1,
     },
+    deleteButton: {
+        marginRight: 10,
+        marginLeft: 'auto',
+        padding: 5,
+        width: 80,
+        backgroundColor: "white",
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    confirmButtonText: {
+        color: "white",
+        alignSelf: "center",
+        fontSize: 16,
+    },
+    deleteButtonText: {
+        color: "grey",
+        alignSelf: "center",
+        fontSize: 16,
+    }
 });
 
 
