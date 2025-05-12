@@ -1,67 +1,95 @@
 import React, {useEffect, useState} from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { collection, getDocs, writeBatch, doc, getDoc } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
 import { Ionicons } from '@expo/vector-icons';
+import { createFilter } from 'react-native-search-filter';
 
 
 const FriendsScreen = () => {
-   const [page, setPage] = useState("friends-page");
-   const [friends, setFriends] = useState([]);
-   const [reqFriends, setReqFriends] = useState([])
+    const [page, setPage] = useState("friends-page");
+    const [friends, setFriends] = useState([]);
+    const [reqFriends, setReqFriends] = useState([]);
+    const [profiles, setProfiles] = useState([]);
+    const [searchText, setSearchText] = useState("");
+    const [searchProfilesText, setSearchProfilesText] = useState("");
 
-   const currentUser = FIREBASE_AUTH.currentUser;
-
-
-   useEffect(() => {
-           fetchFriends();
-           fetchRequests();
-       }, [page]); // change to onSnapshot
+    const currentUser = FIREBASE_AUTH.currentUser;
 
 
-   const fetchFriends = async() => {
+    useEffect(() => {
+        fetchFriends();
+        fetchRequests();
+    }, [page]); // change to onSnapshot
 
-       if (!currentUser) return;
+    useEffect(() => {
+        fetchProfiles();
+    }, [])
 
 
-       try {
-           const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
-           const snapshot = await getDocs(AllFriendsRef);
-           if (!snapshot.empty) {
-               const tempFriends = [];
-               snapshot.forEach((doc) => {
-                   tempFriends.push({ id: doc.id, ...doc.data() });
-               });
-               setFriends(tempFriends);
-               return
-           }
-           else return;
-       } catch (error) {
-           console.error("Error fetching friends:", error);
-       }
-   }
+    const fetchFriends = async() => {
+
+        if (!currentUser) return;
+
+
+        try {
+            const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
+            const snapshot = await getDocs(AllFriendsRef);
+            if (!snapshot.empty) {
+                const tempFriends = [];
+                snapshot.forEach((doc) => {
+                    tempFriends.push({ id: doc.id, ...doc.data() });
+                });
+                setFriends(tempFriends);
+                return
+            }
+            else return;
+        } catch (error) {
+            console.error("Error fetching friends:", error);
+        }
+    }
   
-   const fetchRequests = async() => {
+    const fetchRequests = async() => {
 
-       if (!currentUser) return;
+        if (!currentUser) return;
 
-       try {
-           const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
-           const snapshot = await getDocs(friendsReqRef);
-           if (!snapshot.empty) {
-               const tempFriendsReq = []
-               snapshot.forEach((doc) => {
-                   tempFriendsReq.push({ id: doc.id, ...doc.data() });
-               });
-               setReqFriends(tempFriendsReq);
-               return
-           }
-           else return;
-       } catch (error) {
-           console.error("Error fetching friend requests:", error);
-       }
-   }
+        try {
+            const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
+            const snapshot = await getDocs(friendsReqRef);
+            if (!snapshot.empty) {
+                const tempFriendsReq = []
+                snapshot.forEach((doc) => {
+                    tempFriendsReq.push({ id: doc.id, ...doc.data() });
+                });
+                setReqFriends(tempFriendsReq);
+                return
+            }
+            else return;
+        } catch (error) {
+            console.error("Error fetching friend requests:", error);
+        }
+    }
+
+    const fetchProfiles = async () => {
+        if (!currentUser) return;
+
+        try {
+            const profilesRef = collection(FIRESTORE_DB, 'Users');
+            const snapshot = await getDocs(profilesRef);
+            if (!snapshot.empty) {
+                const tempProfiles = snapshot.docs
+                .filter(doc => doc.id !== currentUser.uid && !friends.some(friend => friend.id === doc.id))
+                .map(doc => ({ id: doc.id, ...doc.data() }));
+                setProfiles(tempProfiles);
+            }
+        } catch (error) {
+            console.error("Error fetching profiles:", error);
+        }
+    }
+
+    const filteredFriends = friends.filter(createFilter(searchText, ['name', 'username']));
+    const filteredProfiles = profiles.filter(createFilter(searchProfilesText, ['name', 'username']));
 
 
     const addFriend = async (friend) => { // add person to AllFriends, remove person from FriendRequests, add current user to AllFriends, remove currentUser from SentRequests
@@ -138,20 +166,46 @@ const FriendsScreen = () => {
                onPress={value => setPage(value)}
            />
            {page === "friends-page" &&
-           (<View style={styles.profileCardContainer}>
-               <FlatList
-                   data={friends}
-                   renderItem={ProfileCard}
-                   keyExtractor={(item) => item.id} />
+           (<View style={styles.searchBrowseContainer}>
+                <View style={styles.searchBoxContainer}>
+                    <TextInput 
+                        placeholder='Search Friends...' 
+                        style={styles.searchBox}
+                        onChangeText={setSearchText}
+                    />
+                </View>
+                <View style={styles.profileCardContainer}>
+                    <FlatList
+                        data={filteredFriends}
+                        renderItem={ProfileCard}
+                        keyExtractor={(item) => item.id} />
+                </View>
            </View>)}
            {page === "add-friends-page" &&
-           (<View style={styles.profileCardContainer}>
-               <Text>Add Friends Page</Text>
-               <FlatList
-                   data={reqFriends}
-                   renderItem={ProfileCard}
-                   keyExtractor={(item) => item.id} />
-           </View>)}
+           (<View style={styles.searchBrowseContainer}>
+                <View style={styles.searchBoxContainer}>
+                    <TextInput 
+                        placeholder='Search Profiles...' 
+                        style={styles.searchBox}
+                        onChangeText={setSearchProfilesText}
+                    />
+                </View>
+                {searchProfilesText === "" && (
+                <View style={styles.profileCardContainer}>
+                    <FlatList
+                        data={reqFriends}
+                        renderItem={ProfileCard}
+                        keyExtractor={(item) => item.id} />
+                </View>)}
+                {searchProfilesText !== "" && 
+                (
+                    <View style={styles.profileCardContainer}>
+                        <FlatList
+                            data={filteredProfiles}
+                            renderItem={ProfileCard}
+                            keyExtractor={(item) => item.id} />
+                    </View>)}
+            </View>)}
        </View>
    );
 };
@@ -159,7 +213,24 @@ const FriendsScreen = () => {
 
 const styles = StyleSheet.create ({
    container: {
-       flex: 1,
+        flex: 1,
+   },
+   searchBrowseContainer: {
+        flex: 1,
+   },
+   searchBoxContainer: {
+        backgroundColor: "white",
+        borderRadius: 10,
+        margin: 5,
+        height: 30,
+        flexDirection: "row",
+        alignItems: "center",
+
+   },
+   searchBox: {
+        paddingLeft: 10,
+        paddingRight: 10,
+        fontSize: 20,
    },
    profileCardContainer: {
        flex: 1,
@@ -194,7 +265,7 @@ const styles = StyleSheet.create ({
         marginLeft: "auto",
    },
    confirmButton: {
-        marginRight: 15,
+        marginRight: 10,
         marginLeft: 'auto',
         padding: 5,
         width: 80,
