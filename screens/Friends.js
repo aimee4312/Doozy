@@ -19,13 +19,15 @@ const FriendsScreen = () => {
 
 
     useEffect(() => {
-        fetchFriends();
-        fetchRequests();
-    }, [page]); // change to onSnapshot
+        const fetchAll = async () => {
+            const friendsData = await fetchFriends();
+            await fetchRequests();
+            await fetchProfiles(friendsData);
+        };
+        fetchAll();
+    
+    }, []); // change to onSnapshot
 
-    useEffect(() => {
-        fetchProfiles();
-    }, [])
 
 
     const fetchFriends = async() => {
@@ -35,6 +37,7 @@ const FriendsScreen = () => {
 
         try {
             const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
+            console.log("reading")
             const snapshot = await getDocs(AllFriendsRef);
             if (!snapshot.empty) {
                 const tempFriends = [];
@@ -42,9 +45,9 @@ const FriendsScreen = () => {
                     tempFriends.push({ id: doc.id, ...doc.data() });
                 });
                 setFriends(tempFriends);
-                return
+                return tempFriends;
             }
-            else return;
+            else return [];
         } catch (error) {
             console.error("Error fetching friends:", error);
         }
@@ -56,6 +59,7 @@ const FriendsScreen = () => {
 
         try {
             const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
+            console.log("reading")
             const snapshot = await getDocs(friendsReqRef);
             if (!snapshot.empty) {
                 const tempFriendsReq = []
@@ -71,15 +75,17 @@ const FriendsScreen = () => {
         }
     }
 
-    const fetchProfiles = async () => {
+    const fetchProfiles = async (friendsData) => {
         if (!currentUser) return;
 
         try {
+            const friendUIDs = friendsData.map(doc => doc.id);
             const profilesRef = collection(FIRESTORE_DB, 'Users');
+            console.log("reading")
             const snapshot = await getDocs(profilesRef);
             if (!snapshot.empty) {
                 const tempProfiles = snapshot.docs
-                .filter(doc => doc.id !== currentUser.uid && !friends.some(friend => friend.id === doc.id))
+                .filter(doc => doc.id !== currentUser.uid && !friendUIDs.includes(doc.id))
                 .map(doc => ({ id: doc.id, ...doc.data() }));
                 setProfiles(tempProfiles);
             }
@@ -88,8 +94,12 @@ const FriendsScreen = () => {
         }
     }
 
-    const filteredFriends = friends.filter(createFilter(searchText, ['name', 'username']));
-    const filteredProfiles = profiles.filter(createFilter(searchProfilesText, ['name', 'username']));
+    const filteredFriends = friends.filter((friend) => {
+        return friend.name.toLowerCase().startsWith(searchText.toLowerCase()) || friend.username.toLowerCase().startsWith(searchText.toLowerCase())
+    });
+    const filteredProfiles = profiles.filter((profile) => {
+        return profile.name.toLowerCase().startsWith(searchProfilesText.toLowerCase()) || profile.username.toLowerCase().startsWith(searchProfilesText.toLowerCase())
+    }); // error occuring because there isnt a username property on some of the users
 
 
     const addFriend = async (friend) => { // add person to AllFriends, remove person from FriendRequests, add current user to AllFriends, remove currentUser from SentRequests
@@ -163,7 +173,7 @@ const FriendsScreen = () => {
                    {[{label: "Friends", value: "friends-page"},
                    {label: "Add Friends", value: "add-friends-page"}]}
                initial={0}
-               onPress={value => setPage(value)}
+               onPress={value => {setSearchProfilesText(""); setSearchText(""); setPage(value);}}
            />
            {page === "friends-page" &&
            (<View style={styles.searchBrowseContainer}>
