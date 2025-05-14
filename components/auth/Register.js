@@ -2,7 +2,8 @@ import React, { Component, useEffect } from 'react';
 import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, FIREBASE_STORAGE } from '../../firebaseConfig';
+import { ref, updateMetadata } from "firebase/storage";
 
 class Register extends Component {
     constructor(props) {
@@ -30,6 +31,16 @@ class Register extends Component {
                 posts: 0,
                 profilePic: "https://firebasestorage.googleapis.com/v0/b/doozy-3d54c.appspot.com/o/profilePics%2Fdefault.jpg?alt=media&token=c4b20aae-830c-4d47-aa90-2a3ebd6e16fb"
             });
+
+            const forestRef = ref(FIREBASE_STORAGE, 'profilePics/default.jpg');
+
+            const newMetadata = {
+                cacheControl: 'public,max-age=600'
+              };
+              
+              // Update metadata properties
+              await updateMetadata(forestRef, newMetadata);
+
             console.log("User information stored in Firestore successfully!");
 
         } catch (error) {

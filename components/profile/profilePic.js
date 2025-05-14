@@ -111,8 +111,11 @@ export default function UploadImage({ refreshing }) {
                 }
                 await batch.commit()
                 const storagePath = getStoragePathFromUrl(prevProfilePic);
-                const profilePicRef = ref(getStorage(), storagePath);
-                deleteObject(profilePicRef);
+                console.log(storagePath);
+                if (storagePath !== "profilePics/default.jpg") {
+                    const profilePicRef = ref(getStorage(), storagePath);
+                    deleteObject(profilePicRef);
+                }
                 setImage(downloadUrl);
                 // update profile pic on each SentRequests
                 console.log('Profile picture updated successfully!');
@@ -124,7 +127,7 @@ export default function UploadImage({ refreshing }) {
     return (
         <View style={imageUploaderStyles.container}>
             {
-                image && <Image source={{ uri: userProfile.profilePic }} style={{ width: 200, height: 200 }} />
+                image && <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100 }} />
             }
             <View style={imageUploaderStyles.uploadBtnContainer}>
                 <TouchableOpacity onPress={addImage} style={imageUploaderStyles.uploadBtn} >

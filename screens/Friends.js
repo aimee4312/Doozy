@@ -4,16 +4,17 @@ import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput } 
 import { collection, getDocs, writeBatch, doc, getDoc } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
 import { Ionicons } from '@expo/vector-icons';
-import { createFilter } from 'react-native-search-filter';
 
 
 const FriendsScreen = () => {
     const [page, setPage] = useState("friends-page");
     const [friends, setFriends] = useState([]);
     const [reqFriends, setReqFriends] = useState([]);
+    const [requesting, setRequesting] = useState([]);
     const [profiles, setProfiles] = useState([]);
     const [searchText, setSearchText] = useState("");
     const [searchProfilesText, setSearchProfilesText] = useState("");
+    const [boom, setBoom] = useState(true);
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -22,18 +23,19 @@ const FriendsScreen = () => {
         const fetchAll = async () => {
             const friendsData = await fetchFriends();
             await fetchRequests();
+            await fetchRequesting();
             await fetchProfiles(friendsData);
         };
         fetchAll();
     
-    }, []); // change to onSnapshot
+    }, [boom]); // change to onSnapshot
 
 
 
     const fetchFriends = async() => {
 
         if (!currentUser) return;
-
+        console.log("read");
 
         try {
             const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
@@ -67,11 +69,29 @@ const FriendsScreen = () => {
                     tempFriendsReq.push({ id: doc.id, ...doc.data() });
                 });
                 setReqFriends(tempFriendsReq);
-                return
+                return tempFriendsReq;
             }
-            else return;
+            else return [];
         } catch (error) {
             console.error("Error fetching friend requests:", error);
+        }
+    }
+    const fetchRequesting = async () => {
+        if (!currentUser) return;
+
+        try {
+            const requestingRef = collection(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests");
+            const snapshot = await getDocs(requestingRef);
+            if (!snapshot.empty) {
+                const tempRequesting = []
+                snapshot.forEach((doc) => {
+                    tempRequesting.push({ id: doc.id });
+                });
+                setRequesting(tempRequesting);
+            }
+            else return [];
+        } catch (error) {
+            console.error("Error fetching requesting:", error);
         }
     }
 
@@ -86,7 +106,7 @@ const FriendsScreen = () => {
             if (!snapshot.empty) {
                 const tempProfiles = snapshot.docs
                 .filter(doc => doc.id !== currentUser.uid && !friendUIDs.includes(doc.id))
-                .map(doc => ({ id: doc.id, ...doc.data() }));
+                .map(doc => ({ id: doc.id, ...doc.data()}));
                 setProfiles(tempProfiles);
             }
         } catch (error) {
@@ -98,7 +118,8 @@ const FriendsScreen = () => {
         return friend.name.toLowerCase().startsWith(searchText.toLowerCase()) || friend.username.toLowerCase().startsWith(searchText.toLowerCase())
     });
     const filteredProfiles = profiles.filter((profile) => {
-        return profile.name.toLowerCase().startsWith(searchProfilesText.toLowerCase()) || profile.username.toLowerCase().startsWith(searchProfilesText.toLowerCase())
+        return profile.name.toLowerCase().startsWith(searchProfilesText.toLowerCase()) 
+        // || profile.username.toLowerCase().startsWith(searchProfilesText.toLowerCase())
     }); // error occuring because there isnt a username property on some of the users
 
 
@@ -142,25 +163,74 @@ const FriendsScreen = () => {
     }
 
 
-   const ProfileCard = ({ item }) => (
-       <View style={styles.profileCard}>
-           <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
-           <View style={styles.profileCardNames}>
-               <Text style={styles.nameText}> {item.name} </Text>
-               <Text style={styles.usernameText}> {item.username} </Text>
-           </View>
-            {page === "add-friends-page" && 
-            (<View style={styles.requestConfirmationButtons}>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => {deleteRequest(item)}}>
-                    <Text style={styles.deleteButtonText}>Delete</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.confirmButton} onPress={() => {addFriend(item)}}>
-                    <Text style={styles.confirmButtonText}>Confirm</Text>
-                </TouchableOpacity>
-            </View>
-            )}
+    const requestUser = async (user) => { // update currentusers requesting, update other user's requested
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const requestingRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests", user.id);
+        const requestedRef = doc(FIRESTORE_DB, "Requests", user.id, "FriendRequests", currentUser.uid);
 
-       </View>
+        try {
+            const batch = writeBatch(FIRESTORE_DB);
+            const userSnapshot = await getDoc(userProfileRef);
+            const userData = userSnapshot.data();
+            batch.set(requestedRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
+            batch.set(requestingRef, {name: user.name, username: user.username, profilePic: user.profilePic});
+            await batch.commit();
+            console.log("user request successful")
+            setBoom(!boom); //temporaryr
+        } catch(error) {
+            console.error("Error requesting user:", error);
+        }
+    } 
+
+
+    const renderProfileCard = ({item}) => {
+        let status;
+        const reqFriendsIds = reqFriends.map(data => data.id);
+        if (reqFriendsIds.some(obj => obj.id === item.id)) {
+            status = "requested";
+        }
+        else if (requesting.some(obj => obj.id === item.id)){
+            status = "requesting";
+        }
+        else {
+            status = "stranger";
+        }
+        return <ProfileCard item={item} status={status}/>
+    };
+
+
+   const ProfileCard = ({ item, status }) => (
+        <View style={styles.profileCard}>
+            <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
+            <View style={styles.profileCardNames}>
+                <Text style={styles.nameText}> {item.name} </Text>
+                <Text style={styles.usernameText}> {item.username} </Text>
+            </View>
+                {page === "add-friends-page" && status === "requested" &&
+                (<View style={styles.requestConfirmationButtons}>
+                    <TouchableOpacity style={styles.deleteButton} onPress={() => {deleteRequest(item)}}>
+                        <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.confirmButton} onPress={() => {addFriend(item)}}>
+                        <Text style={styles.confirmButtonText}>Confirm</Text>
+                    </TouchableOpacity>
+                </View>
+                )}
+                {page ==="add-friends-page" && status === "requesting" &&
+                (<View style={styles.requestConfirmationButtons}>
+                    <TouchableOpacity style={styles.confirmButton}>
+                        <Text style={styles.confirmButtonText}>Requested</Text>
+                    </TouchableOpacity>
+                </View>
+                )}
+                {page ==="add-friends-page" && status === "stranger" &&
+                (<View style={styles.requestConfirmationButtons}>
+                    <TouchableOpacity style={styles.confirmButton} onPress={() =>{requestUser(item)}}>
+                        <Text style={styles.confirmButtonText}>Add Friend</Text>
+                    </TouchableOpacity>
+                </View>
+                )}
+        </View>
    );
 
 
@@ -212,7 +282,7 @@ const FriendsScreen = () => {
                     <View style={styles.profileCardContainer}>
                         <FlatList
                             data={filteredProfiles}
-                            renderItem={ProfileCard}
+                            renderItem={renderProfileCard}
                             keyExtractor={(item) => item.id} />
                     </View>)}
             </View>)}
