@@ -4,7 +4,7 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import NavBar from '../auth/NavigationBar';
 
-class Timeline extends Component {
+class TimelineScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -25,9 +25,10 @@ class Timeline extends Component {
   
     try {
       const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+      
+      if (!isMounted) return;
+      
       const querySnapshot = await getDocs(tasksRef);
-  
-      if (!isMounted) return; // Prevent state updates if unmounted
   
       const tasks = [];
       querySnapshot.forEach((doc) => {
@@ -49,8 +50,9 @@ class Timeline extends Component {
   };
 
   handleRefresh = () => {
-    this.setState({ refreshing: true }, () => {
-      this.refreshTasks();
+    this.setState({ refreshing: true });
+    this.refreshTasks().finally(() => {
+        this.setState({ refreshing: false });
     });
   };
 
@@ -81,7 +83,7 @@ class Timeline extends Component {
           <FlatList
             data={completedTasks}
             renderItem={this.renderTask}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id}
             contentContainerStyle={{ flexGrow: 1 }}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={this.handleRefresh} />
@@ -137,4 +139,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Timeline;
+export default TimelineScreen;

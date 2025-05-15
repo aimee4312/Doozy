@@ -35,7 +35,7 @@ class Register extends Component {
             const forestRef = ref(FIREBASE_STORAGE, 'profilePics/default.jpg');
 
             const newMetadata = {
-                cacheControl: 'public,max-age=600'
+                cacheControl: 'public,max-age=31536000'
               };
               
               // Update metadata properties

@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
 import NavBar from '../auth/NavigationBar';
 
-export class Profile extends Component {
+export class ProfileScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -263,4 +263,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Profile;
+export default ProfileScreen;

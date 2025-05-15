@@ -186,7 +186,7 @@ const FriendsScreen = () => {
     const renderProfileCard = ({item}) => {
         let status;
         const reqFriendsIds = reqFriends.map(data => data.id);
-        if (reqFriendsIds.some(obj => obj.id === item.id)) {
+        if (reqFriendsIds.includes(item.id)) {
             status = "requested";
         }
         else if (requesting.some(obj => obj.id === item.id)){
@@ -274,7 +274,7 @@ const FriendsScreen = () => {
                 <View style={styles.profileCardContainer}>
                     <FlatList
                         data={reqFriends}
-                        renderItem={ProfileCard}
+                        renderItem={renderProfileCard}
                         keyExtractor={(item) => item.id} />
                 </View>)}
                 {searchProfilesText !== "" && 
