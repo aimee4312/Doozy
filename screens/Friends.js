@@ -170,6 +170,36 @@ const FriendsScreen = () => {
         }
     }
 
+    const deletePendingRequest = async (user) => {
+        if (!currentUser) return;
+        const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests", user.id);
+        const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", user.id, "FriendRequests", currentUser.uid);
+
+        try {
+           const batch = writeBatch(FIRESTORE_DB);
+           batch.delete(friendReqProfileRef);
+           batch.delete(currUserSentReqRef);
+           await batch.commit();
+        } catch(error) {
+            console.error("Error deleting pending request:", error);
+        }
+    }
+
+    const deleteFriend = async (friend) => { // add this later
+        if (!currentUser) return;
+        const currUserFriendRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
+        const recUserFriendRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
+
+        try {
+           const batch = writeBatch(FIRESTORE_DB);
+           batch.delete(currUserFriendRef);
+           batch.delete(recUserFriendRef);
+           await batch.commit();
+        } catch(error) {
+            console.error("Error deleting friend:", error);
+        }
+    }
+
 
     const requestUser = async (user) => { // update currentusers requesting, update other user's requested
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
@@ -225,7 +255,7 @@ const FriendsScreen = () => {
                 )}
                 {page ==="add-friends-page" && status === "requesting" &&
                 (<View style={styles.requestConfirmationButtons}>
-                    <TouchableOpacity style={styles.confirmButton}>
+                    <TouchableOpacity style={styles.confirmButton} onPress={() => {deletePendingRequest(item)}}>
                         <Text style={styles.confirmButtonText}>Requested</Text>
                     </TouchableOpacity>
                 </View>
