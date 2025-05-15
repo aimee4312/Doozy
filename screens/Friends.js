@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { collection, getDocs, writeBatch, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -14,101 +14,109 @@ const FriendsScreen = () => {
     const [profiles, setProfiles] = useState([]);
     const [searchText, setSearchText] = useState("");
     const [searchProfilesText, setSearchProfilesText] = useState("");
-    const [boom, setBoom] = useState(true);
+    const unsubscribeRef = useRef([]);
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
 
     useEffect(() => {
-        const fetchAll = async () => {
-            const friendsData = await fetchFriends();
-            await fetchRequests();
-            await fetchRequesting();
-            await fetchProfiles(friendsData);
-        };
-        fetchAll();
+
+        const unsubscribeFriends = fetchFriends();
+        const unsubscribeRequests = fetchRequests();
+        const unsubscribeRequesting = fetchRequesting();
+
+        unsubscribeRef.current = [unsubscribeFriends, unsubscribeRequests, unsubscribeRequesting];
+
+        return () => {
+            console.log(unsubscribeRef);
+            unsubscribeRef.current.forEach(unsub => unsub());
+          };
     
-    }, [boom]); // change to onSnapshot
+    }, []);
+
+    useEffect(() => {
+
+        const unsubscribeProfiles = fetchProfiles();
+
+        return () => unsubscribeProfiles();
+
+    }, [friends, reqFriends, requesting]);
 
 
 
-    const fetchFriends = async() => {
-
-        if (!currentUser) return;
-        console.log("read");
+    function fetchFriends() {
 
         try {
             const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
-            console.log("reading")
-            const snapshot = await getDocs(AllFriendsRef);
-            if (!snapshot.empty) {
-                const tempFriends = [];
-                snapshot.forEach((doc) => {
-                    tempFriends.push({ id: doc.id, ...doc.data() });
+            console.log("reading friends")
+            const unsubscribeFriends = onSnapshot(AllFriendsRef, 
+                (snapshot) => {
+                    const tempFriends = [];
+                    snapshot.forEach((doc) => {
+                        tempFriends.push({ id: doc.id, ...doc.data() });
+                    });
+                    setFriends(tempFriends);
                 });
-                setFriends(tempFriends);
-                return tempFriends;
-            }
-            else return [];
+            return unsubscribeFriends;
         } catch (error) {
             console.error("Error fetching friends:", error);
         }
     }
   
-    const fetchRequests = async() => {
-
-        if (!currentUser) return;
+    function fetchRequests () {
 
         try {
             const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
-            console.log("reading")
-            const snapshot = await getDocs(friendsReqRef);
-            if (!snapshot.empty) {
-                const tempFriendsReq = []
-                snapshot.forEach((doc) => {
-                    tempFriendsReq.push({ id: doc.id, ...doc.data() });
-                });
-                setReqFriends(tempFriendsReq);
-                return tempFriendsReq;
-            }
-            else return [];
+            console.log("reading requests")
+            const unsubscribeRequests = onSnapshot(friendsReqRef, 
+                (snapshot) => {
+                    const tempFriendsReq = []
+                    snapshot.forEach((doc) => {
+                        tempFriendsReq.push({ id: doc.id, ...doc.data() });
+                    });
+                    setReqFriends(tempFriendsReq);
+                }
+            );
+            return unsubscribeRequests;
         } catch (error) {
             console.error("Error fetching friend requests:", error);
         }
     }
-    const fetchRequesting = async () => {
-        if (!currentUser) return;
+    function fetchRequesting() {
 
         try {
             const requestingRef = collection(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests");
-            const snapshot = await getDocs(requestingRef);
-            if (!snapshot.empty) {
-                const tempRequesting = []
-                snapshot.forEach((doc) => {
-                    tempRequesting.push({ id: doc.id });
-                });
-                setRequesting(tempRequesting);
-            }
-            else return [];
+            console.log("reading requesting")
+            const unsubscribeRequesting = onSnapshot(requestingRef, 
+                (snapshot) => {
+                    const tempRequesting = []
+                    snapshot.forEach((doc) => {
+                        tempRequesting.push({ id: doc.id });
+                    });
+                    setRequesting(tempRequesting);
+                }
+            );
+            return unsubscribeRequesting;
         } catch (error) {
             console.error("Error fetching requesting:", error);
         }
     }
 
-    const fetchProfiles = async (friendsData) => {
-        if (!currentUser) return;
+    function fetchProfiles() {
 
         try {
-            const friendUIDs = friendsData.map(doc => doc.id);
+            const friendUIDs = friends.map(doc => doc.id);
             const profilesRef = collection(FIRESTORE_DB, 'Users');
-            console.log("reading")
-            const snapshot = await getDocs(profilesRef);
-            if (!snapshot.empty) {
-                const tempProfiles = snapshot.docs
-                .filter(doc => doc.id !== currentUser.uid && !friendUIDs.includes(doc.id))
-                .map(doc => ({ id: doc.id, ...doc.data()}));
-                setProfiles(tempProfiles);
-            }
+            console.log("reading profiles");
+            const unsubscribeProfiles = onSnapshot(profilesRef, 
+                (snapshot) => {
+                    const tempProfiles = snapshot.docs
+                    .filter(doc => doc.id !== currentUser.uid && !friendUIDs.includes(doc.id))
+                    .map(doc => ({ id: doc.id, ...doc.data()}));
+                    setProfiles(tempProfiles);
+                }
+            );
+            return unsubscribeProfiles;
         } catch (error) {
             console.error("Error fetching profiles:", error);
         }
@@ -176,7 +184,6 @@ const FriendsScreen = () => {
             batch.set(requestingRef, {name: user.name, username: user.username, profilePic: user.profilePic});
             await batch.commit();
             console.log("user request successful")
-            setBoom(!boom); //temporaryr
         } catch(error) {
             console.error("Error requesting user:", error);
         }
