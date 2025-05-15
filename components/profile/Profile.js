@@ -18,6 +18,7 @@ export class ProfileScreen extends Component {
   }
 
   componentDidMount() {
+    console.log("yoo")
     this.fetchData();
   }
 

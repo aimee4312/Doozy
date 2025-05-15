@@ -4,7 +4,7 @@ import { AntDesign } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase, FIREBASE_STORAGE} from '../../firebaseConfig';
 import { doc, updateDoc, getDoc, writeBatch, getDocs, collection, deleteDoc } from 'firebase/firestore';
-import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/storage'
+import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/storage';
 
 
 export default function UploadImage({ refreshing }) {
@@ -45,7 +45,7 @@ export default function UploadImage({ refreshing }) {
             let _image = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsEditing: true,
-                aspect: [4, 3],
+                aspect: [1, 1],
                 quality: 1,
             });
 
