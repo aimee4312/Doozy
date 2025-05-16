@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useRef, forwardRef, useEffe
 import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Task from '../components/task-page/Task'
 import TaskCreation from '../components/task-page/TaskCreation'
-import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction} from 'firebase/firestore';
+import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where} from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import { MenuProvider } from 'react-native-popup-menu';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,15 +20,22 @@ const TaskListScreen = (props) => {
         if (currentUser) {
             const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
             const tasksRef = collection(userProfileRef, 'Tasks');
-            const querySnapshot = await getDocs(tasksRef);
+            const postsRef = collection(FIRESTORE_DB, 'Posts');
+            const q = query(postsRef, where("userId", "==", currentUser.uid));
+            const querySnapshotPosts = await getDocs(q);
+            const querySnapshotTasks = await getDocs(tasksRef);
+
+            const fetchedPosts = [];
+            querySnapshotPosts.forEach((doc) => {
+                fetchedPosts.push({ id: doc.id, ...doc.data() });
+            });
+
             const fetchedTasks = [];
-            querySnapshot.forEach((doc) => {
+            querySnapshotTasks.forEach((doc) => {
                 fetchedTasks.push({ id: doc.id, ...doc.data() });
             });
-            const incompletedTasks = fetchedTasks.filter(task => !task.completed);
-            const completedTasks = fetchedTasks.filter(task => task.completed);
-            setTaskItems(incompletedTasks);
-            setCompletedTaskItems(completedTasks);
+            setTaskItems(fetchedTasks);
+            setCompletedTaskItems(fetchedPosts);
         } else {
             console.error("Current user not found.");
         }
@@ -75,73 +82,81 @@ const TaskListScreen = (props) => {
     }
     };
 
-    const completeTask = async  (index, complete) => {
+    const completeTask = async  (index, complete) => { // clean this
         let docId;
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
+        const postsRef = collection(FIRESTORE_DB, 'Posts');
         if (!complete) {
             try {
-                const imageURI = await addImage();
+                const batch = writeBatch(FIRESTORE_DB);
+                const imageURI = await addImage(); // delete image if error occurs
                 if (!imageURI) {
-                    return;
+                    return; // make error
                 }
-                docId = taskItems[index].id;
-                const docRef = doc(tasksRef, docId);
-                await updateDoc(docRef, {
-                    "completed": true,
+                const postRef = doc(postsRef);
+                batch.set(postRef, {
+                    userId: currentUser.uid,
+                    name: taskItems[index].name,
+                    description: taskItems[index].description,
+                    timePosted: new Date(),
                     image: imageURI,
+                    priority: taskItems[index].priority,
+                    reminders: taskItems[index].reminders,
+                    repeat: taskItems[index].repeat,
+                    repeatEnds: taskItems[index].repeatEnds,
+                    completeByDate: taskItems[index].completeByDate,
+                    isCompletionTime: taskItems[index].isCompletionTime
                 })
-                .then(() => {
-                    let itemsCopy = [...taskItems];
-                    let completedItem = taskItems[index];
-                    itemsCopy.splice(index, 1);
-                    setTaskItems(itemsCopy);
-                    setCompletedTaskItems([...completedTaskItems, completedItem]);
-                })
-                await runTransaction(FIRESTORE_DB, async (transaction) => {
-                    const userProfileDoc = await transaction.get(userProfileRef);
-                    const userProfileData = userProfileDoc.data();
-                    let posts = userProfileData.posts || [];
-                    posts = userProfileData.posts + 1;
-                    transaction.update(userProfileRef, { posts });
-                })
+                const taskRef = doc(tasksRef, taskItems[index].id);
+                batch.delete(taskRef);
+
+                batch.update(userProfileRef, {posts: increment(1)});
+
+                await batch.commit();
+
+                let itemsCopy = [...taskItems];
+                let completedItem = taskItems[index];
+                itemsCopy.splice(index, 1);
+                setTaskItems(itemsCopy);
+                setCompletedTaskItems([...completedTaskItems, completedItem]);
+
             } catch (error) {
+                // add error if image fails
                 console.error('Error updating task completion: ', error);
             }
         }
         else {
+            const batch = writeBatch(FIRESTORE_DB);
             docId = completedTaskItems[index].id;
-            const docRef = doc(tasksRef, docId);
             try {
-                await getDoc(docRef)
-                .then((docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const image = data.image;
-                    if (image) {
-                        const imageRef = ref(getStorage(), image);
-                        deleteObject(imageRef);
-                    }
+                const postRef = doc(postsRef, docId);
+                const querySnapshot = await getDoc(postRef);
+                const image = querySnapshot.data().image;
+                if (image) {
+                    imageRef = ref(getStorage(), image);
+                    deleteObject(imageRef);
                 }
+                const taskRef = doc(tasksRef);
+                batch.set(taskRef, {
+                    name: completedTaskItems[index].name,
+                    description: completedTaskItems[index].description,
+                    priority: completedTaskItems[index].priority,
+                    reminders: completedTaskItems[index].reminders,
+                    repeat: completedTaskItems[index].repeat,
+                    repeatEnds: completedTaskItems[index].repeatEnds,
+                    completeByDate: completedTaskItems[index].completeByDate,
+                    isCompletionTime: completedTaskItems[index].isCompletionTime
                 })
-                await updateDoc(docRef, {
-                    "completed": false,
-                    "image": null
-                })
-                .then(() => {
+                batch.delete(postRef);
+                batch.update(userProfileRef, {posts: increment(-1)});
+                batch.commit();
+
                 let itemsCopy = [...completedTaskItems];
                 let incompletedItem = completedTaskItems[index];
                 itemsCopy.splice(index, 1);
                 setCompletedTaskItems(itemsCopy);
                 setTaskItems([...taskItems, incompletedItem]);
-                })
-                await runTransaction(FIRESTORE_DB, async (transaction) => {
-                    const userProfileDoc = await transaction.get(userProfileRef);
-                    const userProfileData = userProfileDoc.data();
-                    let posts = userProfileData.posts || [];
-                    posts = userProfileData.posts - 1;
-                    transaction.update(userProfileRef, { posts });
-                })
             } catch (error) {
                 console.error('Error updating task completion: ', error);
             }

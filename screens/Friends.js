@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot, increment } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -134,19 +134,23 @@ const FriendsScreen = () => {
     const addFriend = async (friend) => { // add person to AllFriends, remove person from FriendRequests, add current user to AllFriends, remove currentUser from SentRequests
         if (!currentUser) return;
 
-        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const currUserProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const otherUserProfileRef = doc(FIRESTORE_DB, 'Users', friend.id);
         const allFriendProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
         const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "FriendRequests", friend.id);
         const currUserAllFriendsRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
         const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", friend.id, "SentRequests", currentUser.uid);
         try {
             const batch = writeBatch(FIRESTORE_DB);
-            const userSnap = await getDoc(userProfileRef);
+            const userSnap = await getDoc(currUserProfileRef);
             const userData = userSnap.data()
             batch.set(allFriendProfileRef, {name: friend.name, username: friend.username, profilePic: friend.profilePic});
             batch.set(currUserAllFriendsRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
             batch.delete(friendReqProfileRef);
             batch.delete(currUserSentReqRef);
+            batch.update(currUserProfileRef, {friends: increment(1)});
+            batch.update(otherUserProfileRef, {friends: increment(1)});
+
 
             await batch.commit()
         } catch (error) {
@@ -194,6 +198,7 @@ const FriendsScreen = () => {
            const batch = writeBatch(FIRESTORE_DB);
            batch.delete(currUserFriendRef);
            batch.delete(recUserFriendRef);
+           // add decrement friend 
            await batch.commit();
         } catch(error) {
             console.error("Error deleting friend:", error);
@@ -202,13 +207,13 @@ const FriendsScreen = () => {
 
 
     const requestUser = async (user) => { // update currentusers requesting, update other user's requested
-        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const currUserProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const requestingRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests", user.id);
         const requestedRef = doc(FIRESTORE_DB, "Requests", user.id, "FriendRequests", currentUser.uid);
 
         try {
             const batch = writeBatch(FIRESTORE_DB);
-            const userSnapshot = await getDoc(userProfileRef);
+            const userSnapshot = await getDoc(currUserProfileRef);
             const userData = userSnapshot.data();
             batch.set(requestedRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
             batch.set(requestingRef, {name: user.name, username: user.username, profilePic: user.profilePic});

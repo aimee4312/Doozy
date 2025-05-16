@@ -1,46 +1,45 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import NavBar from '../auth/NavigationBar';
+import NavBar from '../components/auth/NavigationBar';
 
-class TimelineScreen extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      tasks: [],
-      refreshing: false, 
-    };
-  }
+const TimelineScreen = (props) => {
+    const [tasks, setTasks] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const completedTasks = tasks.filter(task => task.completed);
   
-  componentDidMount() {
-    this.refreshTasks(); 
-  }
+  useEffect(() => {
+    refreshTasks(); 
+  }, []);
 
-  refreshTasks = async () => {
+
+  const refreshTasks = async () => {
     const currentUser = FIREBASE_AUTH.currentUser;
     let isMounted = true; // Add a flag to track if the component is mounted
   
     if (!currentUser) return;
   
     try {
+      const friendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
       const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
-      
+
       if (!isMounted) return;
       
       const querySnapshot = await getDocs(tasksRef);
   
-      const tasks = [];
+      const tempTasks = [];
       querySnapshot.forEach((doc) => {
-        tasks.push({ id: doc.id, ...doc.data() });
+        tempTasks.push({ id: doc.id, ...doc.data() });
       });
   
-      this.setState({ tasks });
+      setTasks(tempTasks);
     } catch (error) {
       console.error("Error fetching tasks: ", error);
     } finally {
       if (isMounted) {
-        this.setState({ refreshing: false });
+        setRefreshing(false);
       }
     }
   
@@ -49,14 +48,14 @@ class TimelineScreen extends Component {
     };
   };
 
-  handleRefresh = () => {
-    this.setState({ refreshing: true });
-    this.refreshTasks().finally(() => {
-        this.setState({ refreshing: false });
+  const handleRefresh = () => {
+    setRefreshing(true);
+    refreshTasks().finally(() => {
+        setRefreshing(false);
     });
   };
 
-  renderTask = ({ item }) => (
+  const renderTask = ({ item }) => (
     <View style={styles.postContainer}>
       <Image source={{ uri: item.image }} style={styles.postImage} />
       <View style={styles.taskInfo}>
@@ -69,31 +68,26 @@ class TimelineScreen extends Component {
     </View>
   );
 
-  render() {
-    const { tasks, refreshing } = this.state;
-    const completedTasks = tasks.filter(task => task.completed);
-  
-    return (
+  return (
       <ImageBackground
-        source={require('../../assets/background.jpg')}
+        source={require('../assets/background.jpg')}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
         <View style={styles.container}>
           <FlatList
             data={completedTasks}
-            renderItem={this.renderTask}
+            renderItem={renderTask}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ flexGrow: 1 }}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={this.handleRefresh} />
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
             }
           />
-          <NavBar navigation={this.props.navigation} style={styles.navBarContainer}></NavBar>
+          <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
         </View>
       </ImageBackground>
     );
-  }
 }
 
 const styles = StyleSheet.create({
@@ -138,5 +132,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 });
+
 
 export default TimelineScreen;

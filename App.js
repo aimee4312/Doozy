@@ -9,7 +9,7 @@ import RegisterScreen from './components/auth/Register';
 import LoginScreen from './components/auth/Login';
 import ProfileScreen from './components/profile/Profile';
 import SettingsScreen from './components/profile/Settings';
-import TimelineScreen from './components/timeline/Timeline';
+import TimelineScreen from './screens/Timeline';
 import TaskListScreen from './screens/TaskListScreen';
 import TaskDetailsScreen from './components/profile/TaskDetails';
 import AddTaskScreen from './components/tasks/Task_db';

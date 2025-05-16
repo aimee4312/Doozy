@@ -29,6 +29,7 @@ class Register extends Component {
                 email: email,
                 username: username,
                 posts: 0,
+                friends: 0,
                 profilePic: "https://firebasestorage.googleapis.com/v0/b/doozy-3d54c.appspot.com/o/profilePics%2Fdefault.jpg?alt=media&token=c4b20aae-830c-4d47-aa90-2a3ebd6e16fb"
             });
 
