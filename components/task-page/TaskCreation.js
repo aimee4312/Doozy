@@ -15,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 
 const TaskCreation = forwardRef((props, ref) => {
-    const { callSubmitHandler, nav } = props;
+    const { nav } = props;
 
     const textTaskInputRef = useRef(null);
 
@@ -224,7 +224,6 @@ const TaskCreation = forwardRef((props, ref) => {
                 storeTask(null);
             }
         }
-        callSubmitHandler();
         setNewTask('');
         setNewDescription('');
         setShowTaskCreation(false);
