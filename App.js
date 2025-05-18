@@ -15,6 +15,8 @@ import TaskDetailsScreen from './components/profile/TaskDetails';
 import AddTaskScreen from './components/tasks/Task_db';
 import FriendsScreen from './screens/Friends';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { MenuProvider } from 'react-native-popup-menu';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const Stack = createStackNavigator();
 
@@ -48,25 +50,27 @@ class App extends Component {
     }
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
-            {loggedIn ? (
-              <Stack.Navigator screenOptions={{ animationEnabled: false }}>
-                <Stack.Screen name="TaskList" component={TaskListScreen} options={{ headerShown: false }}/>
-                <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }}/>
-                <Stack.Screen name="Settings" component={SettingsScreen} />
-                <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }}/>
-                <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
-                <Stack.Screen name="AddTask" component={AddTaskScreen} />
-                <Stack.Screen name="Friends" component={FriendsScreen} />
-              </Stack.Navigator>
-            ) : (
-              <Stack.Navigator screenOptions={{ animationEnabled: false }}>
-                <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
-                <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }}/>
-              </Stack.Navigator>
-            )}
-        </NavigationContainer>
+        <SafeAreaProvider>
+          <NavigationContainer>
+              {loggedIn ? (
+                <Stack.Navigator screenOptions={{ animationEnabled: false }}>
+                  <Stack.Screen name="TaskList" component={TaskListScreen} options={{ headerShown: false, unmountOnBlur: true}}/>
+                  <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }}/>
+                  <Stack.Screen name="Settings" component={SettingsScreen} />
+                  <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }}/>
+                  <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
+                  <Stack.Screen name="AddTask" component={AddTaskScreen} />
+                  <Stack.Screen name="Friends" component={FriendsScreen} />
+                </Stack.Navigator>
+              ) : (
+                <Stack.Navigator screenOptions={{ animationEnabled: false }}>
+                  <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}/>
+                  <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }}/>
+                </Stack.Navigator>
+              )}
+          </NavigationContainer>
+        </SafeAreaProvider>
       </GestureHandlerRootView>
     );
   }

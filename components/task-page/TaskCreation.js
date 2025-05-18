@@ -1,13 +1,12 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal } from 'react-native';
 import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Swiper from 'react-native-swiper';
-import Modal from "react-native-modal";
 import CustomDropDown from './PopUpMenus/CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
-import { doc, collection, addDoc, runTransaction, writeBatch } from 'firebase/firestore';
+import { doc, collection, addDoc, runTransaction, writeBatch, increment } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
@@ -78,6 +77,7 @@ const TaskCreation = forwardRef((props, ref) => {
             try {
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
+                    userId: currentUser.uid,
                     name: newTask,
                     description: newDescription,
                     timePosted: new Date(),
@@ -94,7 +94,7 @@ const TaskCreation = forwardRef((props, ref) => {
                 console.error("Error posting post:", error);
             }
         }
-        batch.commit();
+        await batch.commit();
     }
 
 
@@ -216,7 +216,7 @@ const TaskCreation = forwardRef((props, ref) => {
                 console.log(imageURI);
                 if (!imageURI) {
                     console.
-                    return;
+                        return;
                 }
                 storeTask(imageURI);
             }
@@ -246,55 +246,55 @@ const TaskCreation = forwardRef((props, ref) => {
     return (
         <View style={styles.container}>
             <Modal
-                isVisible={isCalendarModalVisible}
-                onBackdropPress={toggleCalendarModal}
-                style={{ justifyContent: 'flex-end', margin: 0 }}
-                propagateSwipe
+                visible={isCalendarModalVisible}
+                transparent={true}
+                animationType="slide"
             >
-                <View style={{ backgroundColor: 'white', height: modalHeight, position: 'relative', zIndex: 0 }}>
-                    <Swiper loop={false}>
-                        <View style={{ flex: 1, paddingRight: 20, paddingLeft: 20, flexDirection: 'column' }}>
-                            <View style={{ flex: 1 }}>
-                                <ScheduleMenu
-                                    isCalendarModalVisible={isCalendarModalVisible}
-                                    setCalendarModalVisible={setCalendarModalVisible}
-                                    selectedDate={selectedDate}
-                                    setSelectedDate={setSelectedDate}
-                                    time={time}
-                                    setTime={setTime}
-                                    isTime={isTime}
-                                    setIsTime={setIsTime}
-                                    selectedReminders={selectedReminders}
-                                    setSelectedReminders={setSelectedReminders}
-                                    selectedRepeat={selectedRepeat}
-                                    setSelectedRepeat={setSelectedRepeat}
-                                    dateRepeatEnds={dateRepeatEnds}
-                                    setDateRepeatEnds={setDateRepeatEnds}
-                                    reminderString={reminderString}
-                                    setReminderString={setReminderString}
-                                    repeatString={repeatString}
-                                    setRepeatString={setRepeatString}
-                                    reminderNoTime={reminderNoTime}
-                                    reminderWithTime={reminderWithTime}
-                                    repeat={repeat}
-                                />
-                            </View>
+                <TouchableWithoutFeedback onPress={toggleCalendarModal}>
+                    <View style={{ flex: 1 }}>
+                    </View>
+                    </TouchableWithoutFeedback>
+                        <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', }}>
+                            <ScheduleMenu
+                                isCalendarModalVisible={isCalendarModalVisible}
+                                setCalendarModalVisible={setCalendarModalVisible}
+                                selectedDate={selectedDate}
+                                setSelectedDate={setSelectedDate}
+                                time={time}
+                                setTime={setTime}
+                                isTime={isTime}
+                                setIsTime={setIsTime}
+                                selectedReminders={selectedReminders}
+                                setSelectedReminders={setSelectedReminders}
+                                selectedRepeat={selectedRepeat}
+                                setSelectedRepeat={setSelectedRepeat}
+                                dateRepeatEnds={dateRepeatEnds}
+                                setDateRepeatEnds={setDateRepeatEnds}
+                                reminderString={reminderString}
+                                setReminderString={setReminderString}
+                                repeatString={repeatString}
+                                setRepeatString={setRepeatString}
+                                reminderNoTime={reminderNoTime}
+                                reminderWithTime={reminderWithTime}
+                                repeat={repeat}
+                            />
                         </View>
-                    </Swiper>
-                </View>
             </Modal>
             <Modal
-                isVisible={isListModalVisible}
-                onBackdropPress={toggleListModal}
-                style={{ justifyContent: 'flex-end', margin: 0 }}
-                propagateSwipe
+                visible={isListModalVisible}
+                transparent={true}
+                animationType='slide'
             >
-                <CustomDropDown
-                    options={options}
-                    selectedLists={selectedLists}
-                    toggleSelection={toggleSelection}
-                    openFolders={openFolders}
-                    toggleFolder={toggleFolder} />
+                <TouchableWithoutFeedback onPress={toggleListModal}>
+                    <View style={{ flex: 1}}>
+                    </View>
+                    </TouchableWithoutFeedback>
+                        <CustomDropDown
+                            options={options}
+                            selectedLists={selectedLists}
+                            toggleSelection={toggleSelection}
+                            openFolders={openFolders}
+                            toggleFolder={toggleFolder} />
             </Modal>
             {!showTaskCreation && (<View style={styles.bottomBar}>
                 <View style={styles.buttonContainer}>
@@ -330,6 +330,7 @@ const TaskCreation = forwardRef((props, ref) => {
                                     onChangeText={text => setNewTask(text)}
                                     value={newTask}
                                     placeholder={'Please type here…'}
+                                    autoCorrect={false}
                                 />
                                 <Button
                                     style={styles.submitButton}
@@ -359,7 +360,7 @@ const TaskCreation = forwardRef((props, ref) => {
                                         />
                                     </View>
                                 </TouchableHighlight>
-                                <Menu>
+                                {/* <Menu>
                                     <MenuTrigger style={styles.submitButton}>
                                         <View style={styles.iconContainer}>
                                             <Icon
@@ -380,7 +381,7 @@ const TaskCreation = forwardRef((props, ref) => {
                                                 </TouchableOpacity>))}
                                         </View>
                                     </MenuOptions>
-                                </Menu>
+                                </Menu> */}
                                 <TouchableHighlight
                                     style={styles.submitButton}
                                     onPress={toggleListModal}

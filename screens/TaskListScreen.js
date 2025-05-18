@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback} from 'react-native';
 import Task from '../components/task-page/Task'
 import TaskCreation from '../components/task-page/TaskCreation'
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
-import { MenuProvider } from 'react-native-popup-menu';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 const TaskListScreen = (props) => {
@@ -24,7 +24,6 @@ const TaskListScreen = (props) => {
 
         unsubscribeRef.current = [unsubscribeTasks, unsubscribePosts];
         return () => {
-            console.log(unsubscribeRef);
             unsubscribeRef.current.forEach(unsub => unsub());
         };
     }, []);
@@ -163,6 +162,7 @@ const TaskListScreen = (props) => {
         }
     }
 
+    //diffentiate delete post and task
     const deleteItem = async (index, complete) => {
         let docId;
         let image;
@@ -175,15 +175,20 @@ const TaskListScreen = (props) => {
         }
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
-        const docRef = doc(tasksRef, docId);
+        const taskRef = doc(tasksRef, docId);
+        const postRef = doc(FIRESTORE_DB, 'Posts', docId);
         try {
-            await deleteDoc(docRef)
+            
             if (complete) {
+                await deleteDoc(postRef);
                 if (image) {
                     const imageRef = ref(getStorage(), image);
                     await deleteObject(imageRef);
                 }
                 await updateDoc(userProfileRef, { posts: increment(-1) });
+            }
+            else {
+                await deleteDoc(taskRef)
             }
         } catch (error) {
             console.error('Error deleting document: ', error);
@@ -210,9 +215,8 @@ const TaskListScreen = (props) => {
     );
 
     return (
-        <MenuProvider>
             <TouchableWithoutFeedback onPress={() => { if (swipedCardRef) swipedCardRef.current.close(); }}>
-                <View style={styles.container}>
+                <SafeAreaView style={styles.container}>
                     <DismissKeyboard>
                         <ScrollView style={styles.ScrollView}>
                             {taskItems.length !== 0 && <View style={styles.tasksContainer}>
@@ -259,16 +263,14 @@ const TaskListScreen = (props) => {
                         </ScrollView>
                     </DismissKeyboard>
                     <TaskCreation ref={childRef} nav={props.navigation} />
-                </View>
+                </SafeAreaView>
             </TouchableWithoutFeedback>
-        </MenuProvider>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: 50,
     },
     scrollView: {
 

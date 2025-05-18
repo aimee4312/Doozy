@@ -9,17 +9,17 @@ const Bar = ({ navigation }) => {
         <View style={styles.bar}>
             <View style={styles.emptySpace} />
             <TouchableOpacity 
-                onPress={() => navigation.navigate('Timeline')}
+                onPress={() => navigation.replace('Timeline')}
                 style={styles.button}>
                 <Text>Home</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                onPress={() => navigation.navigate('TaskList')}
+                onPress={() => navigation.replace('TaskList')}
                 style={styles.button}>
                 <Text>Task</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                onPress={() => navigation.navigate('Profile')}
+                onPress={() => navigation.replace('Profile')}
                 style={styles.button}>
                 <Text>Profile</Text>
             </TouchableOpacity>

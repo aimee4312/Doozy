@@ -1,32 +1,35 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 
-const CustomDropDown = ( props ) => {
+const CustomDropDown = (props) => {
 
-    const { options, selectedLists, toggleSelection, openFolders, toggleFolder } = props;
+  const { options, selectedLists, toggleSelection, openFolders, toggleFolder } = props;
+
+  const screenHeight = Dimensions.get('window').height;
+  const modalHeight = screenHeight * 0.55;
 
   return (
-    <View style={styles.dropdown}>
-        <ScrollView>
-      {options.map((option, mainIndex) => (
-        <View key={mainIndex} style={styles.dropdownItem}>
-          {option.label && 
-          (
-            <TouchableOpacity onPress={() => toggleFolder(mainIndex)}>
-              <Text style={styles.mainItem}>{option.label}</Text>
-            </TouchableOpacity>)}
-          {(openFolders.includes(mainIndex) || !option.label) && (
-            <View>
-          {option.subrows.map((subrow, subIndex) => (
-            <TouchableOpacity key={subIndex} onPress={() => toggleSelection(mainIndex, subIndex)}>
-              <Text style={[styles.subrow, selectedLists.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex) && styles.selectedSubrow]}>
-                {subrow.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          </View>)}
-        </View>
-      ))}
+    <View style={{ height: modalHeight, backgroundColor: 'white' }}>
+      <ScrollView style={{ height: modalHeight, backgroundColor: 'white' }}>
+        {options.map((option, mainIndex) => (
+          <View key={mainIndex} style={styles.dropdownItem}>
+            {option.label &&
+              (
+                <TouchableOpacity onPress={() => toggleFolder(mainIndex)}>
+                  <Text style={styles.mainItem}>{option.label}</Text>
+                </TouchableOpacity>)}
+            {(openFolders.includes(mainIndex) || !option.label) && (
+              <View>
+                {option.subrows.map((subrow, subIndex) => (
+                  <TouchableOpacity key={subIndex} onPress={() => toggleSelection(mainIndex, subIndex)}>
+                    <Text style={[styles.subrow, selectedLists.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex) && styles.selectedSubrow]}>
+                      {subrow.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>)}
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -35,12 +38,6 @@ const CustomDropDown = ( props ) => {
 export default CustomDropDown;
 
 const styles = {
-  dropdown: {
-    flex: .55,
-    width: '100%',
-    marginTop: 20,
-    backgroundColor: 'white',
-  },
   dropdownItem: {
     marginBottom: 10,
   },

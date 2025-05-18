@@ -5,35 +5,58 @@ import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import NavBar from '../components/auth/NavigationBar';
 
 const TimelineScreen = (props) => {
-    const [tasks, setTasks] = useState([]);
-    const [refreshing, setRefreshing] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-    const completedTasks = tasks.filter(task => task.completed);
-  
+  const completedTasks = tasks.filter(task => task.completed);
+
   useEffect(() => {
-    refreshTasks(); 
+    refreshTasks();
   }, []);
+
+
+  const fetchFriends = async () => {
+
+    try {
+      const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
+      console.log("reading friends")
+      const snapshot = getDocs(AllFriendsRef);
+      const friends = [];
+      snapshot.forEach((doc) => {
+        friends.push({ id: doc.id, ...doc.data() });
+      });
+      return friends;
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+    }
+  }
 
 
   const refreshTasks = async () => {
     const currentUser = FIREBASE_AUTH.currentUser;
     let isMounted = true; // Add a flag to track if the component is mounted
-  
+
     if (!currentUser) return;
-  
+
     try {
-      const friendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
-      const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
 
       if (!isMounted) return;
-      
+
+      const friends = await fetchFriends();
+
+      tempTasks = []
+      friends.forEach(async (friend) => {
+        tasksRef = collection(FIRESTORE_DB, 'Users', friend.id, 'Tasks');
+        snapshot = await getDocs(taskRef);
+
+      })
       const querySnapshot = await getDocs(tasksRef);
-  
+
       const tempTasks = [];
       querySnapshot.forEach((doc) => {
         tempTasks.push({ id: doc.id, ...doc.data() });
       });
-  
+
       setTasks(tempTasks);
     } catch (error) {
       console.error("Error fetching tasks: ", error);
@@ -42,7 +65,7 @@ const TimelineScreen = (props) => {
         setRefreshing(false);
       }
     }
-  
+
     return () => {
       isMounted = false; // Set flag to false when unmounting
     };
@@ -51,7 +74,7 @@ const TimelineScreen = (props) => {
   const handleRefresh = () => {
     setRefreshing(true);
     refreshTasks().finally(() => {
-        setRefreshing(false);
+      setRefreshing(false);
     });
   };
 
@@ -69,25 +92,25 @@ const TimelineScreen = (props) => {
   );
 
   return (
-      <ImageBackground
-        source={require('../assets/background.jpg')}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <View style={styles.container}>
-          <FlatList
-            data={completedTasks}
-            renderItem={renderTask}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ flexGrow: 1 }}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-            }
-          />
-          <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
-        </View>
-      </ImageBackground>
-    );
+    <ImageBackground
+      source={require('../assets/background.jpg')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        <FlatList
+          data={completedTasks}
+          renderItem={renderTask}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+        />
+        <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
+      </View>
+    </ImageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
