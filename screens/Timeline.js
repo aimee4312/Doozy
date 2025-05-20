@@ -1,17 +1,18 @@
 import React, { Component, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, where, query } from "firebase/firestore";
 import NavBar from '../components/auth/NavigationBar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TimelineScreen = (props) => {
-  const [tasks, setTasks] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [posts, setPosts] = useState([]);
 
-  const completedTasks = tasks.filter(task => task.completed);
+  const currentUser = FIREBASE_AUTH.currentUser;
 
   useEffect(() => {
-    refreshTasks();
+    refreshPosts();
   }, []);
 
 
@@ -20,20 +21,27 @@ const TimelineScreen = (props) => {
     try {
       const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
       console.log("reading friends")
-      const snapshot = getDocs(AllFriendsRef);
-      const friends = [];
+      const snapshot = await getDocs(AllFriendsRef);
+      const friendsMap = {};
       snapshot.forEach((doc) => {
-        friends.push({ id: doc.id, ...doc.data() });
+        friendsMap[doc.id] = doc.data();
       });
-      return friends;
+      return friendsMap;
     } catch (error) {
       console.error("Error fetching friends:", error);
     }
   }
 
+  const splitArray = (array, size) => {
+    const result = [];
+    for (let i = 0; i < array.length; i += size) {
+      result.push(array.slice(i, i + size));
+    }
+    return result;
+  }
 
-  const refreshTasks = async () => {
-    const currentUser = FIREBASE_AUTH.currentUser;
+
+  const refreshPosts = async () => {
     let isMounted = true; // Add a flag to track if the component is mounted
 
     if (!currentUser) return;
@@ -42,24 +50,29 @@ const TimelineScreen = (props) => {
 
       if (!isMounted) return;
 
-      const friends = await fetchFriends();
+      const friendMap = await fetchFriends();
 
-      tempTasks = []
-      friends.forEach(async (friend) => {
-        tasksRef = collection(FIRESTORE_DB, 'Users', friend.id, 'Tasks');
-        snapshot = await getDocs(taskRef);
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const userSnapshot = await getDoc(userProfileRef);
+      const userProfileData = userSnapshot.data();
 
-      })
-      const querySnapshot = await getDocs(tasksRef);
+      friendMap[currentUser.uid] = { name: userProfileData.name, profilePic: userProfileData.profilePic, username: userProfileData.username };
 
-      const tempTasks = [];
-      querySnapshot.forEach((doc) => {
-        tempTasks.push({ id: doc.id, ...doc.data() });
-      });
+      const friendIds = Object.keys(friendMap);
+      const batches = splitArray(friendIds, 10);
 
-      setTasks(tempTasks);
+      const postsRef = collection(FIRESTORE_DB, 'Posts');
+
+      let tempPosts = [];
+      for (const batch of batches) {
+        const q = query(postsRef, where("userId", "in", batch));
+        const snapshot = await getDocs(q);
+        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({id: doc.id, ...doc.data(), ...friendMap[doc.data().userId]})))
+      }
+      setPosts(tempPosts);
+
     } catch (error) {
-      console.error("Error fetching tasks: ", error);
+      console.error("Error fetching posts: ", error);
     } finally {
       if (isMounted) {
         setRefreshing(false);
@@ -73,20 +86,38 @@ const TimelineScreen = (props) => {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    refreshTasks().finally(() => {
+    refreshPosts().finally(() => {
       setRefreshing(false);
     });
   };
+
+  const getDateString = (timestamp) => {
+    const millis = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
+    const date = new Date(millis);
+    return date.toLocaleDateString();
+  }
+
+  const getTimeString = (timestamp) => {
+    const millis = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
+    const date = new Date(millis);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
 
   const renderTask = ({ item }) => (
     <View style={styles.postContainer}>
       <Image source={{ uri: item.image }} style={styles.postImage} />
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>
-          <Text style={styles.taskName}>{item.name}</Text>
-          <Text style={styles.taskDate}>{item.date.dateString}</Text>
+          <Text style={styles.taskName}>{item.username}</Text>
+          <Text style={styles.taskDate}>{getDateString(item.timePosted)}</Text>
+          <Text style={styles.taskDate}>{getTimeString(item.timePosted)}</Text>
         </View>
         <Text style={styles.taskDescription}>{item.description}</Text>
+        <Image source={{ uri: item.profilePic }} style={styles.postImage}/>
       </View>
     </View>
   );
@@ -97,9 +128,9 @@ const TimelineScreen = (props) => {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <FlatList
-          data={completedTasks}
+          data={posts}
           renderItem={renderTask}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ flexGrow: 1 }}
@@ -108,7 +139,7 @@ const TimelineScreen = (props) => {
           }
         />
         <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
-      </View>
+      </SafeAreaView>
     </ImageBackground>
   );
 }
@@ -117,7 +148,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingTop: 16,
     paddingBottom: 35,
   },
   postContainer: {

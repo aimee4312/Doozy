@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ export class ProfileScreen extends Component {
     super(props);
     this.state = {
       userProfile: null,
-      tasks: [],
+      posts: [],
       refreshing: false,
     };
   }
@@ -29,7 +29,7 @@ export class ProfileScreen extends Component {
 
     try {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-      const tasksRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks');
+      const postsRef = collection(FIRESTORE_DB, 'Posts');
       
       if (!isMounted) return;
 
@@ -40,12 +40,14 @@ export class ProfileScreen extends Component {
         console.log("No such document!");
       }
 
-      const querySnapshot = await getDocs(tasksRef);
-      const tasks = [];
+      const q = query(postsRef, where("userId", "==", currentUser.uid));
+
+      const querySnapshot = await getDocs(q);
+      const posts = [];
       querySnapshot.forEach((doc) => {
-        tasks.push({ id: doc.id, ...doc.data() });
+        posts.push({ id: doc.id, ...doc.data() });
       });
-      this.setState({ tasks });
+      this.setState({ posts });
     } catch (error) {
       console.error("Error fetching posts: ", error);
     } finally {
@@ -87,8 +89,7 @@ export class ProfileScreen extends Component {
   }
 
   render() {
-    const { userProfile, tasks, refreshing } = this.state;
-    const completedTasks = tasks.filter(task => task.completed);
+    const { userProfile, posts, refreshing } = this.state;
 
     return (
       <ImageBackground
@@ -134,7 +135,7 @@ export class ProfileScreen extends Component {
 
             <View style={styles.tasksContainer}>
               <View style={styles.grid}>
-                {completedTasks.map((task, index) => (
+                {posts.map((task, index) => (
                   <View key={index} onPress={() => this.handleImagePress(task)}>
                     <View style={styles.postContainer}>
                       <Image source={{ uri: task.image }} style={styles.photo} />

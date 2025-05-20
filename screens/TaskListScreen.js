@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback} from 'react-native';
-import Task from '../components/task-page/Task'
-import TaskCreation from '../components/task-page/TaskCreation'
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback, Modal} from 'react-native';
+import Task from '../components/task-page/Task';
+import TaskCreation from '../components/task-page/TaskCreation';
+import EditTask from '../components/task-page/EditTask';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,6 +14,7 @@ const TaskListScreen = (props) => {
 
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
+    const [isEditTaskVisible, setEditTaskVisible] = useState(false);
     const childRef = useRef();
     const unsubscribeRef = useRef();
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -217,6 +219,13 @@ const TaskListScreen = (props) => {
     return (
             <TouchableWithoutFeedback onPress={() => { if (swipedCardRef) swipedCardRef.current.close(); }}>
                 <SafeAreaView style={styles.container}>
+                    {/* <Modal 
+                        visible={isEditTaskVisible}
+                        transparent={true}
+                        animationType='slide'
+                    >
+                        <EditTask />
+                    </ Modal> */}
                     <DismissKeyboard>
                         <ScrollView style={styles.ScrollView}>
                             {taskItems.length !== 0 && <View style={styles.tasksContainer}>
@@ -224,7 +233,7 @@ const TaskListScreen = (props) => {
                                 <View style={styles.tasks}>
                                     {taskItems.map((task, index) => {
                                         return (
-                                            <View key={index}>
+                                            <TouchableOpacity onPress={() => {setEditTaskVisible(true)}} key={index}>
                                                 <Task
                                                     text={task.name}
                                                     tick={completeTask}
@@ -234,7 +243,7 @@ const TaskListScreen = (props) => {
                                                     onOpen={onOpen}
                                                     onClose={onClose}
                                                 />
-                                            </View>
+                                            </TouchableOpacity>
                                         )
                                     })}
                                 </View>
