@@ -22,7 +22,6 @@ const TaskCreation = forwardRef((props, ref) => {
     const [newDescription, setNewDescription] = useState(''); // Task Description
     const [selectedLists, setSelectedLists] = useState([]);
     const [selectedDate, setSelectedDate] = useState('');
-    const [time, setTime] = useState(new Date()) //change this eventually
     const [selectedPriority, setSelectedPriority] = useState(null);
     const [selectedReminders, setSelectedReminders] = useState([]);
     const [selectedRepeat, setSelectedRepeat] = useState([]);
@@ -30,10 +29,7 @@ const TaskCreation = forwardRef((props, ref) => {
     const [isTime, setIsTime] = useState(false);
     const [dateRepeatEnds, setDateRepeatEnds] = useState('');
     const [image, setImage] = useState(null);
-
-    const [reminderString, setReminderString] = useState("None");
-    const [repeatString, setRepeatString] = useState("None");
-
+    
     const [showTaskCreation, setShowTaskCreation] = useState(false);
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
@@ -55,9 +51,8 @@ const TaskCreation = forwardRef((props, ref) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const postsRef = collection(FIRESTORE_DB, 'Posts');
-        console.log("womnp")
-        if (!isCompleted) {
-            try {
+        try {
+            if (!isCompleted) {
                 const taskRef = doc(tasksRef);
                 batch.set(taskRef, {
                     name: newTask,
@@ -69,12 +64,8 @@ const TaskCreation = forwardRef((props, ref) => {
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
                 });
-            } catch (error) {
-                console.error("Error storing task:", error);
             }
-        }
-        else {
-            try {
+            else {
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
@@ -90,12 +81,13 @@ const TaskCreation = forwardRef((props, ref) => {
                     repeatEnds: dateRepeatEnds,
                 })
                 batch.update(userProfileRef, { posts: increment(1) });
-            } catch (error) {
-                console.error("Error posting post:", error);
-            }
+                await batch.commit();
+            } 
+        } catch (error) {
+            console.error("Error storing task or posting:", error);
         }
-        await batch.commit();
     }
+
 
 
     const addImage = async () => {
@@ -119,30 +111,6 @@ const TaskCreation = forwardRef((props, ref) => {
             Alert.alert("Error Uploading Image " + e.message);
         }
     };
-
-    const reminderNoTime = [
-        { label: 'On the day (9:00 am)' },
-        { label: '1 day early (9:00 am)' },
-        { label: '2 day early (9:00 am)' },
-        { label: '3 day early (9:00 am)' },
-        { label: '1 week early (9:00 am)' }
-    ];
-
-    const reminderWithTime = [
-        { label: 'On time' },
-        { label: '5 minutes early' },
-        { label: '30 minutes early' },
-        { label: '1 hour early' },
-        { label: '1 day early' }
-    ];
-
-    const repeat = [
-        { label: 'Daily' },
-        { label: 'Weekly' },
-        { label: 'Monthly' },
-        { label: 'Yearly' },
-        { label: 'Every weekday' },
-    ];
 
 
     const toggleFolder = (index) => {
@@ -211,7 +179,6 @@ const TaskCreation = forwardRef((props, ref) => {
     const handleSubmitHelper = async () => {
         if (newTask.length !== 0) {
             if (isCompleted) {
-                console.log("hieefiewof");
                 const imageURI = await addImage();
                 console.log(imageURI);
                 if (!imageURI) {
@@ -229,7 +196,6 @@ const TaskCreation = forwardRef((props, ref) => {
         setShowTaskCreation(false);
         setCompleted(false);
         setSelectedLists([]);
-        setTime(new Date());
         setSelectedDate('');
         setSelectedPriority(null);
         setSelectedReminders([]);
@@ -260,8 +226,6 @@ const TaskCreation = forwardRef((props, ref) => {
                                 setCalendarModalVisible={setCalendarModalVisible}
                                 selectedDate={selectedDate}
                                 setSelectedDate={setSelectedDate}
-                                time={time}
-                                setTime={setTime}
                                 isTime={isTime}
                                 setIsTime={setIsTime}
                                 selectedReminders={selectedReminders}
@@ -270,13 +234,6 @@ const TaskCreation = forwardRef((props, ref) => {
                                 setSelectedRepeat={setSelectedRepeat}
                                 dateRepeatEnds={dateRepeatEnds}
                                 setDateRepeatEnds={setDateRepeatEnds}
-                                reminderString={reminderString}
-                                setReminderString={setReminderString}
-                                repeatString={repeatString}
-                                setRepeatString={setRepeatString}
-                                reminderNoTime={reminderNoTime}
-                                reminderWithTime={reminderWithTime}
-                                repeat={repeat}
                             />
                         </View>
             </Modal>

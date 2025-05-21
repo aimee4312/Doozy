@@ -15,6 +15,7 @@ const TaskListScreen = (props) => {
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
     const [isEditTaskVisible, setEditTaskVisible] = useState(false);
+    const [editIndex, setEditIndex] = useState();
     const childRef = useRef();
     const unsubscribeRef = useRef();
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -216,16 +217,21 @@ const TaskListScreen = (props) => {
         </TouchableWithoutFeedback>
     );
 
+    const handleTaskPress = (index) => {
+        setEditIndex(index);
+        setEditTaskVisible(true);
+    }
+
     return (
             <TouchableWithoutFeedback onPress={() => { if (swipedCardRef) swipedCardRef.current.close(); }}>
                 <SafeAreaView style={styles.container}>
-                    {/* <Modal 
+                    <Modal 
                         visible={isEditTaskVisible}
                         transparent={true}
                         animationType='slide'
                     >
-                        <EditTask />
-                    </ Modal> */}
+                        <EditTask task={taskItems[editIndex]} deleteItem={deleteItem} index={editIndex} setEditTaskVisible={setEditTaskVisible} />
+                    </ Modal>
                     <DismissKeyboard>
                         <ScrollView style={styles.ScrollView}>
                             {taskItems.length !== 0 && <View style={styles.tasksContainer}>
@@ -233,7 +239,7 @@ const TaskListScreen = (props) => {
                                 <View style={styles.tasks}>
                                     {taskItems.map((task, index) => {
                                         return (
-                                            <TouchableOpacity onPress={() => {setEditTaskVisible(true)}} key={index}>
+                                            <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
                                                 <Task
                                                     text={task.name}
                                                     tick={completeTask}

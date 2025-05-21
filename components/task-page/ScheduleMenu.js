@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity} from 'react-native';
+import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity } from 'react-native';
 import CustomPopupMenu from './PopUpMenus/CustomPopupMenu';
 import TimePopupMenu from './PopUpMenus/TimePopupMenu';
 import RepeatEndsModal from './PopUpMenus/RepeatEndsModal';
 import ScheduleBuilder from './PopUpMenus/ScheduleBuilder';
 
-const ScheduleMenu = ( props ) => {
+const ScheduleMenu = (props) => {
 
 
     const getTodayDate = () => {
@@ -17,20 +17,21 @@ const ScheduleMenu = ( props ) => {
             year: today.getFullYear(),
             timestamp: today.getTime(),
             dateString: today.toISOString().split('T')[0],
-          };
-      };
-    const {isCalendarModalVisible, setCalendarModalVisible, selectedDate, setSelectedDate, time, setTime, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds, reminderString, setReminderString, repeatString, setRepeatString, reminderNoTime, reminderWithTime, repeat} = props;
+        };
+    };
+    const { isCalendarModalVisible, setCalendarModalVisible, selectedDate, setSelectedDate, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds } = props;
 
-    const [tempSelectedDate, setTempSelectedDate] = useState(selectedDate == '' ? getTodayDate() : selectedDate);
-    const [tempTime, setTempTime] = useState(time);
+    const [tempSelectedDate, setTempSelectedDate] = useState(!selectedDate ? getTodayDate() : selectedDate);
+    const [tempTime, setTempTime] = useState(isTime ? selectedDate.timestamp : new Date());
     const [tempSelectedReminders, setTempSelectedReminders] = useState(selectedReminders);
     const [tempSelectedRepeat, setTempSelectedRepeat] = useState(selectedRepeat);
     const [tempDateRepeatEnds, setTempDateRepeatEnds] = useState(dateRepeatEnds);
-    const [tempReminderString, setTempReminderString] = useState(reminderString);
-    const [tempRepeatString, setTempRepeatString] = useState(repeatString)
+    const [reminderString, setReminderString] = useState("");
+    const [repeatString, setRepeatString] = useState("")
 
     const [isTempTime, setIsTempTime] = useState(isTime);
     const [reminderButtonHeight, setReminderButtonHeight] = useState(null);
+    const [repeatButtonHeight, setRepeatButtonHeight] = useState(null);
     const [timeButtonHeight, setTimeButtonHeight] = useState(null);
     const [isReminderMenuVisible, setIsReminderMenuVisible] = useState(false);
     const [isRepeatMenuVisible, setIsRepeatMenuVisible] = useState(false);
@@ -39,128 +40,168 @@ const ScheduleMenu = ( props ) => {
 
     const reminderMenuRef = useRef(null);
     const timeMenuRef = useRef(null);
+    const repeatMenuRef = useRef(null);
+
 
     const handleDateSelect = (date) => {
         setTempSelectedDate(date);
-      };
+    };
 
-  const toggleReminderMenu = () => {
-    if (reminderMenuRef.current) {
-        reminderMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
-            setReminderButtonHeight(pageY);
-        });
+    const toggleReminderMenu = () => {
+        if (reminderMenuRef.current) {
+            reminderMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
+                setReminderButtonHeight(pageY);
+            });
+        }
+        setIsReminderMenuVisible(!isReminderMenuVisible);
+
+    };
+
+    const toggleRepeatMenu = () => {
+        if (repeatMenuRef.current) {
+            repeatMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
+                setRepeatButtonHeight(pageY);
+            });
+        }
+        setIsRepeatMenuVisible(!isRepeatMenuVisible);
+    };
+
+    const toggleRepeatEndsModal = () => {
+        setIsRepeatEndsModalVisible(!isRepeatEndsModalVisible);
+    };
+
+    const toggleTimeMenu = () => {
+        if (timeMenuRef.current) {
+            timeMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
+                setTimeButtonHeight(pageY);
+            });
+        }
+        setIsTimeMenuVisible(!isTimeMenuVisible);
+        if (!isTempTime) {
+            setIsTempTime(true);
+            setTempSelectedReminders([0]);
+        }
+    };
+
+    const handleTimeCancel = () => {
+        setIsTempTime(false);
+        setTempSelectedReminders([]);
     }
-    setIsReminderMenuVisible(!isReminderMenuVisible);
-    
-  };
 
-  const toggleRepeatMenu = () => {
-    setIsRepeatMenuVisible(!isRepeatMenuVisible);
-  };
-
-  const toggleRepeatEndsModal = () => {
-    setIsRepeatEndsModalVisible(!isRepeatEndsModalVisible);
-  };
-
-  const toggleTimeMenu = () => {
-    if (timeMenuRef.current) {
-        timeMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
-            setTimeButtonHeight(pageY);
-        });
+    const handleReminderCancel = () => {
+        setTempSelectedReminders([]);
     }
-    setIsTimeMenuVisible(!isTimeMenuVisible);
-    if(!isTempTime) {
-        setIsTempTime(true);
-        setTempSelectedReminders([0]);
+
+    const handleRepeatCancel = () => {
+        setTempSelectedRepeat([]);
+        setTempDateRepeatEnds('');
     }
-  };
 
-  const handleTimeCancel = () => {
-    setIsTempTime(false);
-    setTempSelectedReminders([]);
-  }
-
-  const handleReminderCancel = () => {
-    setTempSelectedReminders([]);
-  }
-
-  const handleRepeatCancel = () => {
-    setTempSelectedRepeat([]);
-    setTempDateRepeatEnds('');
-  }
-
-  const handleRepeatEndsCancel = () => {
-    setTempDateRepeatEnds('');
-  }
-
-  const handleTimeChange = (newTime) => {
-    setTempTime(newTime);
-}
-
-const handleReminderStringChange = () => {
-    changeReminderString();
-};
-
-const handleRepeatStringChange = () => {
-    changeRepeatString();
-};
-
-// Call handleReminderStringChange after selectedReminders state is updated
-useEffect(() => {
-    handleReminderStringChange();
-}, [tempSelectedReminders]);
-
-// Call handleReminderStringChange after selectedReminders state is updated
-useEffect(() => {
-    handleRepeatStringChange();
-}, [tempSelectedRepeat]);
-
-const changeReminderString = () => {
-    if (tempSelectedReminders.length === 0) {
-        setTempReminderString("None");
+    const handleRepeatEndsCancel = () => {
+        setTempDateRepeatEnds('');
     }
-    else if (tempSelectedReminders.length === 1) {
-        setTempReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label : reminderNoTime[tempSelectedReminders[0]].label);
-    }
-    else {
-        setTempReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label + ",..." : reminderNoTime[tempSelectedReminders[0]].label + ",...");
-    }
-}
 
-const changeRepeatString = () => {
-    if (tempSelectedRepeat.length === 0) {
-        setTempRepeatString("None");
+    const handleTimeChange = (newTime) => {
+        setTempTime(newTime);
     }
-    else if (tempSelectedRepeat.length === 1) {
-        setTempRepeatString(repeat[tempSelectedRepeat[0]].label);
+
+    const handleReminderStringChange = () => {
+        changeReminderString();
+    };
+
+    const handleRepeatStringChange = () => {
+        changeRepeatString();
+    };
+
+    // Call handleReminderStringChange after selectedReminders state is updated
+    useEffect(() => {
+        handleReminderStringChange();
+    }, [tempSelectedReminders]);
+
+    // Call handleReminderStringChange after selectedReminders state is updated
+    useEffect(() => {
+        handleRepeatStringChange();
+    }, [tempSelectedRepeat]);
+
+    const changeReminderString = () => {
+        if (tempSelectedReminders.length === 0) {
+            setReminderString("None");
+        }
+        else if (tempSelectedReminders.length === 1) {
+            setReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label : reminderNoTime[tempSelectedReminders[0]].label);
+        }
+        else {
+            setReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label + ",..." : reminderNoTime[tempSelectedReminders[0]].label + ",...");
+        }
     }
-    else {
-        setTempRepeatString(repeat[tempSelectedRepeat[0]].label + ",...");
+
+    const changeRepeatString = () => {
+        if (tempSelectedRepeat.length === 0) {
+            setRepeatString("None");
+        }
+        else if (tempSelectedRepeat.length === 1) {
+            setRepeatString(repeat[tempSelectedRepeat[0]].label);
+        }
+        else {
+            setRepeatString(repeat[tempSelectedRepeat[0]].label + ",...");
+        }
     }
-}
+
+    const reminderNoTime = [
+        { label: 'On the day (9:00 am)' },
+        { label: '1 day early (9:00 am)' },
+        { label: '2 day early (9:00 am)' },
+        { label: '3 day early (9:00 am)' },
+        { label: '1 week early (9:00 am)' }
+    ];
+
+    const reminderWithTime = [
+        { label: 'On time' },
+        { label: '5 minutes early' },
+        { label: '30 minutes early' },
+        { label: '1 hour early' },
+        { label: '1 day early' }
+    ];
+
+    const repeat = [
+        { label: 'Daily' },
+        { label: 'Weekly' },
+        { label: 'Monthly' },
+        { label: 'Yearly' },
+        { label: 'Every weekday' },
+    ];
 
     const handleSaveChanges = () => {
+        const date = new Date(tempSelectedDate.timestamp);
         if (isTempTime) {
-            
-            const date = new Date(tempSelectedDate.timestamp);
             tempSelectedDate.timestamp = new Date(
-                date.getUTCFullYear(), 
-                date.getUTCMonth(), 
-                date.getUTCDate(),  
-                tempTime.getHours(), 
+                date.getUTCFullYear(),
+                date.getUTCMonth(),
+                date.getUTCDate(),
+                tempTime.getHours(),
                 tempTime.getMinutes(),
                 0,
                 0,
-              );
+            );
         }
+        else {
+            tempSelectedDate.timestamp = new Date(
+                date.getUTCFullYear(),
+                date.getUTCMonth(),
+                date.getUTCDate(),
+                0,
+                0,
+                0,
+                0,
+            );
+        }
+
         setSelectedDate(tempSelectedDate);
         setIsTime(isTempTime);
         setSelectedReminders(tempSelectedReminders);
         setSelectedRepeat(tempSelectedRepeat);
         setDateRepeatEnds(tempDateRepeatEnds);
         setCalendarModalVisible(false);
-        setReminderString(tempReminderString);
-        setRepeatString(tempRepeatString);
     }
 
 
@@ -185,7 +226,7 @@ const changeRepeatString = () => {
     const formattedHours = hours < 10 ? '0' + hours : hours;
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
 
-// Construct the time string in 'hh:mm AM/PM' format
+    // Construct the time string in 'hh:mm AM/PM' format
     const timeString = `${formattedHours}:${formattedMinutes} ${period}`;
 
 
@@ -193,7 +234,7 @@ const changeRepeatString = () => {
         <View style={styles.container}>
             <View>
                 <View style={styles.saveChanges}>
-                    <Button title='Cancel' onPress={() => setCalendarModalVisible(!isCalendarModalVisible)}/>
+                    <Button title='Cancel' onPress={() => setCalendarModalVisible(!isCalendarModalVisible)} />
                     <Button title='Done' onPress={handleSaveChanges} />
                 </View>
             </View>
@@ -201,114 +242,107 @@ const changeRepeatString = () => {
                 <ScheduleBuilder selectedDate={tempSelectedDate.dateString} handleDateSelect={handleDateSelect} />
             </View>
             <View style={{ flex: .4 }}>
-            <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]} onLayout={(event) => {
-                 const {x, y, width, height} = event.nativeEvent.layout;
-                 
-            }}>
-                <View style={styles.menuButtonWrapper}>
-                    <Text style={styles.menuText}>Time</Text>
-                    <View style={styles.cancelContainer}>
-                        <Text style={styles.menuText}>{isTempTime ? timeString : 'None'}</Text>
-                        {isTempTime && <TouchableOpacity onPress={handleTimeCancel}>
-                            <Text> X</Text>
-                        </TouchableOpacity>}
+                <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]}>
+                    <View style={styles.menuButtonWrapper}>
+                        <Text style={styles.menuText}>Time</Text>
+                        <View style={styles.cancelContainer}>
+                            <Text style={styles.menuText}>{isTempTime ? timeString : 'None'}</Text>
+                            {isTempTime && <TouchableOpacity onPress={handleTimeCancel}>
+                                <Text> X</Text>
+                            </TouchableOpacity>}
+                        </View>
                     </View>
-                </View>
-            </TouchableHighlight>
-            <TouchableHighlight ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton} onLayout={(event) => {
-                const {x, y, width, height, pageY} = event.nativeEvent.layout;
-                setReminderButtonHeight(height);
-                
-            }}>
-                <View style={styles.menuButtonWrapper}>
-                    <Text style={styles.menuText}>Reminder</Text>
-                    <View style={styles.cancelContainer}>
-                        <Text style={styles.menuText}>{tempReminderString}</Text>
-                        {(tempSelectedReminders.length !== 0) && <TouchableOpacity onPress={handleReminderCancel}>
-                            <Text> X</Text>
-                        </TouchableOpacity>}
+                </TouchableHighlight>
+                <TouchableHighlight ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton}>
+                    <View style={styles.menuButtonWrapper}>
+                        <Text style={styles.menuText}>Reminder</Text>
+                        <View style={styles.cancelContainer}>
+                            <Text style={styles.menuText}>{reminderString}</Text>
+                            {(tempSelectedReminders.length !== 0) && <TouchableOpacity onPress={handleReminderCancel}>
+                                <Text> X</Text>
+                            </TouchableOpacity>}
+                        </View>
                     </View>
-                </View>
-            </TouchableHighlight>
-            <TouchableHighlight onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat.length === 0) ? styles.menuBottomButton : null]}>
-                <View style={styles.menuButtonWrapper}>
-                    <Text style={styles.menuText}>Repeat</Text>
-                    <View style={styles.cancelContainer}>
-                        <Text style={styles.menuText}>{tempRepeatString}</Text>
-                        {(tempSelectedRepeat.length !== 0) && <TouchableOpacity onPress={handleRepeatCancel}>
-                            <Text> X</Text>
-                        </TouchableOpacity>}
+                </TouchableHighlight>
+                <TouchableHighlight ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat.length === 0) ? styles.menuBottomButton : null]}>
+                    <View style={styles.menuButtonWrapper}>
+                        <Text style={styles.menuText}>Repeat</Text>
+                        <View style={styles.cancelContainer}>
+                            <Text style={styles.menuText}>{repeatString}</Text>
+                            {(tempSelectedRepeat.length !== 0) && <TouchableOpacity onPress={handleRepeatCancel}>
+                                <Text> X</Text>
+                            </TouchableOpacity>}
+                        </View>
                     </View>
-                </View>
-            </TouchableHighlight>
-            {(tempSelectedRepeat.length !== 0) && <TouchableHighlight onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
-                <View style={styles.menuButtonWrapper}>
-                    <Text style={styles.menuText}>Repeat Ends</Text>
-                    <View style={styles.cancelContainer}>
-                        <Text style={styles.menuText}>{tempDateRepeatEnds == '' ? 'None' : tempDateRepeatEnds}</Text>
-                        {(tempDateRepeatEnds !== '') && <TouchableOpacity onPress={handleRepeatEndsCancel}>
-                            <Text> X</Text>
-                        </TouchableOpacity>}
+                </TouchableHighlight>
+                {(tempSelectedRepeat.length !== 0) && <TouchableHighlight onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
+                    <View style={styles.menuButtonWrapper}>
+                        <Text style={styles.menuText}>Repeat Ends</Text>
+                        <View style={styles.cancelContainer}>
+                            <Text style={styles.menuText}>{tempDateRepeatEnds == '' ? 'None' : tempDateRepeatEnds}</Text>
+                            {(tempDateRepeatEnds !== '') && <TouchableOpacity onPress={handleRepeatEndsCancel}>
+                                <Text> X</Text>
+                            </TouchableOpacity>}
+                        </View>
                     </View>
-                </View>
-            </TouchableHighlight>}
+                </TouchableHighlight>}
             </View>
-            <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={tempTime} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight}/>
-            <CustomPopupMenu isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight}/>
-            <CustomPopupMenu isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOptions={tempSelectedRepeat} setSelectedOptions={setTempSelectedRepeat} buttonHeight={reminderButtonHeight + 50}/>
+            <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={tempTime} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight} />
+            <CustomPopupMenu isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight} />
+            <CustomPopupMenu isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOptions={tempSelectedRepeat} setSelectedOptions={setTempSelectedRepeat} buttonHeight={repeatButtonHeight} />
             <RepeatEndsModal isVisible={isRepeatEndsModalVisible} onClose={toggleRepeatEndsModal} dateRepeatEnds={tempDateRepeatEnds} setDateRepeatEnds={setTempDateRepeatEnds} />
         </View>
-        );
-  };
+    );
+};
 
-    const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-        },
-        saveChanges: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-        },
-        menuTopButton: {
-            borderTopLeftRadius: 5,
-            borderTopRightRadius: 5,
-            borderTopWidth: 1,
-        },
-        menuBottomButton: {
-            borderBottomLeftRadius: 5,
-            borderBottomRightRadius: 5,
-            borderBottomWidth: 1,
-        },
-        menuButton: {
-            padding: 15,
-            backgroundColor: "lightgray",
-            borderColor: 'gray',
-            borderLeftWidth: 1,
-            borderRightWidth: 1,
-        },
-        buttonReminder: {
-            backgroundColor: '#cccccc',
-            borderRadius: 5,
-        },
-        menuButtonWrapper: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-        },
-        menuText: {
-            fontSize: 16
-        },
-        cancelContainer: {
-            flexDirection: 'row',
-            alignItems: 'center'
-        },
-        selectedReminders: {
-            backgroundColor: "yellow",
-        },
-        listsMenu: {
-            backgroundColor: 'transparent',
-            zIndex: 1000,
-        },
-    });
-  
-  export default ScheduleMenu;
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    saveChanges: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    menuTopButton: {
+        borderTopLeftRadius: 5,
+        borderTopRightRadius: 5,
+        borderTopWidth: 1,
+    },
+    menuBottomButton: {
+        borderBottomLeftRadius: 5,
+        borderBottomRightRadius: 5,
+        borderBottomWidth: 1,
+    },
+    menuButton: {
+        padding: 15,
+        backgroundColor: "lightgray",
+        borderColor: 'gray',
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+    },
+    buttonReminder: {
+        backgroundColor: '#cccccc',
+        borderRadius: 5,
+    },
+    menuButtonWrapper: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    menuText: {
+        fontSize: 16
+    },
+    cancelContainer: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    selectedReminders: {
+        backgroundColor: "yellow",
+    },
+    listsMenu: {
+        backgroundColor: 'transparent',
+        zIndex: 1000,
+    },
+});
+
+export default ScheduleMenu;
