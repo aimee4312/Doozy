@@ -314,7 +314,6 @@ const TaskCreation = (props) => {
                                 placeholder={'Description…'}
                             />
                         </View>
-
                         <View style={styles.detailsWrapper}>
                             <TouchableHighlight
                                 style={styles.submitButton}
@@ -328,28 +327,6 @@ const TaskCreation = (props) => {
                                     />
                                 </View>
                             </TouchableHighlight>
-                            {/* <Menu>
-                                <MenuTrigger style={styles.submitButton}>
-                                    <View style={styles.iconContainer}>
-                                        <Icon
-                                            name="flag"
-                                            size={28}
-                                            color={'black'}
-                                        />
-                                    </View>
-                                </MenuTrigger>
-                                <MenuOptions style={styles.listsMenu}>
-                                    <View style={styles.listsMenuScroll}>
-                                        {menuOptions.map((option, index) => (
-                                            <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
-                                                <View style={[styles.priorityWrapper, selectedPriority === index && styles.selectedPriority]}>
-                                                    <Icon name={option.icon} size={20} color={option.color} style={styles.flagSmall} />
-                                                    <Text style={styles.flagText}>{option.text}</Text>
-                                                </View>
-                                            </TouchableOpacity>))}
-                                    </View>
-                                </MenuOptions>
-                            </Menu> */}
                             <TouchableHighlight
                                 style={styles.submitButton}
                                 onPress={toggleListModal}
