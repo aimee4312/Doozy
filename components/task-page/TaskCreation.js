@@ -1,20 +1,20 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal } from 'react-native';
-import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
-import Swiper from 'react-native-swiper';
+import Feather from 'react-native-vector-icons/Feather';
+
 import CustomDropDown from './PopUpMenus/CustomDropDown';
 import ScheduleMenu from './ScheduleMenu';
 import { doc, collection, addDoc, runTransaction, writeBatch, increment } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 
 
-const TaskCreation = forwardRef((props, ref) => {
-    const { nav } = props;
+const TaskCreation = (props) => {
+    const { closeSwipeCard, nav } = props;
 
     const textTaskInputRef = useRef(null);
 
@@ -30,7 +30,8 @@ const TaskCreation = forwardRef((props, ref) => {
     const [dateRepeatEnds, setDateRepeatEnds] = useState('');
     const [image, setImage] = useState(null);
     
-    const [showTaskCreation, setShowTaskCreation] = useState(false);
+    const [showPriority, setShowPriority] = useState(false);
+    const [isTaskCreationModalVisible, setTaskCreationModalVisible] = useState(false);
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
 
@@ -41,6 +42,32 @@ const TaskCreation = forwardRef((props, ref) => {
 
     const screenHeight = Dimensions.get('window').height;
     const modalHeight = screenHeight * 0.75;
+    const taskCreationHeight = 135;
+
+    const animatedHeight = useRef(new Animated.Value(taskCreationHeight)).current;
+
+    useEffect(() => {
+            const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
+                Animated.timing(animatedHeight, {
+                    toValue: taskCreationHeight + e.endCoordinates.height,
+                    duration: e.duration,
+                    useNativeDriver: false
+                }).start();
+            });
+    
+            const willHideSub = Keyboard.addListener('keyboardWillHide', (e) => {
+                Animated.timing(animatedHeight, {
+                    toValue: 0,
+                    duration: e.duration,
+                    useNativeDriver: false
+                }).start();
+            });
+    
+            return () => {
+                willShowSub.remove();
+                willHideSub.remove();
+            };
+        }, []);
 
     const storeTask = async (imageURI) => {
         if (!currentUser) {
@@ -89,8 +116,6 @@ const TaskCreation = forwardRef((props, ref) => {
             console.error("Error storing task or posting:", error);
         }
     }
-
-
 
     const addImage = async () => {
         try {
@@ -164,19 +189,20 @@ const TaskCreation = forwardRef((props, ref) => {
         setListModalVisible(!isListModalVisible);
     };
 
-    //handles error
-    useImperativeHandle(ref, () => ({
-        closeKeyboard() {
-            setShowTaskCreation(false);
-        }
-    }))
-
-    const handleAddTask = () => {
-        setShowTaskCreation(true);
+    const openTaskCreatonModal = () => {
+        closeSwipeCard();
+        setTaskCreationModalVisible(true);
         setTimeout(() => {
             textTaskInputRef?.current?.focus();
-        }, 100);
+        }, 10);
     };
+
+    const closeTaskCreationModal = () => {
+        Keyboard.dismiss();
+        setTimeout(() => {
+            setTaskCreationModalVisible(false);
+        }, 100);
+    }
 
     const handleSubmitHelper = async () => {
         if (newTask.length !== 0) {
@@ -214,6 +240,11 @@ const TaskCreation = forwardRef((props, ref) => {
     return (
         <View style={styles.container}>
             <Modal
+                visible={isTaskCreationModalVisible}
+                transparent={true}
+                animationType='slide'
+            >
+                <Modal
                 visible={isCalendarModalVisible}
                 transparent={true}
                 animationType="slide"
@@ -221,7 +252,7 @@ const TaskCreation = forwardRef((props, ref) => {
                 <TouchableWithoutFeedback onPress={toggleCalendarModal}>
                     <View style={{ flex: 1 }}>
                     </View>
-                    </TouchableWithoutFeedback>
+                </TouchableWithoutFeedback>
                         <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', }}>
                             <ScheduleMenu
                                 isCalendarModalVisible={isCalendarModalVisible}
@@ -238,8 +269,8 @@ const TaskCreation = forwardRef((props, ref) => {
                                 setDateRepeatEnds={setDateRepeatEnds}
                             />
                         </View>
-            </Modal>
-            <Modal
+                </Modal>
+                <Modal
                 visible={isListModalVisible}
                 transparent={true}
                 animationType='slide'
@@ -254,10 +285,140 @@ const TaskCreation = forwardRef((props, ref) => {
                             toggleSelection={toggleSelection}
                             openFolders={openFolders}
                             toggleFolder={toggleFolder} />
+                </Modal>
+                <TouchableWithoutFeedback onPress={closeTaskCreationModal}>
+                    <View style={{ flex: 1 }}>
+                    </View>
+                </TouchableWithoutFeedback>
+                <Animated.View style={{height: animatedHeight, ...styles.taskCreationContainer}}>
+                    <View>
+                        <View style={styles.inputWrapper}>
+                            <TouchableOpacity
+                                style={isCompleted ? styles.checkedbox : styles.uncheckedbox}
+                                onPress={checker}
+                            />
+                            <TextInput
+                                ref={textTaskInputRef}
+                                style={styles.inputTask}
+                                onChangeText={text => setNewTask(text)}
+                                value={newTask}
+                                placeholder={'Please type here…'}
+                                autoCorrect={false}
+                            />
+                            <Button
+                                style={styles.submitButton}
+                                title="go"
+                                onPress={handleSubmitHelper}
+                            />
+                        </View>
+                        <View style={styles.descriptionWrapper}>
+                            <TextInput
+                                style={styles.inputDescription}
+                                onChangeText={text => setNewDescription(text)}
+                                value={newDescription}
+                                placeholder={'Description…'}
+                            />
+                        </View>
+
+                        <View style={styles.detailsWrapper}>
+                            <TouchableHighlight
+                                style={styles.submitButton}
+                                onPress={toggleCalendarModal}
+                            >
+                                <View style={styles.iconContainer}>
+                                    <Icon
+                                        name="calendar"
+                                        size={28}
+                                        color={'black'}
+                                    />
+                                </View>
+                            </TouchableHighlight>
+                            {/* <Menu>
+                                <MenuTrigger style={styles.submitButton}>
+                                    <View style={styles.iconContainer}>
+                                        <Icon
+                                            name="flag"
+                                            size={28}
+                                            color={'black'}
+                                        />
+                                    </View>
+                                </MenuTrigger>
+                                <MenuOptions style={styles.listsMenu}>
+                                    <View style={styles.listsMenuScroll}>
+                                        {menuOptions.map((option, index) => (
+                                            <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
+                                                <View style={[styles.priorityWrapper, selectedPriority === index && styles.selectedPriority]}>
+                                                    <Icon name={option.icon} size={20} color={option.color} style={styles.flagSmall} />
+                                                    <Text style={styles.flagText}>{option.text}</Text>
+                                                </View>
+                                            </TouchableOpacity>))}
+                                    </View>
+                                </MenuOptions>
+                            </Menu> */}
+                            <TouchableHighlight
+                                style={styles.submitButton}
+                                onPress={toggleListModal}
+                            >
+                                <View style={styles.iconContainer}>
+                                    <Icon
+                                        name="folder"
+                                        size={28}
+                                        color={'black'}
+                                    />
+                                </View>
+                            </TouchableHighlight>
+                             <TouchableHighlight
+                                style={styles.submitButton}
+                                onPress={() => {setShowPriority(!showPriority)}}
+                            >
+                                <View style={styles.iconContainer}>
+                                    {!showPriority ? (<Icon
+                                        name="flag"
+                                        size={28}
+                                        color={'black'}
+                                    />)
+                                    : (<Feather name="x-circle" size={28} color={'black'}/>)}
+                                </View>
+                            </TouchableHighlight>
+                            {showPriority && (<View style={styles.priorityContainer}>
+                                <TouchableHighlight style={styles.priorityButtonLow}>
+                                    <View style={styles.priorityButtonContainer}>
+                                        <Icon
+                                            name="flag"
+                                            size={16}
+                                            color={'blue'}
+                                        />
+                                        <Text style={styles.priorityText}>Low</Text>
+                                    </View>
+                                </TouchableHighlight>
+                                <TouchableHighlight style={styles.priorityButtonMed}>
+                                    <View style={styles.priorityButtonContainer}>
+                                        <Icon
+                                            name="flag"
+                                            size={16}
+                                            color={'yellow'}
+                                        />
+                                        <Text style={styles.priorityText}>Med</Text>
+                                    </View>
+                                </TouchableHighlight>
+                                <TouchableHighlight style={styles.priorityButtonHigh}>
+                                    <View style={styles.priorityButtonContainer}>
+                                        <Icon
+                                            name="flag"
+                                            size={16}
+                                            color={'red'}
+                                        />
+                                        <Text style={styles.priorityText}>High</Text>
+                                    </View>
+                                </TouchableHighlight>
+                            </View>)}
+                        </View>
+                    </View>
+                </Animated.View>
             </Modal>
-            {!showTaskCreation && (<View style={styles.bottomBar}>
+            <View style={styles.bottomBar}>
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={handleAddTask}>
+                    <TouchableOpacity onPress={openTaskCreatonModal}>
                         <View style={styles.addTaskButtonWrapper}>
                             <Text style={styles.addTaskText}>+</Text>
                         </View>
@@ -266,101 +427,10 @@ const TaskCreation = forwardRef((props, ref) => {
                 <View style={styles.navBar}>
                     <NavBar navigation={nav} style={styles.navBarContainer}></NavBar>
                 </View>
-            </View>)}
-            {showTaskCreation && (
-                <KeyboardAccessoryView
-                    style={styles.taskCustomization}
-                    heightProperty="minHeight"
-                    alwaysVisible={true}
-                    hideBorder={true}
-                    animateOn='all'
-                    androidAdjustResize
-                >
-                    <TouchableWithoutFeedback>
-                        <View>
-                            <View style={styles.inputWrapper}>
-                                <TouchableOpacity
-                                    style={isCompleted ? styles.checkedbox : styles.uncheckedbox}
-                                    onPress={checker}
-                                />
-                                <TextInput
-                                    ref={textTaskInputRef}
-                                    style={styles.inputTask}
-                                    onChangeText={text => setNewTask(text)}
-                                    value={newTask}
-                                    placeholder={'Please type here…'}
-                                    autoCorrect={false}
-                                />
-                                <Button
-                                    style={styles.submitButton}
-                                    title="go"
-                                    onPress={handleSubmitHelper}
-                                />
-                            </View>
-                            <View style={styles.descriptionWrapper}>
-                                <TextInput
-                                    style={styles.inputDescription}
-                                    onChangeText={text => setNewDescription(text)}
-                                    value={newDescription}
-                                    placeholder={'Description…'}
-                                />
-                            </View>
-
-                            <View style={styles.detailsWrapper}>
-                                <TouchableHighlight
-                                    style={styles.submitButton}
-                                    onPress={toggleCalendarModal}
-                                >
-                                    <View style={styles.iconContainer}>
-                                        <Icon
-                                            name="calendar"
-                                            size={28}
-                                            color={'black'}
-                                        />
-                                    </View>
-                                </TouchableHighlight>
-                                {/* <Menu>
-                                    <MenuTrigger style={styles.submitButton}>
-                                        <View style={styles.iconContainer}>
-                                            <Icon
-                                                name="flag"
-                                                size={28}
-                                                color={'black'}
-                                            />
-                                        </View>
-                                    </MenuTrigger>
-                                    <MenuOptions style={styles.listsMenu}>
-                                        <View style={styles.listsMenuScroll}>
-                                            {menuOptions.map((option, index) => (
-                                                <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
-                                                    <View style={[styles.priorityWrapper, selectedPriority === index && styles.selectedPriority]}>
-                                                        <Icon name={option.icon} size={20} color={option.color} style={styles.flagSmall} />
-                                                        <Text style={styles.flagText}>{option.text}</Text>
-                                                    </View>
-                                                </TouchableOpacity>))}
-                                        </View>
-                                    </MenuOptions>
-                                </Menu> */}
-                                <TouchableHighlight
-                                    style={styles.submitButton}
-                                    onPress={toggleListModal}
-                                >
-                                    <View style={styles.iconContainer}>
-                                        <Icon
-                                            name="folder"
-                                            size={28}
-                                            color={'black'}
-                                        />
-                                    </View>
-                                </TouchableHighlight>
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </KeyboardAccessoryView>
-            )}
+            </View>
         </View>
     );
-});
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -388,6 +458,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderTopLeftRadius: 5,
         borderTopRightRadius: 5,
+    },
+    taskCreationContainer: {
+        backgroundColor: 'white',
     },
     inputWrapper: {
         flexDirection: 'row',
@@ -445,13 +518,15 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     detailsWrapper: {
+        marginHorizontal: 5,
         flexDirection: 'row',
         justifyContent: 'left',
         alignItems: 'center',
 
     },
     iconContainer: {
-        padding: 10,
+        padding: 10
+
     },
     menuContainer: {
         width: 300,
@@ -497,6 +572,44 @@ const styles = StyleSheet.create({
     },
     flagText: {
         fontSize: 18,
+    },
+    priorityContainer: {
+        paddingLeft: 0,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        flex: 1,
+        verticalAlign: 'center',
+        rowGap: 10,
+    },
+    priorityButtonLow: {
+        width: 60,
+        height: 30,
+        marginRight: 5,
+        borderWidth: 1,
+        borderRadius: 15,
+        justifyContent: 'center'
+    },
+    priorityButtonMed: {
+        width: 65,
+        height: 30,
+        marginRight: 5,
+        borderWidth: 1,
+        borderRadius: 15,
+        justifyContent: 'center'
+    },
+    priorityButtonHigh: {
+        width: 70,
+        height: 30,
+        borderWidth: 1,
+        borderRadius: 15,
+        justifyContent: 'center'
+    },
+    priorityButtonContainer: {
+        flexDirection: 'row',
+        alignSelf: 'center',
+    },
+    priorityText: {
+        marginLeft: 5,
     },
     customItem: {
         margin: 0,

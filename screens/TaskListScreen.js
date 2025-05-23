@@ -24,7 +24,6 @@ const TaskListScreen = (props) => {
     const [editIndex, setEditIndex] = useState();
     const [openDrawer, setOpenDrawer] = useState(false);
     const [userProfile, setUserProfile] = useState()
-    const childRef = useRef();
     const unsubscribeRef = useRef();
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -277,11 +276,9 @@ const TaskListScreen = (props) => {
         }
     };
 
-    const DismissKeyboard = ({ children }) => (
-        <TouchableWithoutFeedback onPress={() => { childRef.current.closeKeyboard() }}>
-            {children}
-        </TouchableWithoutFeedback>
-    );
+    const closeSwipeCard = () => {
+        if (swipedCardRef) swipedCardRef.current.close();
+    }
 
     const handleTaskPress = (index) => {
         setEditIndex(index);
@@ -289,7 +286,7 @@ const TaskListScreen = (props) => {
     }
 
     return (
-            <TouchableWithoutFeedback onPress={() => { if (swipedCardRef) swipedCardRef.current.close(); }}>
+            <TouchableWithoutFeedback onPress={closeSwipeCard}>
                 <View style={styles.container}>
                     <Drawer
                         open={openDrawer}
@@ -300,10 +297,6 @@ const TaskListScreen = (props) => {
                         }}
                         drawerStyle={{width: '70%'}}
                         >
-                        <Button
-                            onPress={() => setOpenDrawer((prevOpen) => !prevOpen)}
-                            title={`${openDrawer ? 'Close' : 'Open'} drawer`}
-                        />
                         <Modal 
                             visible={isEditTaskVisible}
                             transparent={true}
@@ -311,7 +304,6 @@ const TaskListScreen = (props) => {
                         >
                             <EditTask task={taskItems[editIndex]} deleteItem={deleteItem} index={editIndex} setEditTaskVisible={setEditTaskVisible} />
                         </ Modal>
-                        <DismissKeyboard>
                             <ScrollView style={styles.ScrollView}>
                                 {taskItems.length !== 0 && <View style={styles.tasksContainer}>
                                     <Text style={styles.sectionTitle}>Tasks</Text>
@@ -355,8 +347,7 @@ const TaskListScreen = (props) => {
                                 </View>}
                                 {/* <View style={{paddingBottom: 300}} /> */}
                             </ScrollView>
-                        </DismissKeyboard>
-                        <TaskCreation ref={childRef} nav={props.navigation} />
+                        <TaskCreation closeSwipeCard={closeSwipeCard} nav={props.navigation} />
                     </Drawer>
                 </View>
             </TouchableWithoutFeedback>
