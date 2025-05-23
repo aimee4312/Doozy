@@ -22,7 +22,7 @@ const TaskCreation = (props) => {
     const [newDescription, setNewDescription] = useState(''); // Task Description
     const [selectedLists, setSelectedLists] = useState([]);
     const [selectedDate, setSelectedDate] = useState('');
-    const [selectedPriority, setSelectedPriority] = useState(null);
+    const [selectedPriority, setSelectedPriority] = useState(0);
     const [selectedReminders, setSelectedReminders] = useState([]);
     const [selectedRepeat, setSelectedRepeat] = useState([]);
     const [isCompleted, setCompleted] = useState(false);
@@ -148,13 +148,6 @@ const TaskCreation = (props) => {
         }
     };
 
-    const menuOptions = [
-        { text: 'High Priority', icon: 'flag', color: 'red' },
-        { text: 'Medium Priority', icon: 'flag', color: '#FF4500' },
-        { text: 'Low Priority', icon: 'flag', color: 'orange' },
-        { text: 'No Priority', icon: 'flag', color: '#FFD700' }
-    ];
-
     const handleOptionSelect = (index) => {
         if (selectedPriority === index) {
             setSelectedPriority(null);
@@ -194,7 +187,7 @@ const TaskCreation = (props) => {
         setTaskCreationModalVisible(true);
         setTimeout(() => {
             textTaskInputRef?.current?.focus();
-        }, 10);
+        }, 100);
     };
 
     const closeTaskCreationModal = () => {
@@ -236,6 +229,8 @@ const TaskCreation = (props) => {
     const checker = () => {
         isCompleted ? setCompleted(false) : setCompleted(true);
     }
+
+    const flagColor = ['black', 'blue', 'yellow', 'red'];
 
     return (
         <View style={styles.container}>
@@ -369,19 +364,19 @@ const TaskCreation = (props) => {
                             </TouchableHighlight>
                              <TouchableHighlight
                                 style={styles.submitButton}
-                                onPress={() => {setShowPriority(!showPriority)}}
+                                onPress={() => {setShowPriority(!showPriority); !showPriority ? {} : setSelectedPriority(0)}}
                             >
                                 <View style={styles.iconContainer}>
                                     {!showPriority ? (<Icon
                                         name="flag"
                                         size={28}
-                                        color={'black'}
+                                        color={flagColor[selectedPriority]}
                                     />)
                                     : (<Feather name="x-circle" size={28} color={'black'}/>)}
                                 </View>
                             </TouchableHighlight>
                             {showPriority && (<View style={styles.priorityContainer}>
-                                <TouchableHighlight style={styles.priorityButtonLow}>
+                                <TouchableHighlight onPress={() => {setSelectedPriority(1); setShowPriority(false)}} style={styles.priorityButtonLow}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -391,7 +386,7 @@ const TaskCreation = (props) => {
                                         <Text style={styles.priorityText}>Low</Text>
                                     </View>
                                 </TouchableHighlight>
-                                <TouchableHighlight style={styles.priorityButtonMed}>
+                                <TouchableHighlight onPress={() => {setSelectedPriority(2); setShowPriority(false)}} style={styles.priorityButtonMed}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -401,7 +396,7 @@ const TaskCreation = (props) => {
                                         <Text style={styles.priorityText}>Med</Text>
                                     </View>
                                 </TouchableHighlight>
-                                <TouchableHighlight style={styles.priorityButtonHigh}>
+                                <TouchableHighlight onPress={() => {setSelectedPriority(3); setShowPriority(false)}} style={styles.priorityButtonHigh}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
