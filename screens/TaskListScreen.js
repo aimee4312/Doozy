@@ -3,19 +3,27 @@ import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard,
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
+import ListSelect from '../components/task-page/ListSelect';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Drawer } from 'react-native-drawer-layout';
+
 
 
 const TaskListScreen = (props) => {
 
+    const {listId, setListId} = props;
+
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
+    const [listItems, setListItems] = useState([]);
     const [isEditTaskVisible, setEditTaskVisible] = useState(false);
     const [editIndex, setEditIndex] = useState();
+    const [openDrawer, setOpenDrawer] = useState(false);
+    const [userProfile, setUserProfile] = useState()
     const childRef = useRef();
     const unsubscribeRef = useRef();
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -24,51 +32,108 @@ const TaskListScreen = (props) => {
     useEffect(() => {
         const unsubscribeTasks = fetchTasks();
         const unsubscribePosts = fetchPosts();
+        const unsubscribeLists = fetchLists();
+        const unsubscribeUserProfile = fetchUserProfile();
 
-        unsubscribeRef.current = [unsubscribeTasks, unsubscribePosts];
+        unsubscribeRef.current = [unsubscribeTasks, unsubscribePosts, unsubscribeLists, unsubscribeUserProfile];
         return () => {
             unsubscribeRef.current.forEach(unsub => unsub());
         };
-    }, []);
+    }, [listId]);
 
     function fetchTasks() {
+        let unsubscribeTasks = () => {};
+
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
+        const listRef = doc(userProfileRef, 'Lists', listId);
 
         try {
-            const unsubscribeTasks = onSnapshot(tasksRef,
+            getDoc(listRef).then(listSnap => {
+                const fetchedTasks = [];
+                let taskArray = [];
+                if (listSnap.exists()) {
+                    taskArray = listSnap.data().taskIds
+                }
+                unsubscribeTasks = onSnapshot(tasksRef,
                 (querySnapshotTasks) => {
-                    const fetchedTasks = [];
                     querySnapshotTasks.forEach((doc) => {
-                        fetchedTasks.push({ id: doc.id, ...doc.data() });
+                        if (!listSnap.exists() || taskArray.includes(doc.id)) {
+                            fetchedTasks.push({ id: doc.id, ...doc.data() });
+                        }
                     });
                     setTaskItems(fetchedTasks);
                 });
-            return unsubscribeTasks;
+            })
         } catch (error) {
             console.error("Error fetching tasks:", error);
         }
+
+        return () => unsubscribeTasks();
     }
 
     function fetchPosts() {
+        let unsubscribePosts = () => {};
+
         const postsRef = collection(FIRESTORE_DB, 'Posts');
         const q = query(postsRef, where("userId", "==", currentUser.uid));
+        const listRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists', listId);
+
         try {
-            const unsubscribePosts = onSnapshot(q,
+            getDoc(listRef).then(listSnap => {
+                const fetchedPosts = [];
+                let postArray = [];
+                if (listSnap.exists()) {
+                    postArray = listSnap.data().postIds
+                }
+                unsubscribePosts = onSnapshot(q,
                 (querySnapshotPosts) => {
-                    const fetchedPosts = [];
                     querySnapshotPosts.forEach((doc) => {
-                        fetchedPosts.push({ id: doc.id, ...doc.data() });
+                        if (!listSnap.exists() || postArray.includes(doc.id)) {
+                            fetchedPosts.push({ id: doc.id, ...doc.data() });
+                        }
                     });
                     setCompletedTaskItems(fetchedPosts);
-                }
-            );
-            return unsubscribePosts;
+                });
+            });
         } catch (error) {
             console.error("Error fetching posts:", error);
         }
+        return () => unsubscribePosts();
     }
 
+
+    function fetchLists() {
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const listsRef = collection(userProfileRef, 'Lists');
+        try {
+            const unsubscribeLists = onSnapshot(listsRef,
+                (querySnapshotLists) => {
+                    const fetchedLists = [];
+                    querySnapshotLists.forEach((doc) => {
+                        fetchedLists.push({ id: doc.id, ...doc.data() });
+                    });
+                    setListItems(fetchedLists);
+                });
+            return unsubscribeLists;
+        } catch (error) {
+            console.error("Error fetching lists:", error);
+        }
+    }
+
+    function fetchUserProfile() {
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        try {
+            const unsubscribeUserProfile = onSnapshot(userProfileRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setUserProfile(docSnap.data());
+                }
+            })
+            return unsubscribeUserProfile;
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+        }
+    }
 
     const addImage = async () => {
         try {
@@ -123,7 +188,7 @@ const TaskListScreen = (props) => {
                 const taskRef = doc(tasksRef, taskItems[index].id);
                 batch.delete(taskRef);
 
-                batch.update(userProfileRef, { posts: increment(1) });
+                batch.update(userProfileRef, { posts: increment(1), tasks: increment(-1) });
 
                 await batch.commit();
 
@@ -156,7 +221,7 @@ const TaskListScreen = (props) => {
                     isCompletionTime: completedTaskItems[index].isCompletionTime
                 })
                 batch.delete(postRef);
-                batch.update(userProfileRef, { posts: increment(-1) });
+                batch.update(userProfileRef, { posts: increment(-1), tasks: increment(1) });
                 await batch.commit();
 
             } catch (error) {
@@ -191,6 +256,7 @@ const TaskListScreen = (props) => {
                 await updateDoc(userProfileRef, { posts: increment(-1) });
             }
             else {
+                await updateDoc(userProfileRef, { tasks: increment(-1) });
                 await deleteDoc(taskRef)
             }
         } catch (error) {
@@ -224,61 +290,75 @@ const TaskListScreen = (props) => {
 
     return (
             <TouchableWithoutFeedback onPress={() => { if (swipedCardRef) swipedCardRef.current.close(); }}>
-                <SafeAreaView style={styles.container}>
-                    <Modal 
-                        visible={isEditTaskVisible}
-                        transparent={true}
-                        animationType='slide'
-                    >
-                        <EditTask task={taskItems[editIndex]} deleteItem={deleteItem} index={editIndex} setEditTaskVisible={setEditTaskVisible} />
-                    </ Modal>
-                    <DismissKeyboard>
-                        <ScrollView style={styles.ScrollView}>
-                            {taskItems.length !== 0 && <View style={styles.tasksContainer}>
-                                <Text style={styles.sectionTitle}>Tasks</Text>
-                                <View style={styles.tasks}>
-                                    {taskItems.map((task, index) => {
-                                        return (
-                                            <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
-                                                <Task
-                                                    text={task.name}
-                                                    tick={completeTask}
-                                                    i={index}
-                                                    complete={false}
-                                                    deleteItem={deleteItem}
-                                                    onOpen={onOpen}
-                                                    onClose={onClose}
-                                                />
-                                            </TouchableOpacity>
-                                        )
-                                    })}
-                                </View>
-                            </View>}
-                            {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
-                                <Text style={styles.sectionTitle}>Completed</Text>
-                                <View style={styles.tasks}>
-                                    {completedTaskItems.map((task, index) => {
-                                        return (
-                                            <View key={index}>
-                                                <Task
-                                                    text={task.name}
-                                                    tick={completeTask}
-                                                    i={index}
-                                                    complete={true}
-                                                    deleteItem={deleteItem}
-                                                    onOpen={onOpen}
-                                                    onClose={onClose}
-                                                />
-                                            </View>
-                                        )
-                                    })}
-                                </View>
-                            </View>}
-                            {/* <View style={{paddingBottom: 300}} /> */}
-                        </ScrollView>
-                    </DismissKeyboard>
-                    <TaskCreation ref={childRef} nav={props.navigation} />
-                </SafeAreaView>
+                <View style={styles.container}>
+                    <Drawer
+                        open={openDrawer}
+                        onOpen={() => setOpenDrawer(true)}
+                        onClose={() => setOpenDrawer(false)}
+                        renderDrawerContent={() => {
+                            return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
+                        }}
+                        drawerStyle={{width: '70%'}}
+                        >
+                        <Button
+                            onPress={() => setOpenDrawer((prevOpen) => !prevOpen)}
+                            title={`${openDrawer ? 'Close' : 'Open'} drawer`}
+                        />
+                        <Modal 
+                            visible={isEditTaskVisible}
+                            transparent={true}
+                            animationType='slide'
+                        >
+                            <EditTask task={taskItems[editIndex]} deleteItem={deleteItem} index={editIndex} setEditTaskVisible={setEditTaskVisible} />
+                        </ Modal>
+                        <DismissKeyboard>
+                            <ScrollView style={styles.ScrollView}>
+                                {taskItems.length !== 0 && <View style={styles.tasksContainer}>
+                                    <Text style={styles.sectionTitle}>Tasks</Text>
+                                    <View style={styles.tasks}>
+                                        {taskItems.map((task, index) => {
+                                            return (
+                                                <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
+                                                    <Task
+                                                        text={task.name}
+                                                        tick={completeTask}
+                                                        i={index}
+                                                        complete={false}
+                                                        deleteItem={deleteItem}
+                                                        onOpen={onOpen}
+                                                        onClose={onClose}
+                                                    />
+                                                </TouchableOpacity>
+                                            )
+                                        })}
+                                    </View>
+                                </View>}
+                                {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
+                                    <Text style={styles.sectionTitle}>Completed</Text>
+                                    <View style={styles.tasks}>
+                                        {completedTaskItems.map((task, index) => {
+                                            return (
+                                                <View key={index}>
+                                                    <Task
+                                                        text={task.name}
+                                                        tick={completeTask}
+                                                        i={index}
+                                                        complete={true}
+                                                        deleteItem={deleteItem}
+                                                        onOpen={onOpen}
+                                                        onClose={onClose}
+                                                    />
+                                                </View>
+                                            )
+                                        })}
+                                    </View>
+                                </View>}
+                                {/* <View style={{paddingBottom: 300}} /> */}
+                            </ScrollView>
+                        </DismissKeyboard>
+                        <TaskCreation ref={childRef} nav={props.navigation} />
+                    </Drawer>
+                </View>
             </TouchableWithoutFeedback>
     );
 }

@@ -64,6 +64,7 @@ const TaskCreation = forwardRef((props, ref) => {
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
                 });
+                batch.update(userProfileRef, { tasks: increment(1) });
             }
             else {
                 const postRef = doc(postsRef);
@@ -81,8 +82,9 @@ const TaskCreation = forwardRef((props, ref) => {
                     repeatEnds: dateRepeatEnds,
                 })
                 batch.update(userProfileRef, { posts: increment(1) });
-                await batch.commit();
+                
             } 
+            await batch.commit();
         } catch (error) {
             console.error("Error storing task or posting:", error);
         }
@@ -363,7 +365,7 @@ const TaskCreation = forwardRef((props, ref) => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 0,
+        bottom: 0, //temporary
         left: 0,
         right: 0,
     },
