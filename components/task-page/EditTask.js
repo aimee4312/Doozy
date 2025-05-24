@@ -9,8 +9,8 @@ import * as ImagePicker from 'expo-image-picker';
 
 const EditTask = (props) => {
     const { task, deleteItem, index, setEditTaskVisible } = props;
-    const [editedTaskName, setEditedTaskName] = useState(task.name);
-    const [editedDescription, setEditedDescription] = useState(task.description);
+    const [editedTaskName, setEditedTaskName] = useState(task ? task.name : null);
+    const [editedDescription, setEditedDescription] = useState(task ? task.description : null);
     const [isComplete, setComplete] = useState(false);
 
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
@@ -22,14 +22,14 @@ const EditTask = (props) => {
                 timestamp: new Date(millis)
             };
         } else {
-            return null; // or a default value
+            return null;
         }
     });
-    const [isTime, setIsTime] = useState(task.isCompletionTime);
-    const [selectedReminders, setSelectedReminders] = useState(task.reminders);
-    const [selectedRepeat, setSelectedRepeat] = useState(task.repeat)
-    const [dateRepeatEnds, setDateRepeatEnds] = useState(task.repeatEnds);
-
+    const [isTime, setIsTime] = useState(task ? task.isCompletionTime : null);
+    const [selectedReminders, setSelectedReminders] = useState(task ? task.reminders : null);
+    const [selectedRepeat, setSelectedRepeat] = useState(task ? task.repeat : null)
+    const [dateRepeatEnds, setDateRepeatEnds] = useState(task ? task.repeatEnds : null);
+    const [listIds, setListIds] = useState(task ? task.listIds : null);
     const [selectedPriority, setSelectedPriority] = useState([]);
 
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -103,6 +103,7 @@ const EditTask = (props) => {
                     reminders: selectedReminders,
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
+                    listIds: listIds,
                 });
             }
             else {
@@ -120,6 +121,7 @@ const EditTask = (props) => {
                     reminders: selectedReminders,
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
+                    listIds: listIds,
                 })
                 batch.update(userProfileRef, { posts: increment(1) });
                 batch.delete(taskRef);

@@ -42,63 +42,60 @@ const TaskListScreen = (props) => {
 
     function fetchTasks() {
         let unsubscribeTasks = () => {};
+        let unsubscribeList = () => {};
+        let taskIds = []
 
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const listRef = doc(userProfileRef, 'Lists', listId);
 
         try {
-            getDoc(listRef).then(listSnap => {
-                const fetchedTasks = [];
-                let taskArray = [];
-                if (listSnap.exists()) {
-                    taskArray = listSnap.data().taskIds
-                }
-                unsubscribeTasks = onSnapshot(tasksRef,
-                (querySnapshotTasks) => {
+            unsubscribeList = onSnapshot(listRef, (listSnap) => {
+                taskIds = listSnap.exists() ? listSnap.data().taskIds : [];
+                unsubscribeTasks = onSnapshot(tasksRef, (querySnapshotTasks) => {
+                    const fetchedTasks = [];
                     querySnapshotTasks.forEach((doc) => {
-                        if (!listSnap.exists() || taskArray.includes(doc.id)) {
+                        if (!listSnap.exists() || taskIds.includes(doc.id)) {
                             fetchedTasks.push({ id: doc.id, ...doc.data() });
                         }
                     });
                     setTaskItems(fetchedTasks);
-                });
+                })
             })
         } catch (error) {
             console.error("Error fetching tasks:", error);
         }
 
-        return () => unsubscribeTasks();
+        return () => {unsubscribeTasks(); unsubscribeList;};
     }
 
     function fetchPosts() {
+        let unsubscribeList = () => {};
         let unsubscribePosts = () => {};
+        let postIds = [];
 
         const postsRef = collection(FIRESTORE_DB, 'Posts');
         const q = query(postsRef, where("userId", "==", currentUser.uid));
         const listRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists', listId);
 
         try {
-            getDoc(listRef).then(listSnap => {
-                const fetchedPosts = [];
-                let postArray = [];
-                if (listSnap.exists()) {
-                    postArray = listSnap.data().postIds
-                }
-                unsubscribePosts = onSnapshot(q,
-                (querySnapshotPosts) => {
+            unsubscribeList = onSnapshot(listRef, (listSnap) => {
+                postIds = listSnap.exists() ? listSnap.data().postIds : [];
+                unsubscribePosts = onSnapshot(q, (querySnapshotPosts) => {
+                    const fetchedPosts = [];
                     querySnapshotPosts.forEach((doc) => {
-                        if (!listSnap.exists() || postArray.includes(doc.id)) {
+                        if (!listSnap.exists() || postIds.includes(doc.id)) {
                             fetchedPosts.push({ id: doc.id, ...doc.data() });
                         }
                     });
                     setCompletedTaskItems(fetchedPosts);
-                });
-            });
+                })
+            })
         } catch (error) {
             console.error("Error fetching posts:", error);
         }
-        return () => unsubscribePosts();
+        return () => {unsubscribePosts(); unsubscribeList();}
+
     }
 
 
@@ -159,7 +156,6 @@ const TaskListScreen = (props) => {
     };
 
     const completeTask = async (index, complete) => { // clean this
-        let docId;
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const postsRef = collection(FIRESTORE_DB, 'Posts');
@@ -171,6 +167,8 @@ const TaskListScreen = (props) => {
                 if (!imageURI) {
                     return; // make error
                 }
+                const docId = taskItems[index].id;
+                const listIds = taskItems[index].listIds;
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
@@ -188,9 +186,9 @@ const TaskListScreen = (props) => {
                 })
 
                 let listRef;
-                taskItems[index].listIds.forEach((listId) => {
-                    listRef = doc(listsRef, 'listId');
-                    batch.update(listRef, {taskIds: arrayRemove(taskItems[index].id)});
+                listIds.forEach((listId) => {
+                    listRef = doc(listsRef, listId);
+                    batch.update(listRef, {taskIds: arrayRemove(docId)});
                     batch.update(listRef, {postIds: arrayUnion(postRef.id)});
                 })
 
@@ -208,12 +206,12 @@ const TaskListScreen = (props) => {
         }
         else {
             const batch = writeBatch(FIRESTORE_DB);
-            docId = completedTaskItems[index].id;
+            const docId = completedTaskItems[index].id;
+            const listIds = completedTaskItems[index].listIds;
             try {
                 const postRef = doc(postsRef, docId);
                 const querySnapshot = await getDoc(postRef);
                 const image = querySnapshot.data().image;
-                console.log(image);
                 if (image) {
                     imageRef = ref(getStorage(), image);
                     deleteObject(imageRef);
@@ -229,11 +227,11 @@ const TaskListScreen = (props) => {
                     completeByDate: completedTaskItems[index].completeByDate,
                     isCompletionTime: completedTaskItems[index].isCompletionTime,
                     listIds: completedTaskItems[index].listIds,
-                })
+                });
                 let listRef;
-                taskItems[index].listIds.forEach((listId) => {
-                    listRef = doc(listsRef, 'listId');
-                    batch.update(listRef, {postIds: arrayRemove(completedTaskItems[index].id)});
+                listIds.forEach((listId) => {
+                    listRef = doc(listsRef, listId);
+                    batch.update(listRef, {postIds: arrayRemove(docId)});
                     batch.update(listRef, {taskIds: arrayUnion(taskRef.id)})
                 })
                 batch.delete(postRef);
