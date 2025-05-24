@@ -4,7 +4,7 @@ import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
 import ListSelect from '../components/task-page/ListSelect';
-import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
@@ -163,6 +163,7 @@ const TaskListScreen = (props) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const postsRef = collection(FIRESTORE_DB, 'Posts');
+        const listsRef = collection(userProfileRef, 'Lists');
         if (!complete) {
             try {
                 const batch = writeBatch(FIRESTORE_DB);
@@ -182,8 +183,17 @@ const TaskListScreen = (props) => {
                     repeat: taskItems[index].repeat,
                     repeatEnds: taskItems[index].repeatEnds,
                     completeByDate: taskItems[index].completeByDate,
-                    isCompletionTime: taskItems[index].isCompletionTime
+                    isCompletionTime: taskItems[index].isCompletionTime,
+                    listIds: taskItems[index].listIds
                 })
+
+                let listRef;
+                taskItems[index].listIds.forEach((listId) => {
+                    listRef = doc(listsRef, 'listId');
+                    batch.update(listRef, {taskIds: arrayRemove(taskItems[index].id)});
+                    batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+                })
+
                 const taskRef = doc(tasksRef, taskItems[index].id);
                 batch.delete(taskRef);
 
@@ -217,7 +227,14 @@ const TaskListScreen = (props) => {
                     repeat: completedTaskItems[index].repeat,
                     repeatEnds: completedTaskItems[index].repeatEnds,
                     completeByDate: completedTaskItems[index].completeByDate,
-                    isCompletionTime: completedTaskItems[index].isCompletionTime
+                    isCompletionTime: completedTaskItems[index].isCompletionTime,
+                    listIds: completedTaskItems[index].listIds,
+                })
+                let listRef;
+                taskItems[index].listIds.forEach((listId) => {
+                    listRef = doc(listsRef, 'listId');
+                    batch.update(listRef, {postIds: arrayRemove(completedTaskItems[index].id)});
+                    batch.update(listRef, {taskIds: arrayUnion(taskRef.id)})
                 })
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1), tasks: increment(1) });
@@ -229,7 +246,7 @@ const TaskListScreen = (props) => {
         }
     }
 
-    //diffentiate delete post and task
+    //diffentiate delete post and task and make batch
     const deleteItem = async (index, complete) => {
         let docId;
         let image;
@@ -244,20 +261,32 @@ const TaskListScreen = (props) => {
         const tasksRef = collection(userProfileRef, 'Tasks');
         const taskRef = doc(tasksRef, docId);
         const postRef = doc(FIRESTORE_DB, 'Posts', docId);
+        const listsRef = collection(userProfileRef, 'Lists');
         try {
-            
+            const batch = writeBatch(FIRESTORE_DB);
             if (complete) {
-                await deleteDoc(postRef);
+                let listRef;
+                completedTaskItems[index].listIds.forEach((listId) => {
+                    listRef = doc(listsRef, listId);
+                    batch.update(listRef, {postIds: arrayRemove(docId)})
+                });
+                batch.delete(postRef);
                 if (image) {
                     const imageRef = ref(getStorage(), image);
                     await deleteObject(imageRef);
                 }
-                await updateDoc(userProfileRef, { posts: increment(-1) });
+                batch.update(userProfileRef, { posts: increment(-1) });
             }
             else {
-                await updateDoc(userProfileRef, { tasks: increment(-1) });
-                await deleteDoc(taskRef)
+                let listRef;
+                taskItems[index].listIds.forEach((listId) => {
+                    listRef = doc(listsRef, listId);
+                    batch.update(listRef, {taskIds: arrayRemove(docId)})
+                });
+                batch.update(userProfileRef, { tasks: increment(-1) });
+                batch.delete(taskRef)
             }
+            await batch.commit();
         } catch (error) {
             console.error('Error deleting document: ', error);
         };
@@ -347,7 +376,7 @@ const TaskListScreen = (props) => {
                                 </View>}
                                 {/* <View style={{paddingBottom: 300}} /> */}
                             </ScrollView>
-                        <TaskCreation closeSwipeCard={closeSwipeCard} nav={props.navigation} />
+                        <TaskCreation closeSwipeCard={closeSwipeCard} listItems={listItems} nav={props.navigation} />
                     </Drawer>
                 </View>
             </TouchableWithoutFeedback>

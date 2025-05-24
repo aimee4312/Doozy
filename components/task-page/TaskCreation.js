@@ -2,19 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-
-import CustomDropDown from './PopUpMenus/CustomDropDown';
+import { Ionicons } from '@expo/vector-icons';
+import ListModal from './PopUpMenus/ListModal';
 import ScheduleMenu from './ScheduleMenu';
-import { doc, collection, addDoc, runTransaction, writeBatch, increment } from 'firebase/firestore';
+import { doc, collection, addDoc, runTransaction, writeBatch, increment, arrayUnion } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+
 
 
 
 const TaskCreation = (props) => {
-    const { closeSwipeCard, nav } = props;
+    const { closeSwipeCard, listItems, nav } = props;
 
     const textTaskInputRef = useRef(null);
 
@@ -34,7 +34,6 @@ const TaskCreation = (props) => {
     const [isTaskCreationModalVisible, setTaskCreationModalVisible] = useState(false);
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
-
 
     const [openFolders, setOpenFolders] = useState([]); // maybe move this inside of customdropdown
 
@@ -90,6 +89,12 @@ const TaskCreation = (props) => {
                     reminders: selectedReminders,
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
+                    listIds: selectedLists,
+                });
+                let listRef;
+                selectedLists.forEach((listId) => {
+                    listRef = doc(userProfileRef, 'Lists', listId);
+                    batch.update(listRef, {taskIds: arrayUnion(taskRef.id)});
                 });
                 batch.update(userProfileRef, { tasks: increment(1) });
             }
@@ -107,7 +112,13 @@ const TaskCreation = (props) => {
                     reminders: selectedReminders,
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
+                    listIds: selectedLists,
                 })
+                let listRef;
+                selectedLists.forEach((listId) => {
+                    listRef = doc(userProfileRef, 'Lists', listId);
+                    batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+                });
                 batch.update(userProfileRef, { posts: increment(1) });
                 
             } 
@@ -140,40 +151,6 @@ const TaskCreation = (props) => {
     };
 
 
-    const toggleFolder = (index) => {
-        if (openFolders.includes(index)) {
-            setOpenFolders(openFolders.filter((item) => item !== index));
-        } else {
-            setOpenFolders([...openFolders, index]);
-        }
-    };
-
-    const handleOptionSelect = (index) => {
-        if (selectedPriority === index) {
-            setSelectedPriority(null);
-        }
-        else {
-            setSelectedPriority(index);
-        }
-        // Perform other actions based on the selected option if needed
-    };
-
-
-    const toggleSelection = (mainIndex, subIndex) => {
-        const isSelected = selectedLists.some((item) => item.mainIndex === mainIndex && item.subIndex === subIndex);
-        if (isSelected) {
-            setSelectedLists(selectedLists.filter((item) => !(item.mainIndex === mainIndex && item.subIndex === subIndex)));
-        } else {
-            setSelectedLists([...selectedLists, { mainIndex, subIndex }]);
-        }
-    };
-
-    const options = [
-        { label: 'School', subrows: [{ label: 'Math' }, { label: 'English' }] },
-        { label: 'Errands', subrows: [{ label: 'Chores' }, { label: 'Groceries' }] },
-        { label: '', subrows: [{ label: 'Fun Activities' }, { label: 'Self Inprovement' }] },
-    ];
-
     const toggleCalendarModal = () => {
         setCalendarModalVisible(!isCalendarModalVisible);
     };
@@ -187,7 +164,7 @@ const TaskCreation = (props) => {
         setTaskCreationModalVisible(true);
         setTimeout(() => {
             textTaskInputRef?.current?.focus();
-        }, 100);
+        }, 10);
     };
 
     const closeTaskCreationModal = () => {
@@ -212,17 +189,19 @@ const TaskCreation = (props) => {
                 storeTask(null);
             }
         }
+
         setNewTask('');
         setNewDescription('');
-        setShowTaskCreation(false);
         setCompleted(false);
         setSelectedLists([]);
         setSelectedDate('');
-        setSelectedPriority(null);
+        setSelectedPriority(0);
         setSelectedReminders([]);
         setSelectedRepeat([]);
         setIsTime(false);
         setDateRepeatEnds('');
+        setSelectedLists([]);
+        setTaskCreationModalVisible(false);
     };
 
 
@@ -273,13 +252,12 @@ const TaskCreation = (props) => {
                 <TouchableWithoutFeedback onPress={toggleListModal}>
                     <View style={{ flex: 1}}>
                     </View>
-                    </TouchableWithoutFeedback>
-                        <CustomDropDown
-                            options={options}
-                            selectedLists={selectedLists}
-                            toggleSelection={toggleSelection}
-                            openFolders={openFolders}
-                            toggleFolder={toggleFolder} />
+                </TouchableWithoutFeedback>
+                    <ListModal
+                        selectedLists={selectedLists}
+                        setSelectedLists={setSelectedLists}
+                        listItems={listItems}
+                    />
                 </Modal>
                 <TouchableWithoutFeedback onPress={closeTaskCreationModal}>
                     <View style={{ flex: 1 }}>
@@ -332,11 +310,7 @@ const TaskCreation = (props) => {
                                 onPress={toggleListModal}
                             >
                                 <View style={styles.iconContainer}>
-                                    <Icon
-                                        name="folder"
-                                        size={28}
-                                        color={'black'}
-                                    />
+                                    <Ionicons name="list-outline" size={28} color="black" />
                                 </View>
                             </TouchableHighlight>
                              <TouchableHighlight
@@ -391,9 +365,7 @@ const TaskCreation = (props) => {
             <View style={styles.bottomBar}>
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity onPress={openTaskCreatonModal}>
-                        <View style={styles.addTaskButtonWrapper}>
-                            <Text style={styles.addTaskText}>+</Text>
-                        </View>
+                        <Ionicons name="add-circle-outline" size={72} color='black'/>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.navBar}>

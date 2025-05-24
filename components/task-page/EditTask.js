@@ -45,15 +45,15 @@ const EditTask = (props) => {
         const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
             Animated.timing(animatedHeight, {
                 toValue: Math.min(defaultHeight + e.endCoordinates.height, maxHeight),
-                duration: 250,
+                duration: e.duration,
                 useNativeDriver: false
             }).start();
         });
 
-        const willHideSub = Keyboard.addListener('keyboardWillHide', () => {
+        const willHideSub = Keyboard.addListener('keyboardWillHide', (e) => {
             Animated.timing(animatedHeight, {
                 toValue: defaultHeight,
-                duration: 250,
+                duration: e.duration,
                 useNativeDriver: false
             }).start();
         });
