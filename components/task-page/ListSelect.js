@@ -1,0 +1,291 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View, TouchableWithoutFeedback, TextInput, Animated, Keyboard, Dimensions} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { arrayRemove, collection, doc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
+
+
+const ListSelect = (props) => {
+    const {setOpenDrawer, listItems, listId, setListId, userProfile} = props;
+    const allListItems = [{id: "0", name: 'Master List', taskNumber: userProfile ? userProfile.tasks : 0}, ...listItems]
+    const [addTaskModalVisible, setAddTaskModalVisible] = useState(false);
+    const [listName, setListName] = useState("");
+    const [listMenuModalVisible, setListMenuModalVisible] = useState(false);
+    const [currYPosition, setCurrYPosition] = useState(0);
+    const [currList, setCurrList] = useState({});
+    const [edit, setEdit] = useState(false);
+
+    const screenWidth = Dimensions.get('window').width;
+    const listMenuXPosition = screenWidth * .7 - 150;
+
+    const currentUser = FIREBASE_AUTH.currentUser;
+    const addListRef = useRef(null);
+    const listItemRefs = useRef({})
+    const inputHeight = 50;
+
+    const animatedHeight = useRef(new Animated.Value(inputHeight)).current;
+    
+    useEffect(() => {
+        const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
+            Animated.timing(animatedHeight, {
+                toValue: inputHeight + e.endCoordinates.height,
+                duration: e.duration,
+                useNativeDriver: false
+            }).start();
+        });
+
+        const willHideSub = Keyboard.addListener('keyboardWillHide', (e) => {
+            Animated.timing(animatedHeight, {
+                toValue: 0,
+                duration: e.duration,
+                useNativeDriver: false
+            }).start();
+        });
+
+        return () => {
+            willShowSub.remove();
+            willHideSub.remove();
+        };
+    }, []);
+
+    const openModal = () => {
+        setAddTaskModalVisible(true);
+        setTimeout(() => {
+            addListRef.current?.focus()
+        }, 10);
+    }
+
+    const dismissModal = () => {
+        setListName("");
+        Keyboard.dismiss();
+        setTimeout(() => {
+            setAddTaskModalVisible(false);
+        }, 10);
+    }
+
+    const addList = async () => {
+        try {
+            const listRef = doc(collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists'));
+            await setDoc(listRef, {name: listName, postIds: [], taskIds: []});
+            dismissModal();
+            setListId(listRef.id);
+        } catch (error) {
+            console.error("Error adding list:", error)
+        }
+    }
+
+    const editList = async () => {
+        try {
+            const listRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists', currList.id);
+            await updateDoc(listRef, {name: listName});
+            dismissModal();
+            setEdit(false);
+        } catch (error) {
+            console.error("Error editing list:", error)
+        }
+    }
+
+    const deleteList = async(list) => {
+        try {
+            const batch = writeBatch(FIRESTORE_DB);
+            let taskRef;
+            let postRef;
+            const listRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists', list.id);
+            list.taskIds.forEach((taskId) => {
+                taskRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Tasks', taskId);
+                batch.update(taskRef, {listIds: arrayRemove(list.id)});
+            })
+            list.postIds.forEach((postId) => {
+                postRef = doc(FIRESTORE_DB, 'Posts', postId);
+                batch.update(postRef, {listIds: arrayRemove(list.id)});
+            })
+            batch.delete(listRef);
+            await batch.commit();
+            setListMenuModalVisible(false);
+            if (listId == list.id) {
+                setListId("0");
+            }
+        } catch (error) {
+            console.error("Error deleting list:", error);
+        }
+    }
+
+    const toggleListMenu = (item) => {
+        listItemRefs.current[item.id]?.measure((x, y, width, height, pageX, pageY) => {
+            setCurrYPosition(pageY);
+        });
+        setListMenuModalVisible(true);
+        setCurrList(item);
+    };
+    
+    const renderList = ({ item }) => (
+        <TouchableOpacity ref={ref => {
+            if (ref) {
+                listItemRefs.current[item.id] = ref;
+            } else {
+                delete listItemRefs.current[item.id];
+            }}}
+            onPress={() => {setOpenDrawer(false); setListId(item.id)}} 
+            style={{...(item.id == listId ? styles.listContainerSelected : {}), ...styles.listContainer}}
+        >
+            <View style={styles.nameContainer}>
+                <Ionicons name="list-outline" size={18} color="black" />
+                <Text style={styles.listName}>{item.name}</Text>
+            </View>
+            {item.id == '0' ? 
+                (<Text style={styles.taskNumber}>{item.taskNumber}</Text>) 
+            : (
+                <TouchableOpacity onPress={() => toggleListMenu(item)} style={{ width: 30, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <Ionicons name="ellipsis-vertical-outline" size={18} color="black" />
+                </TouchableOpacity>
+            )}
+        </TouchableOpacity>
+    );
+
+    return (
+        <View style={styles.container}>
+            <Modal
+                visible={addTaskModalVisible}
+                transparent={true}
+                animationType='slide'
+            >
+                <TouchableWithoutFeedback onPress={dismissModal}> 
+                    <View style={{ flex: 1 }} />
+                </TouchableWithoutFeedback>
+                <Animated.View style={{height: animatedHeight, ...styles.addListContainer}}>
+                    <View style={styles.inputContainer}>
+                        <TextInput ref={addListRef} placeholder="Enter list name..." style={styles.addListInput} value={listName} onChangeText={setListName} />
+                        <TouchableOpacity onPress={edit ? editList : addList} style={styles.saveListButton}>
+                            <Ionicons name="add-circle-outline" size={28} color='black'/>
+                        </TouchableOpacity>
+                    </View>
+                </Animated.View>
+            </Modal>
+            <Modal
+                visible={listMenuModalVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <TouchableWithoutFeedback onPress={() => setListMenuModalVisible(false)}>
+                    <View style={styles.listMenuBackground}>
+                        <TouchableWithoutFeedback>
+                            <View style={{top: currYPosition + 50, left: listMenuXPosition, ...styles.listMenu}}>
+                                <TouchableOpacity onPress={() => {setEdit(true); setListName(currList.name); setListMenuModalVisible(false); openModal();}}style={styles.listMenuButtons}>
+                                    <Text style={styles.listMenuText}>Rename</Text>
+                                    <Ionicons name="create-outline" size={18} color="black" />
+                                </TouchableOpacity>
+                                <View style={styles.divider} />
+                                <TouchableOpacity onPress={() => deleteList(currList)} style={styles.listMenuButtons}>
+                                    <Text style={styles.listMenuText}>Delete</Text>
+                                    <Ionicons name="trash-outline" size={18} color="red" />
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+            <FlatList 
+                data={allListItems}
+                renderItem={renderList}
+                keyExtractor={item => item.id}
+            />
+            <TouchableOpacity onPress={openModal} style={styles.addListButton}>
+                <Ionicons name="add-circle-outline" size={28} color='black' />
+                <Text style={styles.addListText}>Add List</Text>
+            </TouchableOpacity>
+        </View>
+    )
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        marginTop: 50,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+    },
+    addListButton: {
+        alignSelf: 'center',
+        margin: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    addListText: {
+        fontSize: 18,
+        marginLeft: 5,
+        fontWeight: 'bold'
+    },
+    addListContainer: {
+        borderTopRightRadius: 10,
+        borderTopLeftRadius: 10,
+        backgroundColor: 'white',
+        borderWidth: 1,
+        borderColor: 'C0C0C0',
+        flexDirection: 'column',
+        justifyContent: 'flex-start'
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    addListInput: {
+        fontSize: 18,
+        height: 50,
+        paddingHorizontal: 15,
+    },
+    saveListButton: {
+        marginRight: 15,
+    },
+    listMenuBackground: {
+        flex: 1,
+    },
+    listMenu: {
+        height: 80,
+        backgroundColor: 'white',
+        width: 150,
+        borderWidth: 1,
+        borderRadius: 15,
+        flexDirection: 'column',
+        justifyContent: 'space-around'
+    },
+    listMenuButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        height: '50%',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+    },
+    listMenuText: {
+        fontSize: 16
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#e0e0e0',
+        width: '100%',
+    },
+    listContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingLeft: 10,
+        paddingRight: 10,
+        height: 50,
+    },
+    listContainerSelected: {
+        backgroundColor: '#ffe066',
+    },
+    nameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    listName: {
+        paddingLeft: 10,
+        fontSize: 18
+    },
+    taskNumber: {
+        width: 15
+    },
+})
+
+export default ListSelect;
