@@ -329,7 +329,7 @@ const TaskListScreen = (props) => {
                             transparent={true}
                             animationType='slide'
                         >
-                            <EditTask task={taskItems[editIndex]} deleteItem={deleteItem} index={editIndex} setEditTaskVisible={setEditTaskVisible} />
+                            <EditTask task={taskItems[editIndex]} listItems={listItems} setEditTaskVisible={setEditTaskVisible} />
                         </ Modal>
                             <ScrollView style={styles.ScrollView}>
                                 {taskItems.length !== 0 && <View style={styles.tasksContainer}>

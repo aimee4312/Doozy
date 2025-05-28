@@ -1,19 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Keyboard, TextInput, Dimensions, TouchableWithoutFeedback, Animated, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import ScheduleMenu from './ScheduleMenu';
+import ListModal from './PopUpMenus/ListModal';
 import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../firebaseConfig';
-import { writeBatch, doc, collection, increment } from 'firebase/firestore';
+import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 
 const EditTask = (props) => {
-    const { task, deleteItem, index, setEditTaskVisible } = props;
+    const { task, listItems, setEditTaskVisible } = props;
     const [editedTaskName, setEditedTaskName] = useState(task ? task.name : null);
     const [editedDescription, setEditedDescription] = useState(task ? task.description : null);
     const [isComplete, setComplete] = useState(false);
 
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
+    const [isListModalVisible, setListModalVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState(() => {
         if (task.completeByDate && task.completeByDate.timestamp) {
             const millis = task.completeByDate.timestamp.seconds * 1000 + Math.floor(task.completeByDate.timestamp.nanoseconds / 1e6);
@@ -29,8 +31,8 @@ const EditTask = (props) => {
     const [selectedReminders, setSelectedReminders] = useState(task ? task.reminders : null);
     const [selectedRepeat, setSelectedRepeat] = useState(task ? task.repeat : null)
     const [dateRepeatEnds, setDateRepeatEnds] = useState(task ? task.repeatEnds : null);
-    const [listIds, setListIds] = useState(task ? task.listIds : null);
-    const [selectedPriority, setSelectedPriority] = useState([]);
+    const [selectedPriority, setSelectedPriority] = useState(task ? task.priority : null);
+    const [selectedLists, setSelectedLists] = useState(task ? task.listIds : null)
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -103,8 +105,21 @@ const EditTask = (props) => {
                     reminders: selectedReminders,
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
-                    listIds: listIds,
+                    listIds: selectedLists,
                 });
+                // see which listIds were removed and go into each list and remove the taskid from the lists
+                // see which listIds were added and go into each list and add the taskid to the lists
+                const listsToRemoveFrom = task.listIds.filter(item => !selectedLists.includes(item));
+                const liststoAddTo = selectedLists.filter(item => !task.listIds.includes(item));
+                let listRef;
+                listsToRemoveFrom.forEach((list) => {
+                    listRef = doc(userProfileRef, 'Lists', list);
+                    batch.update(listRef, {taskIds: arrayRemove(task.id)});
+                });
+                liststoAddTo.forEach((list) => {
+                    listRef = doc(userProfileRef, 'Lists', list);
+                    batch.update(listRef, {taskIds: arrayUnion(task.id)});
+                })
             }
             else {
                 const imageURI = await addImage()
@@ -121,9 +136,23 @@ const EditTask = (props) => {
                     reminders: selectedReminders,
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
-                    listIds: listIds,
+                    listIds: selectedLists,
                 })
+                // remove task id from every list in original array
+                // add post id to every list in new array
+                let listRef;
+                task.listIds.forEach((list) => {
+                    listRef = doc(userProfileRef, 'Lists', list);
+                    batch.update(listRef, {taskIds: arrayRemove(task.id)});
+                })
+
+                selectedLists.forEach((list) => {
+                    listRef = doc(userProfileRef, 'Lists', list);
+                    batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+                })
+
                 batch.update(userProfileRef, { posts: increment(1) });
+                batch.update(userProfileRef, {tasks: increment(-1)});
                 batch.delete(taskRef);
             } 
             await batch.commit();
@@ -172,6 +201,20 @@ const EditTask = (props) => {
                     />
                 </View>
             </Modal>
+            <Modal
+                visible={isListModalVisible}
+                transparent={true}
+                animationType='slide'
+            >
+                <TouchableWithoutFeedback onPress={() => setListModalVisible(false)}>
+                    <View style={{ flex: 1}} />
+                </TouchableWithoutFeedback>
+                    <ListModal
+                        selectedLists={selectedLists}
+                        setSelectedLists={setSelectedLists}
+                        listItems={listItems}
+                    />
+                </Modal>
             <TouchableWithoutFeedback onPress={() => setEditTaskVisible(false)}>
                 <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
@@ -181,7 +224,7 @@ const EditTask = (props) => {
                         <TouchableOpacity style={{width: 45}}>
                             <Ionicons name="chevron-down-outline" size={32} color="black" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => console.log("pressed debug in MainList text")}>
+                        <TouchableOpacity onPress={() => setListModalVisible(true)}>
                             <Text style={styles.listPicker}>Main List</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={{width: 45}} onPress={() => saveChanges()}>
