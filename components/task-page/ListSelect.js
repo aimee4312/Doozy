@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View, TouchableWithoutFeedback, TextInput, Animated, Keyboard, Dimensions} from "react-native";
+import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View, TouchableWithoutFeedback, TextInput, Animated, Keyboard, Dimensions, Image} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { arrayRemove, collection, doc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
@@ -8,7 +8,7 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
 const ListSelect = (props) => {
     const {setOpenDrawer, listItems, listId, setListId, userProfile} = props;
     const allListItems = [{id: "0", name: 'Master List', taskNumber: userProfile ? userProfile.tasks : 0}, ...listItems]
-    const [addTaskModalVisible, setAddTaskModalVisible] = useState(false);
+    const [addListModalVisible, setAddListModalVisible] = useState(false);
     const [listName, setListName] = useState("");
     const [listMenuModalVisible, setListMenuModalVisible] = useState(false);
     const [currYPosition, setCurrYPosition] = useState(0);
@@ -49,7 +49,7 @@ const ListSelect = (props) => {
     }, []);
 
     const openModal = () => {
-        setAddTaskModalVisible(true);
+        setAddListModalVisible(true);
         setTimeout(() => {
             addListRef.current?.focus()
         }, 10);
@@ -59,14 +59,14 @@ const ListSelect = (props) => {
         setListName("");
         Keyboard.dismiss();
         setTimeout(() => {
-            setAddTaskModalVisible(false);
+            setAddListModalVisible(false);
         }, 10);
     }
 
     const addList = async () => {
         try {
             const listRef = doc(collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists'));
-            await setDoc(listRef, {name: listName, postIds: [], taskIds: []});
+            await setDoc(listRef, {name: listName, postIds: [], taskIds: [], timeListCreated: new Date()});
             dismissModal();
             setListId(listRef.id);
         } catch (error) {
@@ -135,7 +135,7 @@ const ListSelect = (props) => {
             {item.id == '0' ? 
                 (<Text style={styles.taskNumber}>{item.taskNumber}</Text>) 
             : (
-                <TouchableOpacity onPress={() => toggleListMenu(item)} style={{ width: 30, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <TouchableOpacity onPress={() => toggleListMenu(item)} style={{ width: 40, height: 50, flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 15, alignItems: 'center' }}>
                     <Ionicons name="ellipsis-vertical-outline" size={18} color="black" />
                 </TouchableOpacity>
             )}
@@ -145,7 +145,7 @@ const ListSelect = (props) => {
     return (
         <View style={styles.container}>
             <Modal
-                visible={addTaskModalVisible}
+                visible={addListModalVisible}
                 transparent={true}
                 animationType='slide'
             >
@@ -184,6 +184,15 @@ const ListSelect = (props) => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
+            <View style={styles.profileBar}>
+                <View style={styles.profileInfo}>
+                    <Image source={{ uri: userProfile ? userProfile.profilePic : null }} style={{ width: 50, height: 50, borderRadius: 50 }} />
+                    <View style={{ justifyContent: 'center', marginLeft: 10, width: '65%' }}>
+                        <Text style={styles.profileText}>{userProfile ? userProfile.username : ""}</Text>
+                    </View>
+                </View>
+                <Ionicons name="settings-sharp" size={28} color="black" />
+            </View>
             <FlatList 
                 data={allListItems}
                 renderItem={renderList}
@@ -203,6 +212,22 @@ const styles = StyleSheet.create({
         marginTop: 50,
         flexDirection: 'column',
         justifyContent: 'space-between',
+    },
+    profileBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginHorizontal: 10,
+        marginBottom: 10,
+    },
+    profileInfo: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+    },
+    profileText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        height: 20,
     },
     addListButton: {
         alignSelf: 'center',
@@ -269,7 +294,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingLeft: 10,
-        paddingRight: 10,
         height: 50,
     },
     listContainerSelected: {
@@ -278,13 +302,17 @@ const styles = StyleSheet.create({
     nameContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        width: '80%',
+        height: 50,
     },
     listName: {
         paddingLeft: 10,
-        fontSize: 18
+        fontSize: 16,
+        height: 20,
     },
     taskNumber: {
-        width: 15
+        width: 10,
+        marginRight: 10
     },
 })
 

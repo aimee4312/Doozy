@@ -107,12 +107,12 @@ const TimelineScreen = (props) => {
     });
   }
 
-  const renderTask = ({ item }) => (
+  const renderTask = ({ item }) => ( // conflicting names!! change name to users-name and name to postname or something
     <View style={styles.postContainer}>
       <Image source={{ uri: item.image }} style={styles.postImage} />
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>
-          <Text style={styles.taskName}>{item.username}</Text>
+          <Text style={styles.taskName}>{item.name}</Text>
           <Text style={styles.taskDate}>{getDateString(item.timePosted)}</Text>
           <Text style={styles.taskDate}>{getTimeString(item.timePosted)}</Text>
         </View>
@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingBottom: 35,
   },
   postContainer: {
     marginLeft: 20,

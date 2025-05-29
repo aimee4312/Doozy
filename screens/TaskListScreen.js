@@ -1,22 +1,24 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, Button, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableWithoutFeedback, Modal} from 'react-native';
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, RefreshControl, TouchableOpacity, TouchableWithoutFeedback, Modal } from 'react-native';
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
 import ListSelect from '../components/task-page/ListSelect';
-import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion, orderBy } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from 'react-native-drawer-layout';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 
 
 const TaskListScreen = (props) => {
 
-    const {listId, setListId} = props;
+    const { listId, setListId } = props;
 
+    const [refreshing, setRefreshing] = useState(false);
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
     const [listItems, setListItems] = useState([]);
@@ -35,19 +37,21 @@ const TaskListScreen = (props) => {
         const unsubscribeUserProfile = fetchUserProfile();
 
         unsubscribeRef.current = [unsubscribeTasks, unsubscribePosts, unsubscribeLists, unsubscribeUserProfile];
+        setRefreshing(false);
         return () => {
             unsubscribeRef.current.forEach(unsub => unsub());
         };
-    }, [listId]);
+    }, [listId, refreshing]);
 
     function fetchTasks() {
-        let unsubscribeTasks = () => {};
-        let unsubscribeList = () => {};
+        let unsubscribeTasks = () => { };
+        let unsubscribeList = () => { };
         let taskIds = []
 
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const listRef = doc(userProfileRef, 'Lists', listId);
+
 
         try {
             unsubscribeList = onSnapshot(listRef, (listSnap) => {
@@ -66,16 +70,16 @@ const TaskListScreen = (props) => {
             console.error("Error fetching tasks:", error);
         }
 
-        return () => {unsubscribeTasks(); unsubscribeList;};
+        return () => { unsubscribeTasks(); unsubscribeList; };
     }
 
     function fetchPosts() {
-        let unsubscribeList = () => {};
-        let unsubscribePosts = () => {};
+        let unsubscribeList = () => { };
+        let unsubscribePosts = () => { };
         let postIds = [];
 
         const postsRef = collection(FIRESTORE_DB, 'Posts');
-        const q = query(postsRef, where("userId", "==", currentUser.uid));
+        const q = query(postsRef, where("userId", "==", currentUser.uid), orderBy('timePosted', 'desc'));
         const listRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists', listId);
 
         try {
@@ -94,7 +98,7 @@ const TaskListScreen = (props) => {
         } catch (error) {
             console.error("Error fetching posts:", error);
         }
-        return () => {unsubscribePosts(); unsubscribeList();}
+        return () => { unsubscribePosts(); unsubscribeList(); }
 
     }
 
@@ -102,8 +106,9 @@ const TaskListScreen = (props) => {
     function fetchLists() {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const listsRef = collection(userProfileRef, 'Lists');
+        queryListsRef = query(listsRef, orderBy('timeListCreated', 'desc'));
         try {
-            const unsubscribeLists = onSnapshot(listsRef,
+            const unsubscribeLists = onSnapshot(queryListsRef,
                 (querySnapshotLists) => {
                     const fetchedLists = [];
                     querySnapshotLists.forEach((doc) => {
@@ -182,14 +187,15 @@ const TaskListScreen = (props) => {
                     repeatEnds: taskItems[index].repeatEnds,
                     completeByDate: taskItems[index].completeByDate,
                     isCompletionTime: taskItems[index].isCompletionTime,
-                    listIds: taskItems[index].listIds
+                    listIds: taskItems[index].listIds,
+                    timeTaskCreated: taskItems[index].timeTaskCreated,
                 })
 
                 let listRef;
                 listIds.forEach((listId) => {
                     listRef = doc(listsRef, listId);
-                    batch.update(listRef, {taskIds: arrayRemove(docId)});
-                    batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+                    batch.update(listRef, { taskIds: arrayRemove(docId) });
+                    batch.update(listRef, { postIds: arrayUnion(postRef.id) });
                 })
 
                 const taskRef = doc(tasksRef, taskItems[index].id);
@@ -227,12 +233,13 @@ const TaskListScreen = (props) => {
                     completeByDate: completedTaskItems[index].completeByDate,
                     isCompletionTime: completedTaskItems[index].isCompletionTime,
                     listIds: completedTaskItems[index].listIds,
+                    timeTaskCreated: completedTaskItems[index].timeTaskCreated,
                 });
                 let listRef;
                 listIds.forEach((listId) => {
                     listRef = doc(listsRef, listId);
-                    batch.update(listRef, {postIds: arrayRemove(docId)});
-                    batch.update(listRef, {taskIds: arrayUnion(taskRef.id)})
+                    batch.update(listRef, { postIds: arrayRemove(docId) });
+                    batch.update(listRef, { taskIds: arrayUnion(taskRef.id) })
                 })
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1), tasks: increment(1) });
@@ -266,7 +273,7 @@ const TaskListScreen = (props) => {
                 let listRef;
                 completedTaskItems[index].listIds.forEach((listId) => {
                     listRef = doc(listsRef, listId);
-                    batch.update(listRef, {postIds: arrayRemove(docId)})
+                    batch.update(listRef, { postIds: arrayRemove(docId) })
                 });
                 batch.delete(postRef);
                 if (image) {
@@ -279,7 +286,7 @@ const TaskListScreen = (props) => {
                 let listRef;
                 taskItems[index].listIds.forEach((listId) => {
                     listRef = doc(listsRef, listId);
-                    batch.update(listRef, {taskIds: arrayRemove(docId)})
+                    batch.update(listRef, { taskIds: arrayRemove(docId) })
                 });
                 batch.update(userProfileRef, { tasks: increment(-1) });
                 batch.delete(taskRef)
@@ -313,77 +320,93 @@ const TaskListScreen = (props) => {
     }
 
     return (
-            <TouchableWithoutFeedback onPress={closeSwipeCard}>
-                <View style={styles.container}>
-                    <Drawer
-                        open={openDrawer}
-                        onOpen={() => setOpenDrawer(true)}
-                        onClose={() => setOpenDrawer(false)}
-                        renderDrawerContent={() => {
-                            return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
-                        }}
-                        drawerStyle={{width: '70%'}}
-                        >
-                        <Modal 
-                            visible={isEditTaskVisible}
-                            transparent={true}
-                            animationType='slide'
-                        >
-                            <EditTask task={taskItems[editIndex]} listItems={listItems} setEditTaskVisible={setEditTaskVisible} />
-                        </ Modal>
-                            <ScrollView style={styles.ScrollView}>
-                                {taskItems.length !== 0 && <View style={styles.tasksContainer}>
-                                    <Text style={styles.sectionTitle}>Tasks</Text>
-                                    <View style={styles.tasks}>
-                                        {taskItems.map((task, index) => {
-                                            return (
-                                                <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
-                                                    <Task
-                                                        text={task.name}
-                                                        tick={completeTask}
-                                                        i={index}
-                                                        complete={false}
-                                                        deleteItem={deleteItem}
-                                                        onOpen={onOpen}
-                                                        onClose={onClose}
-                                                    />
-                                                </TouchableOpacity>
-                                            )
-                                        })}
-                                    </View>
-                                </View>}
-                                {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
-                                    <Text style={styles.sectionTitle}>Completed</Text>
-                                    <View style={styles.tasks}>
-                                        {completedTaskItems.map((task, index) => {
-                                            return (
-                                                <View key={index}>
-                                                    <Task
-                                                        text={task.name}
-                                                        tick={completeTask}
-                                                        i={index}
-                                                        complete={true}
-                                                        deleteItem={deleteItem}
-                                                        onOpen={onOpen}
-                                                        onClose={onClose}
-                                                    />
-                                                </View>
-                                            )
-                                        })}
-                                    </View>
-                                </View>}
-                                {/* <View style={{paddingBottom: 300}} /> */}
-                            </ScrollView>
-                        <TaskCreation closeSwipeCard={closeSwipeCard} listItems={listItems} nav={props.navigation} />
-                    </Drawer>
-                </View>
-            </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={closeSwipeCard}>
+            <Drawer
+                open={openDrawer}
+                onOpen={() => setOpenDrawer(true)}
+                onClose={() => setOpenDrawer(false)}
+                renderDrawerContent={() => {
+                    return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
+                }}
+                drawerStyle={{ width: '70%' }}
+            >
+                <SafeAreaView style={styles.container}>
+                    <Modal
+                        visible={isEditTaskVisible}
+                        transparent={true}
+                        animationType='slide'
+                    >
+                        <EditTask task={taskItems[editIndex]} listItems={listItems} setEditTaskVisible={setEditTaskVisible} />
+                    </ Modal>
+                    <View style={styles.topBorder}>
+                        <TouchableOpacity onPress={() => setOpenDrawer(true)}>
+                            <Ionicons name="menu" size={32} color="black" />
+                        </TouchableOpacity>
+                        <Text style={{fontSize: 24, fontWeight: 'bold'}}>Doozy</Text>
+                        <TouchableOpacity>
+                            <Feather name="filter" size={32} color="black"/>
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView style={styles.ScrollView}>
+                        {taskItems.length !== 0 && <View style={styles.tasksContainer}>
+                            <Text style={styles.sectionTitle}>Tasks</Text>
+                            <View style={styles.tasks}>
+                                {taskItems.map((task, index) => {
+                                    return (
+                                        <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
+                                            <Task
+                                                text={task.name}
+                                                tick={completeTask}
+                                                i={index}
+                                                complete={false}
+                                                deleteItem={deleteItem}
+                                                onOpen={onOpen}
+                                                onClose={onClose}
+                                            />
+                                        </TouchableOpacity>
+                                    )
+                                })}
+                            </View>
+                        </View>}
+                        {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
+                            <Text style={styles.sectionTitle}>Completed</Text>
+                            <View style={styles.tasks}>
+                                {completedTaskItems.map((task, index) => {
+                                    return (
+                                        <View key={index}>
+                                            <Task
+                                                text={task.name}
+                                                tick={completeTask}
+                                                i={index}
+                                                complete={true}
+                                                deleteItem={deleteItem}
+                                                onOpen={onOpen}
+                                                onClose={onClose}
+                                            />
+                                        </View>
+                                    )
+                                })}
+                            </View>
+                        </View>}
+                        {/* <View style={{paddingBottom: 300}} /> */}
+                    </ScrollView>
+                    <TaskCreation closeSwipeCard={closeSwipeCard} listItems={listItems} nav={props.navigation} />
+                </SafeAreaView>
+            </Drawer>
+        </TouchableWithoutFeedback>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    topBorder: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginHorizontal: 20,
+        marginBottom: 10
     },
     scrollView: {
 

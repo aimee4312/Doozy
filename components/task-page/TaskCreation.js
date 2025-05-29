@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated } from 'react-native';
+import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import { Ionicons } from '@expo/vector-icons';
@@ -90,6 +90,7 @@ const TaskCreation = (props) => {
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
                     listIds: selectedLists,
+                    timeTaskCreated: new Date(),
                 });
                 let listRef;
                 selectedLists.forEach((listId) => {
@@ -105,6 +106,7 @@ const TaskCreation = (props) => {
                     name: newTask,
                     description: newDescription,
                     timePosted: new Date(),
+                    timeTaskCreated: new Date(),
                     image: imageURI,
                     completeByDate: selectedDate,
                     isCompletionTime: isTime,
@@ -209,10 +211,10 @@ const TaskCreation = (props) => {
         isCompleted ? setCompleted(false) : setCompleted(true);
     }
 
-    const flagColor = ['black', 'blue', 'yellow', 'red'];
+    const flagColor = ['black', 'blue', 'orange', 'red'];
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Modal
                 visible={isTaskCreationModalVisible}
                 transparent={true}
@@ -257,6 +259,7 @@ const TaskCreation = (props) => {
                         selectedLists={selectedLists}
                         setSelectedLists={setSelectedLists}
                         listItems={listItems}
+                        setListModalVisible={setListModalVisible}
                     />
                 </Modal>
                 <TouchableWithoutFeedback onPress={closeTaskCreationModal}>
@@ -315,7 +318,7 @@ const TaskCreation = (props) => {
                             </TouchableHighlight>
                              <TouchableHighlight
                                 style={styles.submitButton}
-                                onPress={() => {setShowPriority(!showPriority); !showPriority ? {} : setSelectedPriority(0)}}
+                                onPress={() => {setShowPriority(!showPriority)}}
                             >
                                 <View style={styles.iconContainer}>
                                     {!showPriority ? (<Icon
@@ -327,7 +330,7 @@ const TaskCreation = (props) => {
                                 </View>
                             </TouchableHighlight>
                             {showPriority && (<View style={styles.priorityContainer}>
-                                <TouchableHighlight onPress={() => {setSelectedPriority(1); setShowPriority(false)}} style={styles.priorityButtonLow}>
+                                <TouchableHighlight onPress={() => {selectedPriority == 1 ? setSelectedPriority(0) : setSelectedPriority(1)}} style={[selectedPriority == 1 ? {width: 75, ...styles.selectedPriorityButton} : {width: 60}, styles.priorityButtonLow]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -335,19 +338,21 @@ const TaskCreation = (props) => {
                                             color={'blue'}
                                         />
                                         <Text style={styles.priorityText}>Low</Text>
+                                        {selectedPriority == 1 && <Feather name="x" size={16} color={'black'}/>}
                                     </View>
                                 </TouchableHighlight>
-                                <TouchableHighlight onPress={() => {setSelectedPriority(2); setShowPriority(false)}} style={styles.priorityButtonMed}>
+                                <TouchableHighlight onPress={() => {selectedPriority == 2 ? setSelectedPriority(0) : setSelectedPriority(2)}} style={[selectedPriority == 2 ? {width: 80, ...styles.selectedPriorityButton} : {width: 65}, styles.priorityButtonMed]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
                                             size={16}
-                                            color={'yellow'}
+                                            color={'orange'}
                                         />
                                         <Text style={styles.priorityText}>Med</Text>
+                                        {selectedPriority == 2 && <Feather name="x" size={16} color={'black'}/>}
                                     </View>
                                 </TouchableHighlight>
-                                <TouchableHighlight onPress={() => {setSelectedPriority(3); setShowPriority(false)}} style={styles.priorityButtonHigh}>
+                                <TouchableHighlight onPress={() => {selectedPriority == 3 ? setSelectedPriority(0) : setSelectedPriority(3)}} style={[selectedPriority == 3 ? {width: 85, ...styles.selectedPriorityButton} : {width: 70}, styles.priorityButtonHigh]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -355,6 +360,7 @@ const TaskCreation = (props) => {
                                             color={'red'}
                                         />
                                         <Text style={styles.priorityText}>High</Text>
+                                        {selectedPriority == 3 && <Feather name="x" size={16} color={'black'}/>}
                                     </View>
                                 </TouchableHighlight>
                             </View>)}
@@ -372,7 +378,7 @@ const TaskCreation = (props) => {
                     <NavBar navigation={nav} style={styles.navBarContainer}></NavBar>
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -394,7 +400,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         alignItems: 'flex-end',
         right: 16,
-        bottom: 64,
+        bottom: 32,
     },
     taskCustomization: {
         backgroundColor: '#FFF',
@@ -508,9 +514,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 2,
     },
-    selectedPriority: {
-        backgroundColor: "yellow",
-    },
     flagSmall: {
         paddingRight: 20,
     },
@@ -525,8 +528,10 @@ const styles = StyleSheet.create({
         verticalAlign: 'center',
         rowGap: 10,
     },
+    selectedPriorityButton: {
+        backgroundColor: "yellow",
+    },
     priorityButtonLow: {
-        width: 60,
         height: 30,
         marginRight: 5,
         borderWidth: 1,
@@ -534,7 +539,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     priorityButtonMed: {
-        width: 65,
         height: 30,
         marginRight: 5,
         borderWidth: 1,
@@ -542,7 +546,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     priorityButtonHigh: {
-        width: 70,
         height: 30,
         borderWidth: 1,
         borderRadius: 15,
@@ -551,9 +554,11 @@ const styles = StyleSheet.create({
     priorityButtonContainer: {
         flexDirection: 'row',
         alignSelf: 'center',
+        alignItems: 'center'
     },
     priorityText: {
         marginLeft: 5,
+        marginRight: 2,
     },
     customItem: {
         margin: 0,
@@ -577,7 +582,7 @@ const styles = StyleSheet.create({
     navBar: {
         position: 'absolute',
         width: '100%',
-        bottom: 34,
+        bottom: 0,
     }
 })
 

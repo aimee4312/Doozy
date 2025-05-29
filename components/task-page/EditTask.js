@@ -7,15 +7,22 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../firebaseConfig';
 import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
+import { list } from 'firebase/storage';
 
 const EditTask = (props) => {
     const { task, listItems, setEditTaskVisible } = props;
+
+    const priorityRef = useRef(null);
+
     const [editedTaskName, setEditedTaskName] = useState(task ? task.name : null);
     const [editedDescription, setEditedDescription] = useState(task ? task.description : null);
     const [isComplete, setComplete] = useState(false);
 
+    const [priorityYPosition, setPriorityYPosition] = useState(0);
+
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
+    const [isPriorityModalVisible, setPriorityModalVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState(() => {
         if (task.completeByDate && task.completeByDate.timestamp) {
             const millis = task.completeByDate.timestamp.seconds * 1000 + Math.floor(task.completeByDate.timestamp.nanoseconds / 1e6);
@@ -42,6 +49,8 @@ const EditTask = (props) => {
     const maxHeight = screenHeight * 0.9;
 
     const animatedHeight = useRef(new Animated.Value(defaultHeight)).current;
+
+    const flagColor = ['black', 'blue', 'orange', 'red'];
 
     useEffect(() => {
         const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
@@ -129,6 +138,7 @@ const EditTask = (props) => {
                     name: editedTaskName,
                     description: editedDescription,
                     timePosted: new Date(),
+                    timeTaskCreated: task.timeTaskCreated,
                     image: imageURI,
                     completeByDate: selectedDate,
                     isCompletionTime: isTime,
@@ -166,13 +176,21 @@ const EditTask = (props) => {
         return timestamp.toLocaleDateString();
       }
     
-      const getTimeString = (timestamp) => {
-        return timestamp.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
+    const getTimeString = (timestamp) => {
+    return timestamp.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+    });
+    }
+
+    const openPriorityModal = () => { // set a timeout
+        Keyboard.dismiss();
+        priorityRef.current?.measure((x, y, width, height, pageX, pageY) => {
+            setPriorityYPosition(pageY);
         });
-      }
+        setPriorityModalVisible(true);
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -209,26 +227,61 @@ const EditTask = (props) => {
                 <TouchableWithoutFeedback onPress={() => setListModalVisible(false)}>
                     <View style={{ flex: 1}} />
                 </TouchableWithoutFeedback>
-                    <ListModal
-                        selectedLists={selectedLists}
-                        setSelectedLists={setSelectedLists}
-                        listItems={listItems}
-                    />
-                </Modal>
+                <ListModal
+                    selectedLists={selectedLists}
+                    setSelectedLists={setSelectedLists}
+                    listItems={listItems}
+                    setListModalVisible={setListModalVisible}
+                />
+            </Modal>
+            <Modal
+                visible={isPriorityModalVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <TouchableWithoutFeedback onPress={() => setPriorityModalVisible(false)}>
+                    <View style={styles.priorityContainer}>
+                        <TouchableWithoutFeedback>
+                            <View style={{top: priorityYPosition + 30, ...styles.priorityButtonContainer}}>
+                                <TouchableOpacity onPress={() => {setSelectedPriority(0)}} style={[selectedPriority == 0 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                    <Text style={styles.priorityText}>No Priority</Text>
+                                    <Icon name="flag" size={16} color={'black'} />
+                                </TouchableOpacity>
+                                <View style={styles.divider} />
+                                <TouchableOpacity onPress={() => {setSelectedPriority(1)}} style={[selectedPriority == 1 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                    <Text style={styles.priorityText}>Low Priority</Text>
+                                    <Icon name="flag" size={16} color={'blue'} />
+                                </TouchableOpacity>
+                                <View style={styles.divider} />
+                                <TouchableOpacity onPress={() => {setSelectedPriority(2)}} style={[selectedPriority == 2 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                    <Text style={styles.priorityText}>Medium Priority</Text>
+                                    <Icon name="flag" size={16} color={'orange'} />
+                                </TouchableOpacity>
+                                <View style={styles.divider} />
+                                <TouchableOpacity onPress={() => {setSelectedPriority(3)}} style={[selectedPriority == 3 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                    <Text style={styles.priorityText}>High Priority</Text>
+                                    <Icon name="flag" size={16} color={'red'} />
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
             <TouchableWithoutFeedback onPress={() => setEditTaskVisible(false)}>
                 <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Animated.View style={[styles.modalContainer, { height: animatedHeight }]}>
                     <View style={styles.rowOneView}>
-                        <TouchableOpacity style={{width: 45}}>
+                        <TouchableOpacity onPress={() => setEditTaskVisible(false)} style={{width: 45}}>
                             <Ionicons name="chevron-down-outline" size={32} color="black" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setListModalVisible(true)}>
-                            <Text style={styles.listPicker}>Main List</Text>
+                        <TouchableOpacity onPress={() => setListModalVisible(true)} style={styles.listButton}>
+                            <Text style={styles.listPicker}>{selectedLists.length == 0 ? "No Lists Selected" : listItems.find(item => item.id == selectedLists[0]).name + (selectedLists.length == 1 ? "" : ", ...")}</Text>
+                            <Ionicons name="chevron-down-outline" size={18} color="black" />
                         </TouchableOpacity>
                         <TouchableOpacity style={{width: 45}} onPress={() => saveChanges()}>
-                            {isComplete ? (<Text style={styles.done}>Post</Text>) : (<Text style={styles.done}>Done</Text>)}
+                            {isComplete ? (<Text style={styles.save}>Post</Text>) : (<Text style={styles.save}>Save</Text>)}
                         </TouchableOpacity>
                     </View>
                     <View style={styles.rowTwoView}>
@@ -243,11 +296,11 @@ const EditTask = (props) => {
                                 )
                             }
                         </TouchableOpacity>
-                        <TouchableOpacity style={{width: 24}}>
+                        <TouchableOpacity ref={priorityRef} onPress={openPriorityModal} style={{width: 24}}>
                             <Icon
                                 name="flag"
                                 size={24}
-                                color={'black'}
+                                color={flagColor[selectedPriority]}
                             />
                         </TouchableOpacity>
                     </View>
@@ -281,6 +334,36 @@ const EditTask = (props) => {
 };
 
 const styles = StyleSheet.create({
+    priorityContainer: {
+        flex: 1,
+    },
+    priorityButtonContainer: {
+        height: 160,
+        backgroundColor: 'white',
+        width: 150,
+        borderWidth: 1,
+        borderRadius: 15,
+        flexDirection: 'column',
+        justifyContent: 'space-around',
+        right: 20,
+        position: 'absolute',
+        overflow: 'hidden'
+    },
+    selectedPriorityButton: {
+        backgroundColor: 'yellow',
+    },
+    priorityButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        height: 39,
+        alignItems: 'center',
+        paddingHorizontal: 10,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#e0e0e0',
+        width: '100%',
+    },
     modalContainer: {
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
@@ -299,13 +382,21 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    done: {
+    listButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        maxWidth: 200
+    },
+    save: {
         fontSize: 18,
         textAlign: 'center',
+        color: 'blue',
+        fontWeight: 'bold'
     },
     listPicker: {
         textAlign: 'center',
-        fontSize: 18
+        fontSize: 18,
+        height: 20,
     },
     rowTwoView: {
         height: 40,
