@@ -24,6 +24,7 @@ export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [listId, setListId] = useState("0");
+  const [order, setOrder] = useState("priority");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {
@@ -49,7 +50,7 @@ export default function App() {
             {loggedIn ? (
               <>
                 <Stack.Screen name="TaskList" options={{ headerShown: false }}>
-                  {(props) => <TaskListScreen {...props} listId={listId} setListId={setListId} />}
+                  {(props) => <TaskListScreen {...props} listId={listId} setListId={setListId} order={order} setOrder={setOrder} />}
                 </Stack.Screen>
                 <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />

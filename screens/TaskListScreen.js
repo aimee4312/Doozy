@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, RefreshControl, TouchableOpacity, TouchableWithoutFeedback, Modal } from 'react-native';
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal } from 'react-native';
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
@@ -10,23 +10,25 @@ import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from 'react-native-drawer-layout';
-import { Feather, Ionicons } from '@expo/vector-icons';
-
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 
 const TaskListScreen = (props) => {
 
-    const { listId, setListId } = props;
+    const { listId, setListId, order, setOrder } = props;
 
-    const [refreshing, setRefreshing] = useState(false);
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
     const [listItems, setListItems] = useState([]);
     const [isEditTaskVisible, setEditTaskVisible] = useState(false);
     const [editIndex, setEditIndex] = useState();
     const [openDrawer, setOpenDrawer] = useState(false);
-    const [userProfile, setUserProfile] = useState()
+    const [sortModalVisible, setSortModalVisible] = useState(false);
+    const [userProfile, setUserProfile] = useState();
+    const [sortYPosition, setSortYPosition] = useState();
     const unsubscribeRef = useRef();
+    const sortRef = useRef(null);
     const currentUser = FIREBASE_AUTH.currentUser;
 
 
@@ -37,21 +39,23 @@ const TaskListScreen = (props) => {
         const unsubscribeUserProfile = fetchUserProfile();
 
         unsubscribeRef.current = [unsubscribeTasks, unsubscribePosts, unsubscribeLists, unsubscribeUserProfile];
-        setRefreshing(false);
         return () => {
             unsubscribeRef.current.forEach(unsub => unsub());
         };
-    }, [listId, refreshing]);
+    }, [listId]);
+
+    useEffect(() => {
+        sortTasks(taskItems);
+    }, [order]);
 
     function fetchTasks() {
         let unsubscribeTasks = () => { };
         let unsubscribeList = () => { };
-        let taskIds = []
+        let taskIds = [];
 
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
         const listRef = doc(userProfileRef, 'Lists', listId);
-
 
         try {
             unsubscribeList = onSnapshot(listRef, (listSnap) => {
@@ -63,7 +67,7 @@ const TaskListScreen = (props) => {
                             fetchedTasks.push({ id: doc.id, ...doc.data() });
                         }
                     });
-                    setTaskItems(fetchedTasks);
+                    sortTasks(fetchedTasks);
                 })
             })
         } catch (error) {
@@ -134,6 +138,63 @@ const TaskListScreen = (props) => {
         } catch (error) {
             console.error("Error fetching user profile:", error);
         }
+    }
+
+    const sortTasks = (fetchedTasks) => {
+        let sortedFetchedTasks = [];
+        if (order == "default") {
+            sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
+                if (!a.completeByDate && b.completeByDate) {
+                    return 1
+                }
+                else if (a.completeByDate && !b.completeByDate) {
+                    return -1
+                }
+                else if ((!a.completeByDate && !b.completeByDate) || (a.completeByDate && b.completeByDate && a.completeByDate.timestamp.toMillis() === b.completeByDate.timestamp.toMillis())) {
+                    if (a.priority - b.priority !== 0) {
+                        return b.priority - a.priority;
+                    }
+                    else {
+                        return b.timeTaskCreated - a.timeTaskCreated;
+                    }
+                }
+                else {
+                    return a.completeByDate.timestamp.toMillis() - b.completeByDate.timestamp.toMillis();
+                }
+            })
+        }
+        else if (order == "priority") {
+            sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
+                if (a.priority - b.priority !== 0) {
+                    return b.priority - a.priority;
+                }
+                else {
+                    return b.timeTaskCreated - a.timeTaskCreated;
+                }
+            })
+        }
+        else if (order == "dueDate") {
+            sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
+                if (!a.completeByDate && b.completeByDate) {
+                    return 1
+                }
+                else if (a.completeByDate && !b.completeByDate) {
+                    return -1
+                }
+                else if ((!a.completeByDate && !b.completeByDate) || (a.completeByDate && b.completeByDate && a.completeByDate.timestamp.toMillis() === b.completeByDate.timestamp.toMillis())) {
+                    return b.timeTaskCreated - a.timeTaskCreated;
+                }
+                else {
+                    return a.completeByDate.timestamp.toMillis() - b.completeByDate.timestamp.toMillis();
+                }
+            })
+        }
+        else {
+            sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
+                return a.name.localeCompare(b.name);
+            })
+        }
+        setTaskItems(sortedFetchedTasks);
     }
 
     const addImage = async () => {
@@ -319,80 +380,125 @@ const TaskListScreen = (props) => {
         setEditTaskVisible(true);
     }
 
+    const openSortModal = () => {
+        sortRef.current?.measure((x, y, width, height, pageX, pageY) => {
+            setSortYPosition(pageY);
+        });
+        setSortModalVisible(true);
+    }
+
     return (
         <TouchableWithoutFeedback onPress={closeSwipeCard}>
-            <Drawer
-                open={openDrawer}
-                onOpen={() => setOpenDrawer(true)}
-                onClose={() => setOpenDrawer(false)}
-                renderDrawerContent={() => {
-                    return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
-                }}
-                drawerStyle={{ width: '70%' }}
-            >
-                <SafeAreaView style={styles.container}>
-                    <Modal
-                        visible={isEditTaskVisible}
-                        transparent={true}
-                        animationType='slide'
-                    >
-                        <EditTask task={taskItems[editIndex]} listItems={listItems} setEditTaskVisible={setEditTaskVisible} />
-                    </ Modal>
-                    <View style={styles.topBorder}>
-                        <TouchableOpacity onPress={() => setOpenDrawer(true)}>
-                            <Ionicons name="menu" size={32} color="black" />
-                        </TouchableOpacity>
-                        <Text style={{fontSize: 24, fontWeight: 'bold'}}>Doozy</Text>
-                        <TouchableOpacity>
-                            <Feather name="filter" size={32} color="black"/>
-                        </TouchableOpacity>
-                    </View>
-                    <ScrollView style={styles.ScrollView}>
-                        {taskItems.length !== 0 && <View style={styles.tasksContainer}>
-                            <Text style={styles.sectionTitle}>Tasks</Text>
-                            <View style={styles.tasks}>
-                                {taskItems.map((task, index) => {
-                                    return (
-                                        <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
-                                            <Task
-                                                text={task.name}
-                                                tick={completeTask}
-                                                i={index}
-                                                complete={false}
-                                                deleteItem={deleteItem}
-                                                onOpen={onOpen}
-                                                onClose={onClose}
-                                            />
-                                        </TouchableOpacity>
-                                    )
-                                })}
-                            </View>
-                        </View>}
-                        {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
-                            <Text style={styles.sectionTitle}>Completed</Text>
-                            <View style={styles.tasks}>
-                                {completedTaskItems.map((task, index) => {
-                                    return (
-                                        <View key={index}>
-                                            <Task
-                                                text={task.name}
-                                                tick={completeTask}
-                                                i={index}
-                                                complete={true}
-                                                deleteItem={deleteItem}
-                                                onOpen={onOpen}
-                                                onClose={onClose}
-                                            />
+            <View style={styles.container}>
+                <Drawer
+                    open={openDrawer}
+                    onOpen={() => setOpenDrawer(true)}
+                    onClose={() => setOpenDrawer(false)}
+                    renderDrawerContent={() => {
+                        return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
+                    }}
+                    drawerStyle={{ width: '70%' }}
+                >
+                    <SafeAreaView style={styles.container}>
+                        <Modal
+                            visible={isEditTaskVisible}
+                            transparent={true}
+                            animationType='slide'
+                        >
+                            <EditTask task={taskItems[editIndex]} listItems={listItems} setEditTaskVisible={setEditTaskVisible} />
+                        </ Modal>
+                        <Modal
+                            visible={sortModalVisible}
+                            transparent={true}
+                            animationType='fade'
+                        >
+                            <TouchableWithoutFeedback onPress={() => setSortModalVisible(false)}>
+                                <View style={styles.sortContainer}>
+                                    <TouchableWithoutFeedback>
+                                        <View style={{top: sortYPosition + 40, ...styles.sortButtonContainer}}>
+                                            <View style={styles.sortBy}>
+                                                <Text style={styles.sortByText}>Sort by:</Text>
+                                            </View>
+                                            <View style={styles.divider} />
+                                            <TouchableOpacity onPress={() => {setOrder("default")}} style={[order == "default" ? styles.selectedSortButton : {}, styles.sortButtons]}>
+                                                <MaterialCommunityIcons name="sort" size={16} color="black" />
+                                                <Text style={styles.sortText}>Default</Text>
+                                            </TouchableOpacity>
+                                            <View style={styles.divider} />
+                                            <TouchableOpacity onPress={() => {setOrder("dueDate")}} style={[order == "dueDate" ? styles.selectedSortButton : {}, styles.sortButtons]}>
+                                                <MaterialCommunityIcons name="sort-calendar-ascending" size={16} color="black" />
+                                                <Text style={styles.sortText}>Due Date</Text>
+                                            </TouchableOpacity>
+                                            <View style={styles.divider} />
+                                            <TouchableOpacity onPress={() => {setOrder("priority")}} style={[order == "priority" ? styles.selectedSortButton : {}, styles.sortButtons]}>
+                                                <Icon name="flag" size={16} color={'black'} />
+                                                <Text style={styles.sortText}>Priority</Text>
+                                            </TouchableOpacity>
+                                            <View style={styles.divider} />
+                                            <TouchableOpacity onPress={() => {setOrder("name")}} style={[order == "name" ? styles.selectedSortButton : {}, styles.sortButtons]}>
+                                                <MaterialCommunityIcons name="sort-alphabetical-ascending" size={16} color="black" />
+                                                <Text style={styles.sortText}>Name</Text>
+                                            </TouchableOpacity>
                                         </View>
-                                    )
-                                })}
-                            </View>
-                        </View>}
-                        {/* <View style={{paddingBottom: 300}} /> */}
-                    </ScrollView>
-                    <TaskCreation closeSwipeCard={closeSwipeCard} listItems={listItems} nav={props.navigation} />
-                </SafeAreaView>
-            </Drawer>
+                                    </TouchableWithoutFeedback>
+                                </View>
+                            </TouchableWithoutFeedback>
+                        </Modal>
+                        <View style={styles.topBorder}>
+                            <TouchableOpacity onPress={() => setOpenDrawer(true)}>
+                                <Ionicons name="menu" size={32} color="black" />
+                            </TouchableOpacity>
+                            <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Doozy</Text>
+                            <TouchableOpacity ref={sortRef} onPress={openSortModal}>
+                                <MaterialCommunityIcons name="sort" size={32} color="black" />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView style={styles.ScrollView}>
+                            {taskItems.length !== 0 && <View style={styles.tasksContainer}>
+                                <Text style={styles.sectionTitle}>Tasks</Text>
+                                <View style={styles.tasks}>
+                                    {taskItems.map((task, index) => {
+                                        return (
+                                            <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
+                                                <Task
+                                                    text={task.name}
+                                                    tick={completeTask}
+                                                    i={index}
+                                                    complete={false}
+                                                    deleteItem={deleteItem}
+                                                    onOpen={onOpen}
+                                                    onClose={onClose}
+                                                />
+                                            </TouchableOpacity>
+                                        )
+                                    })}
+                                </View>
+                            </View>}
+                            {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
+                                <Text style={styles.sectionTitle}>Completed</Text>
+                                <View style={styles.tasks}>
+                                    {completedTaskItems.map((task, index) => {
+                                        return (
+                                            <View key={index}>
+                                                <Task
+                                                    text={task.name}
+                                                    tick={completeTask}
+                                                    i={index}
+                                                    complete={true}
+                                                    deleteItem={deleteItem}
+                                                    onOpen={onOpen}
+                                                    onClose={onClose}
+                                                />
+                                            </View>
+                                        )
+                                    })}
+                                </View>
+                            </View>}
+                        </ScrollView>
+                        <TaskCreation closeSwipeCard={closeSwipeCard} listItems={listItems} nav={props.navigation} />
+                    </SafeAreaView>
+                </Drawer>
+            </View>
         </TouchableWithoutFeedback>
     );
 }
@@ -407,6 +513,49 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: 20,
         marginBottom: 10
+    },
+    sortContainer: {
+        flex: 1,
+    },
+    sortButtonContainer: {
+        height: 195,
+        backgroundColor: 'white',
+        width: 150,
+        borderWidth: 1,
+        borderRadius: 15,
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        right: 20,
+        position: 'absolute',
+        overflow: 'hidden'
+    },
+    sortBy: {
+        height: 30,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        marginLeft: 10,
+    },
+    sortByText: {
+
+    },
+    selectedSortButton: {
+        backgroundColor: 'yellow',
+    },
+    sortButtons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        height: 40,
+        alignItems: 'center',
+        paddingHorizontal: 10,
+    },
+    sortText: {
+        marginLeft: 10,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#e0e0e0',
+        width: '100%',
     },
     scrollView: {
 
