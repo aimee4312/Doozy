@@ -24,7 +24,7 @@ export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [listId, setListId] = useState("0");
-  const [order, setOrder] = useState("priority");
+  const [order, setOrder] = useState("default");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {

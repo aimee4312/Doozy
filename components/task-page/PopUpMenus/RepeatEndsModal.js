@@ -7,7 +7,9 @@ const RepeatEndsModal = ( props ) => {
   const { isVisible, onClose, dateRepeatEnds, setDateRepeatEnds } = props;
 
   const handleDateSelect = (date) => {
-    setDateRepeatEnds(date.dateString);
+    if (date.timestamp > Date.now()) {
+        setDateRepeatEnds(date)
+    }
   };
 
 
@@ -25,10 +27,10 @@ const RepeatEndsModal = ( props ) => {
                         {/* <Swiper loop={false}> */}
                         {/* <View> */}
                         <Calendar
-                            current={dateRepeatEnds}
+                            current={dateRepeatEnds.timeString}
                             onDayPress={(day) => handleDateSelect(day)}
                             markedDates={{
-                            [dateRepeatEnds]: { selected: true, selectedColor: 'blue' }
+                            [dateRepeatEnds.timeString]: { selected: true, selectedColor: 'blue' }
                             }}
                             style={styles.calendar}
                         />

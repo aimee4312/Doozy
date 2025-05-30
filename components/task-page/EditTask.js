@@ -45,7 +45,7 @@ const EditTask = (props) => {
 
     const screenHeight = Dimensions.get('window').height;
     const defaultHeight = screenHeight * 0.5;
-    const scheduleMenuHeight = screenHeight * 0.75;
+    const scheduleMenuHeight = 700;
     const maxHeight = screenHeight * 0.9;
 
     const animatedHeight = useRef(new Animated.Value(defaultHeight)).current;
@@ -286,7 +286,8 @@ const EditTask = (props) => {
                     </View>
                     <View style={styles.rowTwoView}>
                         <TouchableOpacity style={ isComplete ? styles.checkedbox : styles.uncheckedbox } onPress={() => setComplete(!isComplete)} />
-                        <TouchableOpacity onPress={() => {setCalendarModalVisible(true)}}>
+                        <TouchableOpacity style={styles.dateContainer} onPress={() => {setCalendarModalVisible(true)}}>
+                            <Text>Due Date:</Text>
                             {isTime ? (
                                 <Text style={styles.timePicker}>{getDateString(selectedDate.timestamp)}, {getTimeString(selectedDate.timestamp)}</Text>
                                 ) : selectedDate ? (
@@ -417,6 +418,10 @@ const styles = StyleSheet.create({
         opacity: 0.4,
         backgroundColor: 'grey',
         borderRadius: 5,
+    },
+    dateContainer: {
+        flexDirection: 'column',
+        alignItems: 'center'
     },
     timePicker: {
         textAlign: 'center',

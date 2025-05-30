@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity, SafeAreaView } from 'react-native';
 import CustomPopupMenu from './PopUpMenus/CustomPopupMenu';
 import TimePopupMenu from './PopUpMenus/TimePopupMenu';
 import RepeatEndsModal from './PopUpMenus/RepeatEndsModal';
-import ScheduleBuilder from './PopUpMenus/ScheduleBuilder';
+import { Calendar } from 'react-native-calendars';
+import { Ionicons } from '@expo/vector-icons';
 
 const ScheduleMenu = (props) => {
 
@@ -42,6 +43,12 @@ const ScheduleMenu = (props) => {
     const timeMenuRef = useRef(null);
     const repeatMenuRef = useRef(null);
 
+    // modalHeight: 650
+    // cancelDoneHeight: 40
+    // calendarHeight: 360
+    // menuHeight: 200
+    // clearHeight: 20
+
 
     const handleDateSelect = (date) => {
         setTempSelectedDate(date);
@@ -71,6 +78,9 @@ const ScheduleMenu = (props) => {
     };
 
     const toggleTimeMenu = () => {
+        if (!isTempTime) {
+            setTempTime(new Date());
+        }
         if (timeMenuRef.current) {
             timeMenuRef.current.measure((x, y, width, height, pageX, pageY) => {
                 setTimeButtonHeight(pageY);
@@ -204,6 +214,15 @@ const ScheduleMenu = (props) => {
         setCalendarModalVisible(false);
     }
 
+    const clearData = () => {
+        setSelectedDate('');
+        setIsTime(false);
+        setSelectedReminders([]);
+        setSelectedRepeat([]);
+        setDateRepeatEnds('');
+        setCalendarModalVisible(false);
+    }
+
 
     let hours = tempTime.getHours(); // Get the hours component (0-23)
     const minutes = tempTime.getMinutes(); // Get the minutes component (0-59)
@@ -231,77 +250,113 @@ const ScheduleMenu = (props) => {
 
 
     return (
-        <View style={styles.container}>
-            <View>
-                <View style={styles.saveChanges}>
-                    <Button title='Cancel' onPress={() => setCalendarModalVisible(!isCalendarModalVisible)} />
-                    <Button title='Done' onPress={handleSaveChanges} />
+        <SafeAreaView style={styles.container}>
+            <View style={styles.bigContainer}>
+                <View style={{height: 40}}>
+                    <View style={styles.saveChanges}>
+                        <TouchableOpacity onPress={() => setCalendarModalVisible(false)}>
+                            <Ionicons name="chevron-down-outline" size={32} color="black" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleSaveChanges} >
+                            <Text style={styles.saveButton}>Save</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                <View style={{height: 360}}>
+                    <Calendar
+                        current={tempSelectedDate.dateString}
+                        onDayPress={(day) => handleDateSelect(day)}
+                        markedDates={{
+                        [tempSelectedDate.dateString]: { selected: true, selectedColor: 'blue' }
+                        }}
+                    />
+                </View>
+                <View style={{height: 200}}>
+                    <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]}>
+                        <View style={styles.menuButtonWrapper}>
+                            <Text style={styles.menuText}>Time</Text>
+                            <View style={styles.cancelContainer}>
+                                <Text style={styles.menuText}>{isTempTime ? timeString : 'None'}</Text>
+                                {isTempTime && <TouchableOpacity onPress={handleTimeCancel}>
+                                    <Text> X</Text>
+                                </TouchableOpacity>}
+                            </View>
+                        </View>
+                    </TouchableHighlight>
+                    <TouchableHighlight ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton}>
+                        <View style={styles.menuButtonWrapper}>
+                            <Text style={styles.menuText}>Reminder</Text>
+                            <View style={styles.cancelContainer}>
+                                <Text style={styles.menuText}>{reminderString}</Text>
+                                {(tempSelectedReminders.length !== 0) && <TouchableOpacity onPress={handleReminderCancel}>
+                                    <Text> X</Text>
+                                </TouchableOpacity>}
+                            </View>
+                        </View>
+                    </TouchableHighlight>
+                    <TouchableHighlight ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat.length === 0) ? styles.menuBottomButton : null]}>
+                        <View style={styles.menuButtonWrapper}>
+                            <Text style={styles.menuText}>Repeat</Text>
+                            <View style={styles.cancelContainer}>
+                                <Text style={styles.menuText}>{repeatString}</Text>
+                                {(tempSelectedRepeat.length !== 0) && <TouchableOpacity onPress={handleRepeatCancel}>
+                                    <Text> X</Text>
+                                </TouchableOpacity>}
+                            </View>
+                        </View>
+                    </TouchableHighlight>
+                    {(tempSelectedRepeat.length !== 0) && <TouchableHighlight onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
+                        <View style={styles.menuButtonWrapper}>
+                            <Text style={styles.menuText}>Repeat Ends</Text>
+                            <View style={styles.cancelContainer}>
+                                <Text style={styles.menuText}>{!tempDateRepeatEnds ? 'None' : tempDateRepeatEnds.dateString}</Text>
+                                {(tempDateRepeatEnds !== '') && <TouchableOpacity onPress={handleRepeatEndsCancel}>
+                                    <Text> X</Text>
+                                </TouchableOpacity>}
+                            </View>
+                        </View>
+                    </TouchableHighlight>}
                 </View>
             </View>
-            <View style={{ flex: .7 }}>
-                <ScheduleBuilder selectedDate={tempSelectedDate.dateString} handleDateSelect={handleDateSelect} />
-            </View>
-            <View style={{ flex: .4 }}>
-                <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]}>
-                    <View style={styles.menuButtonWrapper}>
-                        <Text style={styles.menuText}>Time</Text>
-                        <View style={styles.cancelContainer}>
-                            <Text style={styles.menuText}>{isTempTime ? timeString : 'None'}</Text>
-                            {isTempTime && <TouchableOpacity onPress={handleTimeCancel}>
-                                <Text> X</Text>
-                            </TouchableOpacity>}
-                        </View>
-                    </View>
-                </TouchableHighlight>
-                <TouchableHighlight ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton}>
-                    <View style={styles.menuButtonWrapper}>
-                        <Text style={styles.menuText}>Reminder</Text>
-                        <View style={styles.cancelContainer}>
-                            <Text style={styles.menuText}>{reminderString}</Text>
-                            {(tempSelectedReminders.length !== 0) && <TouchableOpacity onPress={handleReminderCancel}>
-                                <Text> X</Text>
-                            </TouchableOpacity>}
-                        </View>
-                    </View>
-                </TouchableHighlight>
-                <TouchableHighlight ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat.length === 0) ? styles.menuBottomButton : null]}>
-                    <View style={styles.menuButtonWrapper}>
-                        <Text style={styles.menuText}>Repeat</Text>
-                        <View style={styles.cancelContainer}>
-                            <Text style={styles.menuText}>{repeatString}</Text>
-                            {(tempSelectedRepeat.length !== 0) && <TouchableOpacity onPress={handleRepeatCancel}>
-                                <Text> X</Text>
-                            </TouchableOpacity>}
-                        </View>
-                    </View>
-                </TouchableHighlight>
-                {(tempSelectedRepeat.length !== 0) && <TouchableHighlight onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
-                    <View style={styles.menuButtonWrapper}>
-                        <Text style={styles.menuText}>Repeat Ends</Text>
-                        <View style={styles.cancelContainer}>
-                            <Text style={styles.menuText}>{tempDateRepeatEnds == '' ? 'None' : tempDateRepeatEnds}</Text>
-                            {(tempDateRepeatEnds !== '') && <TouchableOpacity onPress={handleRepeatEndsCancel}>
-                                <Text> X</Text>
-                            </TouchableOpacity>}
-                        </View>
-                    </View>
-                </TouchableHighlight>}
-            </View>
+            <TouchableOpacity style={{height: 20, ...styles.smallContainer}} onPress={clearData}>
+                <Text style={styles.clearText}>Clear</Text>
+            </TouchableOpacity>
             <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={tempTime} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight} />
             <CustomPopupMenu isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight} />
             <CustomPopupMenu isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOptions={tempSelectedRepeat} setSelectedOptions={setTempSelectedRepeat} buttonHeight={repeatButtonHeight} />
             <RepeatEndsModal isVisible={isRepeatEndsModalVisible} onClose={toggleRepeatEndsModal} dateRepeatEnds={tempDateRepeatEnds} setDateRepeatEnds={setTempDateRepeatEnds} />
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+    },
+    bigContainer: {
+        
+    },
+    smallContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    clearText: {
+        fontSize: 16,
+        color: 'red',
     },
     saveChanges: {
+        flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center'
+
+    },
+    saveButton: {
+        color: 'blue',
+        fontWeight: 'bold',
+        fontSize: 18
     },
     menuTopButton: {
         borderTopLeftRadius: 5,
@@ -319,6 +374,7 @@ const styles = StyleSheet.create({
         borderColor: 'gray',
         borderLeftWidth: 1,
         borderRightWidth: 1,
+        height: 50
     },
     buttonReminder: {
         backgroundColor: '#cccccc',

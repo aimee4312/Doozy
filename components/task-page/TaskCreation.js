@@ -27,7 +27,7 @@ const TaskCreation = (props) => {
     const [selectedRepeat, setSelectedRepeat] = useState([]);
     const [isCompleted, setCompleted] = useState(false);
     const [isTime, setIsTime] = useState(false);
-    const [dateRepeatEnds, setDateRepeatEnds] = useState('');
+    const [dateRepeatEnds, setDateRepeatEnds] = useState([]);
     const [image, setImage] = useState(null);
     
     const [showPriority, setShowPriority] = useState(false);
@@ -35,12 +35,10 @@ const TaskCreation = (props) => {
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
 
-    const [openFolders, setOpenFolders] = useState([]); // maybe move this inside of customdropdown
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
-    const screenHeight = Dimensions.get('window').height;
-    const modalHeight = screenHeight * 0.75;
+    const modalHeight = 700;
     const taskCreationHeight = 135;
 
     const animatedHeight = useRef(new Animated.Value(taskCreationHeight)).current;
@@ -229,7 +227,7 @@ const TaskCreation = (props) => {
                     <View style={{ flex: 1 }}>
                     </View>
                 </TouchableWithoutFeedback>
-                        <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', }}>
+                        <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20}}>
                             <ScheduleMenu
                                 isCalendarModalVisible={isCalendarModalVisible}
                                 setCalendarModalVisible={setCalendarModalVisible}
