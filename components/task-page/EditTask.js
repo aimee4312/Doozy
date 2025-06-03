@@ -23,17 +23,7 @@ const EditTask = (props) => {
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
     const [isPriorityModalVisible, setPriorityModalVisible] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(() => {
-        if (task.completeByDate && task.completeByDate.timestamp) {
-            const millis = task.completeByDate.timestamp.seconds * 1000 + Math.floor(task.completeByDate.timestamp.nanoseconds / 1e6);
-            return {
-                ...task.completeByDate,
-                timestamp: new Date(millis)
-            };
-        } else {
-            return null;
-        }
-    });
+    const [selectedDate, setSelectedDate] = useState(task.completeByDate);
     const [isTime, setIsTime] = useState(task ? task.isCompletionTime : null);
     const [selectedReminders, setSelectedReminders] = useState(task ? task.reminders : null);
     const [selectedRepeat, setSelectedRepeat] = useState(task ? task.repeat : null)

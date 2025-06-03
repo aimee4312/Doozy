@@ -21,14 +21,13 @@ const TaskCreation = (props) => {
     const [newTask, setNewTask] = useState(''); // Task Name
     const [newDescription, setNewDescription] = useState(''); // Task Description
     const [selectedLists, setSelectedLists] = useState([]);
-    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedDate, setSelectedDate] = useState(null);
     const [selectedPriority, setSelectedPriority] = useState(0);
     const [selectedReminders, setSelectedReminders] = useState([]);
     const [selectedRepeat, setSelectedRepeat] = useState([]);
     const [isCompleted, setCompleted] = useState(false);
     const [isTime, setIsTime] = useState(false);
-    const [dateRepeatEnds, setDateRepeatEnds] = useState([]);
-    const [image, setImage] = useState(null);
+    const [dateRepeatEnds, setDateRepeatEnds] = useState(null);
     
     const [showPriority, setShowPriority] = useState(false);
     const [isTaskCreationModalVisible, setTaskCreationModalVisible] = useState(false);
@@ -229,7 +228,6 @@ const TaskCreation = (props) => {
                 </TouchableWithoutFeedback>
                         <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20}}>
                             <ScheduleMenu
-                                isCalendarModalVisible={isCalendarModalVisible}
                                 setCalendarModalVisible={setCalendarModalVisible}
                                 selectedDate={selectedDate}
                                 setSelectedDate={setSelectedDate}

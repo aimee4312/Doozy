@@ -8,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 const ScheduleMenu = (props) => {
 
-
     const getTodayDate = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -20,20 +19,22 @@ const ScheduleMenu = (props) => {
             dateString: today.toISOString().split('T')[0],
         };
     };
-    const { isCalendarModalVisible, setCalendarModalVisible, selectedDate, setSelectedDate, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds } = props;
+    const { setCalendarModalVisible, selectedDate, setSelectedDate, isTime, setIsTime, selectedReminders, setSelectedReminders, selectedRepeat, setSelectedRepeat, dateRepeatEnds, setDateRepeatEnds } = props;
 
     const [tempSelectedDate, setTempSelectedDate] = useState(!selectedDate ? getTodayDate() : selectedDate);
     const [tempTime, setTempTime] = useState(isTime ? selectedDate.timestamp : new Date());
     const [tempSelectedReminders, setTempSelectedReminders] = useState(selectedReminders);
     const [tempSelectedRepeat, setTempSelectedRepeat] = useState(selectedRepeat);
-    const [tempDateRepeatEnds, setTempDateRepeatEnds] = useState(dateRepeatEnds);
+    const [isDateRepeatEnds, setIsDateRepeatEnds] = useState(dateRepeatEnds ? true : false);
+    const [tempDateRepeatEnds, setTempDateRepeatEnds] = useState(dateRepeatEnds ? dateRepeatEnds : new Date());
     const [reminderString, setReminderString] = useState("");
-    const [repeatString, setRepeatString] = useState("")
-
+    const [repeatString, setRepeatString] = useState("");
     const [isTempTime, setIsTempTime] = useState(isTime);
+
     const [reminderButtonHeight, setReminderButtonHeight] = useState(null);
     const [repeatButtonHeight, setRepeatButtonHeight] = useState(null);
     const [timeButtonHeight, setTimeButtonHeight] = useState(null);
+    const [repeatEndsButtonHeight, setRepeatEndsButtonHeight] = useState(null);
     const [isReminderMenuVisible, setIsReminderMenuVisible] = useState(false);
     const [isRepeatMenuVisible, setIsRepeatMenuVisible] = useState(false);
     const [isRepeatEndsModalVisible, setIsRepeatEndsModalVisible] = useState(false);
@@ -42,6 +43,7 @@ const ScheduleMenu = (props) => {
     const reminderMenuRef = useRef(null);
     const timeMenuRef = useRef(null);
     const repeatMenuRef = useRef(null);
+    const repeatEndsRef = useRef(null);
 
     // modalHeight: 650
     // cancelDoneHeight: 40
@@ -52,6 +54,9 @@ const ScheduleMenu = (props) => {
 
     const handleDateSelect = (date) => {
         setTempSelectedDate(date);
+        if (tempDateRepeatEnds < date.timestamp) {
+            setTempDateRepeatEnds(new Date(date.year, date.month - 1, date.day));
+        }
     };
 
     const toggleReminderMenu = () => {
@@ -74,6 +79,12 @@ const ScheduleMenu = (props) => {
     };
 
     const toggleRepeatEndsModal = () => {
+        if (repeatEndsRef.current) {
+            repeatEndsRef.current.measure((x, y, width, height, pageX, pageY) => {
+                setRepeatEndsButtonHeight(pageY);
+            });
+        }
+        setIsDateRepeatEnds(true);
         setIsRepeatEndsModalVisible(!isRepeatEndsModalVisible);
     };
 
@@ -104,11 +115,12 @@ const ScheduleMenu = (props) => {
 
     const handleRepeatCancel = () => {
         setTempSelectedRepeat([]);
-        setTempDateRepeatEnds('');
+        handleRepeatEndsCancel();
     }
 
     const handleRepeatEndsCancel = () => {
-        setTempDateRepeatEnds('');
+        setIsDateRepeatEnds(false);
+        setTempDateRepeatEnds(new Date());
     }
 
     const handleTimeChange = (newTime) => {
@@ -210,7 +222,9 @@ const ScheduleMenu = (props) => {
         setIsTime(isTempTime);
         setSelectedReminders(tempSelectedReminders);
         setSelectedRepeat(tempSelectedRepeat);
-        setDateRepeatEnds(tempDateRepeatEnds);
+        if (isDateRepeatEnds) {
+            setDateRepeatEnds(tempDateRepeatEnds);
+        }
         setCalendarModalVisible(false);
     }
 
@@ -247,6 +261,13 @@ const ScheduleMenu = (props) => {
 
     // Construct the time string in 'hh:mm AM/PM' format
     const timeString = `${formattedHours}:${formattedMinutes} ${period}`;
+
+    const dateToString = (date) => {
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${m}/${d}/${y}`;
+    }
 
 
     return (
@@ -305,12 +326,12 @@ const ScheduleMenu = (props) => {
                             </View>
                         </View>
                     </TouchableHighlight>
-                    {(tempSelectedRepeat.length !== 0) && <TouchableHighlight onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
+                    {(tempSelectedRepeat.length !== 0) && <TouchableHighlight ref={repeatEndsRef} onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat Ends</Text>
                             <View style={styles.cancelContainer}>
-                                <Text style={styles.menuText}>{!tempDateRepeatEnds ? 'None' : tempDateRepeatEnds.dateString}</Text>
-                                {(tempDateRepeatEnds !== '') && <TouchableOpacity onPress={handleRepeatEndsCancel}>
+                                <Text style={styles.menuText}>{!isDateRepeatEnds ? 'Never' : dateToString(tempDateRepeatEnds)}</Text>
+                                {isDateRepeatEnds && <TouchableOpacity onPress={handleRepeatEndsCancel}>
                                     <Text> X</Text>
                                 </TouchableOpacity>}
                             </View>
@@ -324,7 +345,7 @@ const ScheduleMenu = (props) => {
             <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={tempTime} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight} />
             <CustomPopupMenu isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight} />
             <CustomPopupMenu isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOptions={tempSelectedRepeat} setSelectedOptions={setTempSelectedRepeat} buttonHeight={repeatButtonHeight} />
-            <RepeatEndsModal isVisible={isRepeatEndsModalVisible} onClose={toggleRepeatEndsModal} dateRepeatEnds={tempDateRepeatEnds} setDateRepeatEnds={setTempDateRepeatEnds} />
+            <RepeatEndsModal isVisible={isRepeatEndsModalVisible} setIsRepeatEndsModalVisible={setIsRepeatEndsModalVisible} dateRepeatEnds={tempDateRepeatEnds} setDateRepeatEnds={setTempDateRepeatEnds} minimumDate={new Date(tempSelectedDate.year, tempSelectedDate.month - 1, tempSelectedDate.day)} buttonHeight={repeatEndsButtonHeight} />
         </SafeAreaView>
     );
 };

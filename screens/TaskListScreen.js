@@ -63,8 +63,20 @@ const TaskListScreen = (props) => {
                 unsubscribeTasks = onSnapshot(tasksRef, (querySnapshotTasks) => {
                     const fetchedTasks = [];
                     querySnapshotTasks.forEach((doc) => {
+                        let docData = doc.data();
                         if (!listSnap.exists() || taskIds.includes(doc.id)) {
-                            fetchedTasks.push({ id: doc.id, ...doc.data() });
+                            if (docData.completeByDate?.timestamp) {
+                                const millisCompleteBy = docData.completeByDate.timestamp.seconds * 1000 + Math.floor(docData.completeByDate.timestamp.nanoseconds / 1e6);
+                                docData.completeByDate = {
+                                    ...docData.completeByDate,
+                                    timestamp: new Date(millisCompleteBy)
+                                }
+                            }
+                            if (docData.repeatEnds) {
+                                const millisRepeatEnds = docData.repeatEnds.seconds * 1000 + Math.floor(docData.repeatEnds.nanoseconds / 1e6);
+                                docData.repeatEnds = new Date(millisRepeatEnds);
+                            }
+                            fetchedTasks.push({ id: doc.id, ...docData });
                         }
                     });
                     sortTasks(fetchedTasks);
@@ -150,7 +162,7 @@ const TaskListScreen = (props) => {
                 else if (a.completeByDate && !b.completeByDate) {
                     return -1
                 }
-                else if ((!a.completeByDate && !b.completeByDate) || (a.completeByDate && b.completeByDate && a.completeByDate.timestamp.toMillis() === b.completeByDate.timestamp.toMillis())) {
+                else if ((!a.completeByDate && !b.completeByDate) || (a.completeByDate && b.completeByDate && a.completeByDate.timestamp === b.completeByDate.timestamp)) {
                     if (a.priority - b.priority !== 0) {
                         return b.priority - a.priority;
                     }
@@ -159,7 +171,7 @@ const TaskListScreen = (props) => {
                     }
                 }
                 else {
-                    return a.completeByDate.timestamp.toMillis() - b.completeByDate.timestamp.toMillis();
+                    return a.completeByDate.timestamp - b.completeByDate.timestamp;
                 }
             })
         }
@@ -181,11 +193,11 @@ const TaskListScreen = (props) => {
                 else if (a.completeByDate && !b.completeByDate) {
                     return -1
                 }
-                else if ((!a.completeByDate && !b.completeByDate) || (a.completeByDate && b.completeByDate && a.completeByDate.timestamp.toMillis() === b.completeByDate.timestamp.toMillis())) {
+                else if ((!a.completeByDate && !b.completeByDate) || (a.completeByDate && b.completeByDate && a.completeByDate.timestamp === b.completeByDate.timestamp)) {
                     return b.timeTaskCreated - a.timeTaskCreated;
                 }
                 else {
-                    return a.completeByDate.timestamp.toMillis() - b.completeByDate.timestamp.toMillis();
+                    return a.completeByDate.timestamp - b.completeByDate.timestamp;
                 }
             })
         }
