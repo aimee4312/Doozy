@@ -365,6 +365,7 @@ const TaskListScreen = (props) => {
                 batch.delete(taskRef)
             }
             await batch.commit();
+            closeSwipeCard();
         } catch (error) {
             console.error('Error deleting document: ', error);
         };
@@ -384,10 +385,11 @@ const TaskListScreen = (props) => {
     };
 
     const closeSwipeCard = () => {
-        if (swipedCardRef) swipedCardRef.current.close();
+       if (swipedCardRef) swipedCardRef.current?.close();
     }
 
     const handleTaskPress = (index) => {
+        closeSwipeCard();
         setEditIndex(index);
         setEditTaskVisible(true);
     }

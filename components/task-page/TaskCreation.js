@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated, SafeAreaView } from 'react-native';
+import { StyleSheet, Platform, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,8 +9,7 @@ import { doc, collection, addDoc, runTransaction, writeBatch, increment, arrayUn
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import NavBar from "../auth/NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
-
-
+import * as Notifications from "expo-notifications";
 
 
 const TaskCreation = (props) => {
@@ -94,6 +93,11 @@ const TaskCreation = (props) => {
                     listRef = doc(userProfileRef, 'Lists', listId);
                     batch.update(listRef, {taskIds: arrayUnion(taskRef.id)});
                 });
+                if (selectedReminders.length !== 0) {
+                    if (await configureNotifications()) {
+                        await scheduleNotifications();
+                    }
+                }
                 batch.update(userProfileRef, { tasks: increment(1) });
             }
             else {
@@ -125,6 +129,93 @@ const TaskCreation = (props) => {
         } catch (error) {
             console.error("Error storing task or posting:", error);
         }
+    }
+
+    const configureNotifications = async () => {
+        const response = await Notifications.requestPermissionsAsync();
+        console.log(response);
+        if (!response.granted) {
+            console.warn("⚠️ Notification Permissions not granted!");
+            return response.granted;
+        }
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowBanner: true,
+                shouldShowList: true,
+                shouldPlaySound: true,
+                shouldSetBadge: true,
+            }),
+        });
+        return response.granted;
+    }
+
+    const scheduleNotifications = async () => {
+        let dateArray = [];
+        if (!isTime) {
+            selectedReminders.forEach(reminder => {
+                let date = new Date(selectedDate.timestamp.getTime());
+                date.setHours(9);
+                date.setMinutes(0);
+                date.setSeconds(0);
+                if (reminder == 1) {
+                    date.setDate(selectedDate.day - 1);
+                }
+                else if (reminder == 2) {
+                    date.setDate(selectedDate.day - 2);
+                }
+                else if (reminder == 3) {
+                    date.setDate(selectedDate.day - 3);
+                }
+                else if (reminder == 4) {
+                    date.setDate(selectedDate.day - 7);
+                }
+                if (date > new Date()) {
+                    dateArray.push(date);
+                }
+            })
+        }
+        else {
+            console.log(selectedReminders);
+            selectedReminders.forEach(reminder => {
+                let date = new Date(selectedDate.timestamp.getTime());
+                if (reminder == 1) {
+                    date.setMinutes(selectedDate.timestamp.getMinutes() - 5);
+                }
+                else if (reminder == 2) {
+                    date.setMinutes(selectedDate.timestamp.getMinutes() - 30);
+                }
+                else if (reminder == 3) {
+                    date.setHours(selectedDate.timestamp.getHours() - 1);
+                }
+                else if (reminder == 4) {
+                    date.setDate(selectedDate.day - 1);
+                }
+                if (date > new Date()) {
+                    dateArray.push(date)
+                }
+                console.log(dateArray)
+            })
+        }
+        await scheduleAllNotifications(dateArray);
+    }
+
+    const scheduleAllNotifications = async (dateArray) => {
+        await Promise.all(
+            dateArray.map((date) => 
+                Notifications.scheduleNotificationAsync({
+                    content: {
+                        title: newTask,
+                        body: "This is a test.",
+                        sound: Platform.OS === 'ios' ? "default" : undefined,
+                    },
+                    trigger: {
+                        type: 'date',
+                        date: date,
+                        allowWhileIdle: true,
+                    },
+                })
+            )
+        )
     }
 
     const addImage = async () => {

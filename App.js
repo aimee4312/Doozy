@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform } from 'react-native';
 import { FIREBASE_AUTH } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
@@ -34,6 +34,19 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    async function setupChannel() {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.HIGH,
+          sound: 'default',
+        });
+      }
+    }
+    setupChannel();
+  }, []);
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -53,11 +66,11 @@ export default function App() {
                   {(props) => <TaskListScreen {...props} listId={listId} setListId={setListId} order={order} setOrder={setOrder} />}
                 </Stack.Screen>
                 <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} />
-                <Stack.Screen name="AddTask" component={AddTaskScreen} />
-                <Stack.Screen name="Friends" component={FriendsScreen} />
+                <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="AddTask" component={AddTaskScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
               </>
             ) : (
               <>

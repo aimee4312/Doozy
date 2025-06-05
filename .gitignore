@@ -34,4 +34,43 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-firebaseConfig.js
+# iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+*.xcworkspace
+*.xcuserstate
+*.xcuserdata
+*.xcodeproj/project.xcworkspace/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.moved-aside
+*.hmap
+*.ipa
+
+# Android build files
+android/build/
+android/app/build/
+android/.gradle/
+*.keystore
+
+# Local configuration
+android/local.properties
+
+# IDE files
+android/.idea/
+android/*.iml
+
+# Keystore files
+android/*.jks
+android/*.keystore
+
+# Miscellaneous
+*.log
+*.apk
+*.ap_
+*.dex
+*.class
+.DS_Store

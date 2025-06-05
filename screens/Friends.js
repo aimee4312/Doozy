@@ -1,9 +1,8 @@
 import React, {useEffect, useState, useRef} from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
 import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot, increment } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
-import { Ionicons } from '@expo/vector-icons';
 
 
 const FriendsScreen = () => {
@@ -279,7 +278,7 @@ const FriendsScreen = () => {
 
 
    return (
-       <View style={styles.container}>
+       <SafeAreaView style={styles.container}>
            <SwitchSelector
                options=
                    {[{label: "Friends", value: "friends-page"},
@@ -328,7 +327,7 @@ const FriendsScreen = () => {
                             keyExtractor={(item) => item.id} />
                     </View>)}
             </View>)}
-       </View>
+       </SafeAreaView>
    );
 };
 
@@ -336,6 +335,8 @@ const FriendsScreen = () => {
 const styles = StyleSheet.create ({
    container: {
         flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'flex-start'
    },
    searchBrowseContainer: {
         flex: 1,
@@ -344,7 +345,7 @@ const styles = StyleSheet.create ({
         backgroundColor: "white",
         borderRadius: 10,
         margin: 5,
-        height: 30,
+        height: 40,
         flexDirection: "row",
         alignItems: "center",
 
@@ -352,7 +353,11 @@ const styles = StyleSheet.create ({
    searchBox: {
         paddingLeft: 10,
         paddingRight: 10,
-        fontSize: 20,
+        fontSize: 18,
+        textAlign: 'left',
+        textAlignVertical: 'center',
+        includeFontPadding: false,  
+        width: '100%'
    },
    profileCardContainer: {
        flex: 1,
@@ -372,7 +377,7 @@ const styles = StyleSheet.create ({
        marginRight: 10,
        height: 60,
        width: 60,
-       borderRadius: '50%',
+       borderRadius: 50,
    },
    nameText: {
        fontSize: 18,

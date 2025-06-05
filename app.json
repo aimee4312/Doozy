@@ -10,9 +10,30 @@
     ],
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.doozy"
     },
     "android": {
-    }
+      "package": "com.anonymous.doozy"
+    },
+    "plugins": [
+        [
+        "expo-build-properties",
+          {
+          "ios": {
+            "useFrameworks": "static",
+            "modularHeaders": {
+              "FirebaseCore": true,
+              "FirebaseCoreInternal": true,
+              "GoogleUtilities": true,
+              "FirebaseAuth": true,
+              "FirebaseStorage": true,
+              "FirebaseFirestore": true,
+              "FirebaseCrashlytics": true
+            }
+          }
+        }
+      ]
+    ]
   }
 }
