@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal } from 'react-native';
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal, Platform } from 'react-native';
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from 'react-native-drawer-layout';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
-
+import * as Notifications from "expo-notifications";
 
 const TaskListScreen = (props) => {
 
@@ -104,8 +104,20 @@ const TaskListScreen = (props) => {
                 unsubscribePosts = onSnapshot(q, (querySnapshotPosts) => {
                     const fetchedPosts = [];
                     querySnapshotPosts.forEach((doc) => {
+                        let docData = doc.data();
                         if (!listSnap.exists() || postIds.includes(doc.id)) {
-                            fetchedPosts.push({ id: doc.id, ...doc.data() });
+                            if (docData.completeByDate?.timestamp) {
+                                const millisCompleteBy = docData.completeByDate.timestamp.seconds * 1000 + Math.floor(docData.completeByDate.timestamp.nanoseconds / 1e6);
+                                docData.completeByDate = {
+                                    ...docData.completeByDate,
+                                    timestamp: new Date(millisCompleteBy)
+                                }
+                            }
+                            if (docData.repeatEnds) {
+                                const millisRepeatEnds = docData.repeatEnds.seconds * 1000 + Math.floor(docData.repeatEnds.nanoseconds / 1e6);
+                                docData.repeatEnds = new Date(millisRepeatEnds);
+                            }
+                            fetchedPosts.push({ id: doc.id, ...docData });
                         }
                     });
                     setCompletedTaskItems(fetchedPosts);
@@ -276,6 +288,8 @@ const TaskListScreen = (props) => {
 
                 batch.update(userProfileRef, { posts: increment(1), tasks: increment(-1) });
 
+                await cancelNotifications(taskItems[index].notificationIds);
+
                 await batch.commit();
 
             } catch (error) {
@@ -289,12 +303,6 @@ const TaskListScreen = (props) => {
             const listIds = completedTaskItems[index].listIds;
             try {
                 const postRef = doc(postsRef, docId);
-                const querySnapshot = await getDoc(postRef);
-                const image = querySnapshot.data().image;
-                if (image) {
-                    imageRef = ref(getStorage(), image);
-                    deleteObject(imageRef);
-                }
                 const taskRef = doc(tasksRef);
                 batch.set(taskRef, {
                     name: completedTaskItems[index].name,
@@ -316,6 +324,20 @@ const TaskListScreen = (props) => {
                 })
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1), tasks: increment(1) });
+
+                if (completedTaskItems[index].reminders.length !== 0) {
+                    if (await configureNotifications()) {
+                        const tempNotifIds = await scheduleNotifications(completedTaskItems[index].reminders, completedTaskItems[index].completeByDate, completedTaskItems[index].isCompletionTime, completedTaskItems[index].name);
+                        batch.update(taskRef, {notificationIds: tempNotifIds});
+                    }
+                }
+
+                const image = completedTaskItems[index].image;
+                if (image) {
+                    const imageRef = ref(getStorage(), image);
+                    await deleteObject(imageRef);
+                }
+
                 await batch.commit();
 
             } catch (error) {
@@ -363,6 +385,7 @@ const TaskListScreen = (props) => {
                 });
                 batch.update(userProfileRef, { tasks: increment(-1) });
                 batch.delete(taskRef)
+                await cancelNotifications(taskItems[index].notificationIds);
             }
             await batch.commit();
             closeSwipeCard();
@@ -370,6 +393,116 @@ const TaskListScreen = (props) => {
             console.error('Error deleting document: ', error);
         };
 
+    }
+
+    const configureNotifications = async () => {
+        const response = await Notifications.requestPermissionsAsync();
+        if (!response.granted) {
+            console.warn("⚠️ Notification Permissions not granted!");
+            return response.granted;
+        }
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowBanner: true,
+                shouldShowList: true,
+                shouldPlaySound: true,
+                shouldSetBadge: true,
+            }),
+        });
+        return response.granted;
+    }
+
+    const scheduleNotifications = async (selectedReminders, selectedDate, isTime, newTask) => {
+        let notificationArray = [];
+        if (!isTime) {
+            selectedReminders.forEach(reminder => {
+                let date = new Date(selectedDate.timestamp.getTime());
+                let body;
+                date.setHours(9);
+                date.setMinutes(0);
+                date.setSeconds(0);
+                if (reminder == 0) {
+                    body = "Today";
+                }
+                else if (reminder == 1) {
+                    date.setDate(selectedDate.timestamp.getDate() - 1);
+                    body = "Tomorrow"
+                }
+                else if (reminder == 2) {
+                    date.setDate(selectedDate.timestamp.getDate() - 2);
+                    body = "In 2 days";
+                }
+                else if (reminder == 3) {
+                    date.setDate(selectedDate.timestamp.getDate() - 3);
+                    body = "In 3 days";
+                }
+                else {
+                    date.setDate(selectedDate.timestamp.getDate() - 7);
+                    body = "In 1 week"
+                }
+                if (date > new Date()) {
+                    notificationArray.push({date: date, title: newTask, body: body});
+                }
+            })
+        }
+        else {
+            selectedReminders.forEach(reminder => {
+                let date = new Date(selectedDate.timestamp.getTime());
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                let body;
+                if (reminder == 0) {
+                    body = "Now, " + timeString;
+                }
+                else if (reminder == 1) {
+                    date.setMinutes(selectedDate.timestamp.getMinutes() - 5);
+                    body = "In 5 minutes, " + timeString;
+                }
+                else if (reminder == 2) {
+                    date.setMinutes(selectedDate.timestamp.getMinutes() - 30);
+                    body = "In 30 minutes, " + timeString;
+                }
+                else if (reminder == 3) {
+                    date.setHours(selectedDate.timestamp.getHours() - 1);
+                    body = "in 1 hour, " + timeString;
+                }
+                else {
+                    date.setDate(selectedDate.day - 1);
+                    body = "Tomorrow, " + timeString;
+                }
+                if (date > new Date()) {
+                    notificationArray.push({date: date, title: newTask, body: body});
+                }
+            })
+        }
+        return await scheduleAllNotifications(notificationArray);
+    }
+
+    const scheduleAllNotifications = async (notificationArray) => {
+        let notificationIds = [];
+        await Promise.all(
+            notificationArray.map(async (notification) => {
+                const id = await Notifications.scheduleNotificationAsync({
+                    content: {
+                        title: notification.title,
+                        body: notification.body,
+                        sound: Platform.OS === 'ios' ? "default" : undefined,
+                    },
+                    trigger: {
+                        type: 'date',
+                        date: notification.date,
+                        allowWhileIdle: true,
+                    },
+                })
+                notificationIds.push(id);
+            })
+        )
+        return notificationIds
+    }
+
+    const cancelNotifications = async (notificationIds) => {
+        await notificationIds.forEach(async (notification) => {
+            await Notifications.cancelScheduledNotificationAsync(notification)
+        })
     }
 
     let swipedCardRef = null;
@@ -401,6 +534,10 @@ const TaskListScreen = (props) => {
         setSortModalVisible(true);
     }
 
+    const testFunction = async () => {
+        await Notifications.cancelScheduledNotificationAsync("aee5ac74-2f06-49a2-a5a0-d7d0501ea0fc");
+    }
+
     return (
         <TouchableWithoutFeedback onPress={closeSwipeCard}>
             <View style={styles.container}>
@@ -419,7 +556,14 @@ const TaskListScreen = (props) => {
                             transparent={true}
                             animationType='slide'
                         >
-                            <EditTask task={taskItems[editIndex]} listItems={listItems} setEditTaskVisible={setEditTaskVisible} />
+                            <EditTask 
+                                task={taskItems[editIndex]} 
+                                listItems={listItems} 
+                                setEditTaskVisible={setEditTaskVisible} 
+                                configureNotifications={configureNotifications} 
+                                scheduleNotifications={scheduleNotifications} 
+                                cancelNotifications={cancelNotifications} 
+                            />
                         </ Modal>
                         <Modal
                             visible={sortModalVisible}
@@ -462,7 +606,9 @@ const TaskListScreen = (props) => {
                             <TouchableOpacity onPress={() => setOpenDrawer(true)}>
                                 <Ionicons name="menu" size={32} color="black" />
                             </TouchableOpacity>
-                            <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Doozy</Text>
+                            <TouchableOpacity onPress={testFunction}>
+                                <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Doozy</Text>
+                            </TouchableOpacity>
                             <TouchableOpacity ref={sortRef} onPress={openSortModal}>
                                 <MaterialCommunityIcons name="sort" size={32} color="black" />
                             </TouchableOpacity>
@@ -509,7 +655,13 @@ const TaskListScreen = (props) => {
                                 </View>
                             </View>}
                         </ScrollView>
-                        <TaskCreation closeSwipeCard={closeSwipeCard} listItems={listItems} nav={props.navigation} />
+                        <TaskCreation 
+                            closeSwipeCard={closeSwipeCard} 
+                            listItems={listItems} 
+                            nav={props.navigation} 
+                            configureNotifications={configureNotifications} 
+                            scheduleNotifications={scheduleNotifications} 
+                        />
                     </SafeAreaView>
                 </Drawer>
             </View>

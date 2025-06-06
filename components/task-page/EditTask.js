@@ -7,10 +7,10 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../firebaseConfig';
 import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
-import { list } from 'firebase/storage';
+import * as Notifications from "expo-notifications";
 
 const EditTask = (props) => {
-    const { task, listItems, setEditTaskVisible } = props;
+    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications} = props;
 
     const priorityRef = useRef(null);
 
@@ -119,6 +119,14 @@ const EditTask = (props) => {
                     listRef = doc(userProfileRef, 'Lists', list);
                     batch.update(listRef, {taskIds: arrayUnion(task.id)});
                 })
+                await cancelNotifications(task.notificationIds);
+
+                if (selectedReminders.length !== 0) {
+                    if (await configureNotifications()) {
+                        const tempNotifIds = await scheduleNotifications(selectedReminders, selectedDate, isTime, editedTaskName);
+                        batch.update(taskRef, {notificationIds: tempNotifIds});
+                    }
+                }
             }
             else {
                 const imageURI = await addImage()
@@ -154,6 +162,8 @@ const EditTask = (props) => {
                 batch.update(userProfileRef, { posts: increment(1) });
                 batch.update(userProfileRef, {tasks: increment(-1)});
                 batch.delete(taskRef);
+
+                await cancelNotifications(task.notificationIds);
             } 
             await batch.commit();
             setEditTaskVisible(false);

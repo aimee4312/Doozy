@@ -197,9 +197,9 @@ const ScheduleMenu = (props) => {
         const date = new Date(tempSelectedDate.timestamp);
         if (isTempTime) {
             tempSelectedDate.timestamp = new Date(
-                date.getUTCFullYear(),
-                date.getUTCMonth(),
-                date.getUTCDate(),
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate(),
                 tempTime.getHours(),
                 tempTime.getMinutes(),
                 0,
@@ -208,16 +208,15 @@ const ScheduleMenu = (props) => {
         }
         else {
             tempSelectedDate.timestamp = new Date(
-                date.getUTCFullYear(),
-                date.getUTCMonth(),
-                date.getUTCDate(),
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate(),
                 0,
                 0,
                 0,
                 0,
             );
         }
-
         setSelectedDate(tempSelectedDate);
         setIsTime(isTempTime);
         setSelectedReminders(tempSelectedReminders);
@@ -229,11 +228,11 @@ const ScheduleMenu = (props) => {
     }
 
     const clearData = () => {
-        setSelectedDate('');
+        setSelectedDate(null);
         setIsTime(false);
         setSelectedReminders([]);
         setSelectedRepeat([]);
-        setDateRepeatEnds('');
+        setDateRepeatEnds(null);
         setCalendarModalVisible(false);
     }
 
