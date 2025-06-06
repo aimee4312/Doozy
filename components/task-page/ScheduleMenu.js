@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity, SafeAreaView } from 'react-native';
-import CustomPopupMenu from './PopUpMenus/CustomPopupMenu';
+import ReminderModal from './PopUpMenus/ReminderModal';
+import RepeatModal from './PopUpMenus/RepeatModal';
 import TimePopupMenu from './PopUpMenus/TimePopupMenu';
 import RepeatEndsModal from './PopUpMenus/RepeatEndsModal';
 import { Calendar } from 'react-native-calendars';
@@ -114,7 +115,7 @@ const ScheduleMenu = (props) => {
     }
 
     const handleRepeatCancel = () => {
-        setTempSelectedRepeat([]);
+        setTempSelectedRepeat(null);
         handleRepeatEndsCancel();
     }
 
@@ -158,14 +159,12 @@ const ScheduleMenu = (props) => {
     }
 
     const changeRepeatString = () => {
-        if (tempSelectedRepeat.length === 0) {
+        if (tempSelectedRepeat === null) {
             setRepeatString("None");
-        }
-        else if (tempSelectedRepeat.length === 1) {
-            setRepeatString(repeat[tempSelectedRepeat[0]].label);
-        }
-        else {
-            setRepeatString(repeat[tempSelectedRepeat[0]].label + ",...");
+        } else if (repeat[tempSelectedRepeat] && repeat[tempSelectedRepeat].label) {
+            setRepeatString(repeat[tempSelectedRepeat].label);
+        } else {
+            setRepeatString("None");
         }
     }
 
@@ -194,7 +193,7 @@ const ScheduleMenu = (props) => {
     ];
 
     const handleSaveChanges = () => {
-        const date = new Date(tempSelectedDate.timestamp);
+        const date = new Date(tempSelectedDate.year, tempSelectedDate.month - 1, tempSelectedDate.day);
         if (isTempTime) {
             tempSelectedDate.timestamp = new Date(
                 date.getFullYear(),
@@ -231,7 +230,7 @@ const ScheduleMenu = (props) => {
         setSelectedDate(null);
         setIsTime(false);
         setSelectedReminders([]);
-        setSelectedRepeat([]);
+        setSelectedRepeat(null);
         setDateRepeatEnds(null);
         setCalendarModalVisible(false);
     }
@@ -314,18 +313,18 @@ const ScheduleMenu = (props) => {
                             </View>
                         </View>
                     </TouchableHighlight>
-                    <TouchableHighlight ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat.length === 0) ? styles.menuBottomButton : null]}>
+                    <TouchableHighlight ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat === null) ? styles.menuBottomButton : null]}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat</Text>
                             <View style={styles.cancelContainer}>
                                 <Text style={styles.menuText}>{repeatString}</Text>
-                                {(tempSelectedRepeat.length !== 0) && <TouchableOpacity onPress={handleRepeatCancel}>
+                                {(tempSelectedRepeat !== null) && <TouchableOpacity onPress={handleRepeatCancel}>
                                     <Text> X</Text>
                                 </TouchableOpacity>}
                             </View>
                         </View>
                     </TouchableHighlight>
-                    {(tempSelectedRepeat.length !== 0) && <TouchableHighlight ref={repeatEndsRef} onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
+                    {(tempSelectedRepeat !== null) && <TouchableHighlight ref={repeatEndsRef} onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat Ends</Text>
                             <View style={styles.cancelContainer}>
@@ -342,8 +341,8 @@ const ScheduleMenu = (props) => {
                 <Text style={styles.clearText}>Clear</Text>
             </TouchableOpacity>
             <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={tempTime} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight} />
-            <CustomPopupMenu isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight} />
-            <CustomPopupMenu isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOptions={tempSelectedRepeat} setSelectedOptions={setTempSelectedRepeat} buttonHeight={repeatButtonHeight} />
+            <ReminderModal isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight} />
+            <RepeatModal isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOption={tempSelectedRepeat} setSelectedOption={setTempSelectedRepeat} buttonHeight={repeatButtonHeight} />
             <RepeatEndsModal isVisible={isRepeatEndsModalVisible} setIsRepeatEndsModalVisible={setIsRepeatEndsModalVisible} dateRepeatEnds={tempDateRepeatEnds} setDateRepeatEnds={setTempDateRepeatEnds} minimumDate={new Date(tempSelectedDate.year, tempSelectedDate.month - 1, tempSelectedDate.day)} buttonHeight={repeatEndsButtonHeight} />
         </SafeAreaView>
     );

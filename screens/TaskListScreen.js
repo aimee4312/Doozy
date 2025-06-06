@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal, Platform } from 'react-native';
+import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal, Platform, DynamicColorIOS } from 'react-native';
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
@@ -230,14 +230,12 @@ const TaskListScreen = (props) => {
                 quality: 1,
             });
 
-            if (_image.assets && !_image.cancelled) {
-                console.log("uri::: " + _image.assets[0].uri);
+            if (_image.assets && !_image.canceled) {
                 const { uri } = _image.assets[0];
                 const fileName = uri.split('/').pop();
                 const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
                     console.log(progress)
                 );
-                console.log(uploadResp);
                 return uploadResp.downloadUrl;
             }
         } catch (e) {
@@ -251,29 +249,25 @@ const TaskListScreen = (props) => {
         const postsRef = collection(FIRESTORE_DB, 'Posts');
         const listsRef = collection(userProfileRef, 'Lists');
         if (!complete) {
+            const task = taskItems[index];
             try {
                 const batch = writeBatch(FIRESTORE_DB);
-                const imageURI = await addImage(); // delete image if error occurs
-                if (!imageURI) {
-                    return; // make error
-                }
-                const docId = taskItems[index].id;
-                const listIds = taskItems[index].listIds;
+                const docId = task.id;
+                const listIds = task.listIds;
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
-                    name: taskItems[index].name,
-                    description: taskItems[index].description,
+                    name: task.name,
+                    description: task.description,
                     timePosted: new Date(),
-                    image: imageURI,
-                    priority: taskItems[index].priority,
-                    reminders: taskItems[index].reminders,
-                    repeat: taskItems[index].repeat,
-                    repeatEnds: taskItems[index].repeatEnds,
-                    completeByDate: taskItems[index].completeByDate,
-                    isCompletionTime: taskItems[index].isCompletionTime,
-                    listIds: taskItems[index].listIds,
-                    timeTaskCreated: taskItems[index].timeTaskCreated,
+                    priority: task.priority,
+                    reminders: task.reminders,
+                    repeat: task.repeat,
+                    repeatEnds: task.repeatEnds,
+                    completeByDate: task.completeByDate,
+                    isCompletionTime: task.isCompletionTime,
+                    listIds: task.listIds,
+                    timeTaskCreated: task.timeTaskCreated,
                 })
 
                 let listRef;
@@ -283,13 +277,30 @@ const TaskListScreen = (props) => {
                     batch.update(listRef, { postIds: arrayUnion(postRef.id) });
                 })
 
-                const taskRef = doc(tasksRef, taskItems[index].id);
-                batch.delete(taskRef);
+                batch.update(userProfileRef, { posts: increment(1) });
 
-                batch.update(userProfileRef, { posts: increment(1), tasks: increment(-1) });
+                const imageURI = await addImage(); // delete image if error occurs
+                if (!imageURI) {
+                    return; // make error
+                }
+                await cancelNotifications(task.notificationIds);
 
-                await cancelNotifications(taskItems[index].notificationIds);
-
+                const taskRef = doc(tasksRef, task.id);
+                const newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat);
+                if (newCompleteByDate) {
+                    batch.update(taskRef, {completeByDate: newCompleteByDate});
+                    if (taskItems[index].reminders.length !== 0) {
+                        if (await configureNotifications()) {
+                            const tempNotifIds = await scheduleNotifications(task.reminders, newCompleteByDate, task.isCompletionTime, task.name);
+                            batch.update(taskRef, {notificationIds: tempNotifIds});
+                        }
+                    }
+                }
+                else {
+                    batch.delete(taskRef);
+                    batch.update(userProfileRef, { tasks: increment(-1) });
+                }
+                batch.update(postRef, { image: imageURI });
                 await batch.commit();
 
             } catch (error) {
@@ -299,22 +310,23 @@ const TaskListScreen = (props) => {
         }
         else {
             const batch = writeBatch(FIRESTORE_DB);
-            const docId = completedTaskItems[index].id;
-            const listIds = completedTaskItems[index].listIds;
+            const post = completedTaskItems[index];
+            const docId = post.id;
+            const listIds = post.listIds;
             try {
                 const postRef = doc(postsRef, docId);
                 const taskRef = doc(tasksRef);
                 batch.set(taskRef, {
-                    name: completedTaskItems[index].name,
-                    description: completedTaskItems[index].description,
-                    priority: completedTaskItems[index].priority,
-                    reminders: completedTaskItems[index].reminders,
-                    repeat: completedTaskItems[index].repeat,
-                    repeatEnds: completedTaskItems[index].repeatEnds,
-                    completeByDate: completedTaskItems[index].completeByDate,
-                    isCompletionTime: completedTaskItems[index].isCompletionTime,
-                    listIds: completedTaskItems[index].listIds,
-                    timeTaskCreated: completedTaskItems[index].timeTaskCreated,
+                    name: post.name,
+                    description: post.description,
+                    priority: post.priority,
+                    reminders: post.reminders,
+                    repeat: post.repeat,
+                    repeatEnds: post.repeatEnds,
+                    completeByDate: post.completeByDate,
+                    isCompletionTime: post.isCompletionTime,
+                    listIds: post.listIds,
+                    timeTaskCreated: post.timeTaskCreated,
                 });
                 let listRef;
                 listIds.forEach((listId) => {
@@ -325,14 +337,14 @@ const TaskListScreen = (props) => {
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1), tasks: increment(1) });
 
-                if (completedTaskItems[index].reminders.length !== 0) {
+                if (post.reminders.length !== 0) {
                     if (await configureNotifications()) {
-                        const tempNotifIds = await scheduleNotifications(completedTaskItems[index].reminders, completedTaskItems[index].completeByDate, completedTaskItems[index].isCompletionTime, completedTaskItems[index].name);
+                        const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.name);
                         batch.update(taskRef, {notificationIds: tempNotifIds});
                     }
                 }
 
-                const image = completedTaskItems[index].image;
+                const image = post.image;
                 if (image) {
                     const imageRef = ref(getStorage(), image);
                     await deleteObject(imageRef);
@@ -344,6 +356,56 @@ const TaskListScreen = (props) => {
                 console.error('Error updating task completion: ', error);
             }
         }
+    }
+
+    const isRepeatingTask = (currDueDate, repeatEnds, selectedRepeat) => {
+        if (currDueDate === null || selectedRepeat === null) {
+            return 0;
+        }
+        let flag = 0;
+        if (currDueDate >= new Date()) { //completed task on time
+            flag = 1;
+        }
+        while (currDueDate < new Date() || flag === 1) { //completed task late
+            if (repeatEnds && currDueDate > repeatEnds)
+                return 0;
+            if (selectedRepeat == 0) {
+                currDueDate.setDate(currDueDate.getDate() + 1);
+            }
+            else if (selectedRepeat == 1) { 
+                currDueDate.setDate(currDueDate.getDate() + 7);
+            }
+            else if (selectedRepeat == 2) {
+                currDueDate.setMonth(currDueDate.getMonth() + 1);
+            }
+            else if (selectedRepeat == 3) {
+                currDueDate.setYear(currDueDate.getYear() + 1);
+            }
+            else {
+                if (currDueDate.getDay() === 5) {
+                    currDueDate.setDate(currDueDate.getDate() + 3);
+                }
+                else if (currDueDate.getDay() === 6) {
+                    currDueDate.setDate(currDueDate.getDate() + 2);
+                }
+                else {
+                    currDueDate.setDate(currDueDate.getDate() + 1);
+                }
+            }
+            if (flag === 1) {
+                break;
+            }
+        }
+        if (repeatEnds && currDueDate > repeatEnds) {
+            return 0;
+        }
+        return {
+                    day: currDueDate.getDate(),
+                    month: currDueDate.getMonth() + 1,
+                    year: currDueDate.getFullYear(),
+                    timestamp: currDueDate,
+                    dateString: currDueDate.toISOString().split('T')[0],
+                };
     }
 
     //diffentiate delete post and task and make batch
@@ -474,6 +536,7 @@ const TaskListScreen = (props) => {
                 }
             })
         }
+        console.log(notificationArray);
         return await scheduleAllNotifications(notificationArray);
     }
 
@@ -563,6 +626,8 @@ const TaskListScreen = (props) => {
                                 configureNotifications={configureNotifications} 
                                 scheduleNotifications={scheduleNotifications} 
                                 cancelNotifications={cancelNotifications} 
+                                addImage={addImage}
+                                isRepeatingTask={isRepeatingTask}
                             />
                         </ Modal>
                         <Modal
@@ -603,13 +668,13 @@ const TaskListScreen = (props) => {
                             </TouchableWithoutFeedback>
                         </Modal>
                         <View style={styles.topBorder}>
-                            <TouchableOpacity onPress={() => setOpenDrawer(true)}>
+                            <TouchableOpacity onPress={() => {closeSwipeCard(); setOpenDrawer(true)}}>
                                 <Ionicons name="menu" size={32} color="black" />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={testFunction}>
                                 <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Doozy</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity ref={sortRef} onPress={openSortModal}>
+                            <TouchableOpacity ref={sortRef} onPress={() => {closeSwipeCard(); openSortModal();}}>
                                 <MaterialCommunityIcons name="sort" size={32} color="black" />
                             </TouchableOpacity>
                         </View>

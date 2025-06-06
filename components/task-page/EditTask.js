@@ -10,7 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from "expo-notifications";
 
 const EditTask = (props) => {
-    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications} = props;
+    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, addImage, isRepeatingTask} = props;
 
     const priorityRef = useRef(null);
 
@@ -65,28 +65,6 @@ const EditTask = (props) => {
         };
     }, []);
 
-    const addImage = async () => {
-        try {
-            let _image = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-            });
-
-            if (_image.assets && !_image.cancelled) {
-                const { uri } = _image.assets[0];
-                const fileName = uri.split('/').pop();
-                const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
-                    console.log(progress)
-                );
-                return uploadResp.downloadUrl;
-            }
-        } catch (e) {
-            Alert.alert("Error Uploading Image " + e.message);
-        }
-    };
-
     const saveChanges = async () => {
         const batch = writeBatch(FIRESTORE_DB);
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
@@ -129,7 +107,6 @@ const EditTask = (props) => {
                 }
             }
             else {
-                const imageURI = await addImage()
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
@@ -137,7 +114,6 @@ const EditTask = (props) => {
                     description: editedDescription,
                     timePosted: new Date(),
                     timeTaskCreated: task.timeTaskCreated,
-                    image: imageURI,
                     completeByDate: selectedDate,
                     isCompletionTime: isTime,
                     priority: selectedPriority,
@@ -159,11 +135,33 @@ const EditTask = (props) => {
                     batch.update(listRef, {postIds: arrayUnion(postRef.id)});
                 })
 
-                batch.update(userProfileRef, { posts: increment(1) });
-                batch.update(userProfileRef, {tasks: increment(-1)});
-                batch.delete(taskRef);
+                // const imageURI = await addImage(); // delete image if error occurs
+                // if (!imageURI) {
+                //     return; // make error
+                // }
 
                 await cancelNotifications(task.notificationIds);
+                const taskRef = doc(tasksRef, task.id);
+                const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat);
+                if (newCompleteByDate) {
+                    batch.update(taskRef, {completeByDate: newCompleteByDate});
+                    if (selectedReminders.length !== 0) {
+                        if (await configureNotifications()) {
+                            const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, editedTaskName);
+                            batch.update(taskRef, {notificationIds: tempNotifIds});
+                        }
+                    }
+                }
+                else {
+                    batch.delete(taskRef);
+                    batch.update(userProfileRef, { tasks: increment(-1) });
+                }
+                const imageURI = await addImage(); // delete image if error occurs
+                if (!imageURI) {
+                    return; // make error
+                }
+                batch.update(postRef, { image: imageURI });
+                batch.update(userProfileRef, { posts: increment(1) });
             } 
             await batch.commit();
             setEditTaskVisible(false);

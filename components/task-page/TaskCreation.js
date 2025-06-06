@@ -23,7 +23,7 @@ const TaskCreation = (props) => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedPriority, setSelectedPriority] = useState(0);
     const [selectedReminders, setSelectedReminders] = useState([]);
-    const [selectedRepeat, setSelectedRepeat] = useState([]);
+    const [selectedRepeat, setSelectedRepeat] = useState(null);
     const [isCompleted, setCompleted] = useState(false);
     const [isTime, setIsTime] = useState(false);
     const [dateRepeatEnds, setDateRepeatEnds] = useState(null);
@@ -230,21 +230,21 @@ const TaskCreation = (props) => {
                     <View style={{ flex: 1 }}>
                     </View>
                 </TouchableWithoutFeedback>
-                        <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20}}>
-                            <ScheduleMenu
-                                setCalendarModalVisible={setCalendarModalVisible}
-                                selectedDate={selectedDate}
-                                setSelectedDate={setSelectedDate}
-                                isTime={isTime}
-                                setIsTime={setIsTime}
-                                selectedReminders={selectedReminders}
-                                setSelectedReminders={setSelectedReminders}
-                                selectedRepeat={selectedRepeat}
-                                setSelectedRepeat={setSelectedRepeat}
-                                dateRepeatEnds={dateRepeatEnds}
-                                setDateRepeatEnds={setDateRepeatEnds}
-                            />
-                        </View>
+                    <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20}}>
+                        <ScheduleMenu
+                            setCalendarModalVisible={setCalendarModalVisible}
+                            selectedDate={selectedDate}
+                            setSelectedDate={setSelectedDate}
+                            isTime={isTime}
+                            setIsTime={setIsTime}
+                            selectedReminders={selectedReminders}
+                            setSelectedReminders={setSelectedReminders}
+                            selectedRepeat={selectedRepeat}
+                            setSelectedRepeat={setSelectedRepeat}
+                            dateRepeatEnds={dateRepeatEnds}
+                            setDateRepeatEnds={setDateRepeatEnds}
+                        />
+                    </View>
                 </Modal>
                 <Modal
                 visible={isListModalVisible}
