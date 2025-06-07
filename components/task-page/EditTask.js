@@ -121,6 +121,7 @@ const EditTask = (props) => {
                     repeat: selectedRepeat,
                     repeatEnds: dateRepeatEnds,
                     listIds: selectedLists,
+                    parentTaskID: null
                 })
                 // remove task id from every list in original array
                 // add post id to every list in new array
@@ -135,16 +136,17 @@ const EditTask = (props) => {
                     batch.update(listRef, {postIds: arrayUnion(postRef.id)});
                 })
 
-                // const imageURI = await addImage(); // delete image if error occurs
-                // if (!imageURI) {
-                //     return; // make error
-                // }
+                const imageURI = await addImage(); // delete image if error occurs
+                if (!imageURI) {
+                    return; // make error
+                }
 
                 await cancelNotifications(task.notificationIds);
                 const taskRef = doc(tasksRef, task.id);
                 const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat);
                 if (newCompleteByDate) {
-                    batch.update(taskRef, {completeByDate: newCompleteByDate});
+                    batch.update(taskRef, {completeByDate: newCompleteByDate, childCounter: increment(1), currentChild: task.childCounter + 1});
+                    batch.update(postRef, {parentTaskID: task.id, childNumber: task.childCounter});
                     if (selectedReminders.length !== 0) {
                         if (await configureNotifications()) {
                             const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, editedTaskName);
@@ -156,10 +158,7 @@ const EditTask = (props) => {
                     batch.delete(taskRef);
                     batch.update(userProfileRef, { tasks: increment(-1) });
                 }
-                const imageURI = await addImage(); // delete image if error occurs
-                if (!imageURI) {
-                    return; // make error
-                }
+                
                 batch.update(postRef, { image: imageURI });
                 batch.update(userProfileRef, { posts: increment(1) });
             } 

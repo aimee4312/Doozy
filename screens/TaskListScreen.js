@@ -268,6 +268,7 @@ const TaskListScreen = (props) => {
                     isCompletionTime: task.isCompletionTime,
                     listIds: task.listIds,
                     timeTaskCreated: task.timeTaskCreated,
+                    parentTaskID: null
                 })
 
                 let listRef;
@@ -288,8 +289,9 @@ const TaskListScreen = (props) => {
                 const taskRef = doc(tasksRef, task.id);
                 const newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat);
                 if (newCompleteByDate) {
-                    batch.update(taskRef, {completeByDate: newCompleteByDate});
-                    if (taskItems[index].reminders.length !== 0) {
+                    batch.update(taskRef, {completeByDate: newCompleteByDate, childCounter: increment(1), currentChild: task.childCounter + 1});
+                    batch.update(postRef, {parentTaskID: task.id, childNumber: task.childCounter});
+                    if (task.reminders.length !== 0) {
                         if (await configureNotifications()) {
                             const tempNotifIds = await scheduleNotifications(task.reminders, newCompleteByDate, task.isCompletionTime, task.name);
                             batch.update(taskRef, {notificationIds: tempNotifIds});
@@ -315,7 +317,20 @@ const TaskListScreen = (props) => {
             const listIds = post.listIds;
             try {
                 const postRef = doc(postsRef, docId);
-                const taskRef = doc(tasksRef);
+                let taskRef;
+                const parentTask = getTaskWithID(post.parentTaskID)
+                if (post.parentTaskID && parentTask) {
+                    if (parentTask.currentChild > post.childNumber) {
+                        taskRef = doc(tasksRef, post.parentTaskID);
+                    }
+                    else {
+                        deleteItem(index, true);
+                        return;
+                    }
+                }
+                else {
+                    taskRef = doc(tasksRef);
+                }
                 batch.set(taskRef, {
                     name: post.name,
                     description: post.description,
@@ -335,8 +350,13 @@ const TaskListScreen = (props) => {
                     batch.update(listRef, { taskIds: arrayUnion(taskRef.id) })
                 })
                 batch.delete(postRef);
-                batch.update(userProfileRef, { posts: increment(-1), tasks: increment(1) });
-
+                batch.update(userProfileRef, { posts: increment(-1)});
+                if (parentTask) {
+                    batch.update(taskRef, {childCounter: parentTask.childCounter, currentChild: post.childNumber});
+                }
+                else {
+                    batch.update(userProfileRef, { posts: increment(-1)});
+                }
                 if (post.reminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.name);
@@ -356,6 +376,11 @@ const TaskListScreen = (props) => {
                 console.error('Error updating task completion: ', error);
             }
         }
+    }
+
+    const getTaskWithID = (id) => {
+        const task = taskItems.find(item => item.id == id);
+        return task;
     }
 
     const isRepeatingTask = (currDueDate, repeatEnds, selectedRepeat) => {
@@ -726,6 +751,7 @@ const TaskListScreen = (props) => {
                             nav={props.navigation} 
                             configureNotifications={configureNotifications} 
                             scheduleNotifications={scheduleNotifications} 
+                            isRepeatingTask={isRepeatingTask}
                         />
                     </SafeAreaView>
                 </Drawer>

@@ -13,7 +13,7 @@ import * as Notifications from "expo-notifications";
 
 
 const TaskCreation = (props) => {
-    const { closeSwipeCard, listItems, nav, configureNotifications, scheduleNotifications } = props;
+    const { closeSwipeCard, listItems, nav, configureNotifications, scheduleNotifications, isRepeatingTask } = props;
 
     const textTaskInputRef = useRef(null);
 
@@ -69,66 +69,96 @@ const TaskCreation = (props) => {
             console.error("Current user not found.");
             return;
         }
-        const batch = writeBatch(FIRESTORE_DB);
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
-        const postsRef = collection(FIRESTORE_DB, 'Posts');
+        const taskRef = doc(tasksRef);
+
+        const batch = writeBatch(FIRESTORE_DB);
+        let cookedBatch;
+        isCompleted ? cookedBatch = await storeCompletedTask(taskRef, batch, imageURI) : cookedBatch = await storeIncompletedTask(false, taskRef, batch);
+        await cookedBatch.commit();
+        
+    }
+
+    const storeIncompletedTask = async (blockNotifications, taskRef, batch) => {
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         try {
-            if (!isCompleted) {
-                const taskRef = doc(tasksRef);
-                batch.set(taskRef, {
-                    name: newTask,
-                    description: newDescription,
-                    completeByDate: selectedDate,
-                    isCompletionTime: isTime,
-                    priority: selectedPriority,
-                    reminders: selectedReminders,
-                    repeat: selectedRepeat,
-                    repeatEnds: dateRepeatEnds,
-                    listIds: selectedLists,
-                    timeTaskCreated: new Date(),
-                    notificationIds: [],
-                });
-                let listRef;
-                selectedLists.forEach((listId) => {
-                    listRef = doc(userProfileRef, 'Lists', listId);
-                    batch.update(listRef, {taskIds: arrayUnion(taskRef.id)});
-                });
-                batch.update(userProfileRef, { tasks: increment(1) });
+            batch.set(taskRef, {
+                name: newTask,
+                description: newDescription,
+                completeByDate: selectedDate,
+                isCompletionTime: isTime,
+                priority: selectedPriority,
+                reminders: selectedReminders,
+                repeat: selectedRepeat,
+                repeatEnds: dateRepeatEnds,
+                listIds: selectedLists,
+                timeTaskCreated: new Date(),
+                notificationIds: [],
+                childCounter: 0,
+                currentChild: 0,
+            });
+            let listRef;
+            selectedLists.forEach((listId) => {
+                listRef = doc(userProfileRef, 'Lists', listId);
+                batch.update(listRef, {taskIds: arrayUnion(taskRef.id)});
+            });
+            batch.update(userProfileRef, { tasks: increment(1) });
+            if (!blockNotifications && selectedReminders.length !== 0) {
+                if (await configureNotifications()) {
+                    console.log("notifications not blocked");
+                    const tempNotifIds = await scheduleNotifications(selectedReminders, selectedDate, isTime, newTask);
+                    batch.update(taskRef, {notificationIds: tempNotifIds});
+                }
+            }
+            return batch;
+        } catch (error) {
+            console.error("Error storing task:", error);
+        }
+    }
+
+    const storeCompletedTask = async (taskRef, batch, imageURI) => {
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const postsRef = collection(FIRESTORE_DB, 'Posts');
+        const postRef = doc(postsRef);
+        
+        try {
+            batch.set(postRef, {
+                userId: currentUser.uid,
+                name: newTask,
+                description: newDescription,
+                timePosted: new Date(),
+                timeTaskCreated: new Date(),
+                image: imageURI,
+                completeByDate: selectedDate,
+                isCompletionTime: isTime,
+                priority: selectedPriority,
+                reminders: selectedReminders,
+                repeat: selectedRepeat,
+                repeatEnds: dateRepeatEnds,
+                listIds: selectedLists,
+            })
+            let listRef;
+            selectedLists.forEach((listId) => {
+                listRef = doc(userProfileRef, 'Lists', listId);
+                batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+            });
+            const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, selectedRepeat, selectedRepeat);
+            if (newCompleteByDate) {
+                batch = await storeIncompletedTask(true, taskRef, batch);
+                batch.update(taskRef, {completeByDate: newCompleteByDate, childCounter: 1, currentChild: 1});
+                batch.update(postRef, {parentTaskID: taskRef.id, childNumber: 0});
                 if (selectedReminders.length !== 0) {
                     if (await configureNotifications()) {
-                        const tempNotifIds = await scheduleNotifications(selectedReminders, selectedDate, isTime, newTask);
+                        const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, newTask);
                         batch.update(taskRef, {notificationIds: tempNotifIds});
                     }
                 }
             }
-            else {
-                const postRef = doc(postsRef);
-                batch.set(postRef, {
-                    userId: currentUser.uid,
-                    name: newTask,
-                    description: newDescription,
-                    timePosted: new Date(),
-                    timeTaskCreated: new Date(),
-                    image: imageURI,
-                    completeByDate: selectedDate,
-                    isCompletionTime: isTime,
-                    priority: selectedPriority,
-                    reminders: selectedReminders,
-                    repeat: selectedRepeat,
-                    repeatEnds: dateRepeatEnds,
-                    listIds: selectedLists,
-                })
-                let listRef;
-                selectedLists.forEach((listId) => {
-                    listRef = doc(userProfileRef, 'Lists', listId);
-                    batch.update(listRef, {postIds: arrayUnion(postRef.id)});
-                });
-                batch.update(userProfileRef, { posts: increment(1) });
-            } 
-            await batch.commit();
+            batch.update(userProfileRef, { posts: increment(1) });
+            return batch;
         } catch (error) {
-            console.error("Error storing task or posting:", error);
+            console.error("Error storing post:", error);
         }
     }
 
