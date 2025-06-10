@@ -248,59 +248,58 @@ const TaskListScreen = (props) => {
         const tasksRef = collection(userProfileRef, 'Tasks');
         const postsRef = collection(FIRESTORE_DB, 'Posts');
         const listsRef = collection(userProfileRef, 'Lists');
-        if (!complete) {
+        if (!complete) { // task --> post
             const task = taskItems[index];
             try {
                 const batch = writeBatch(FIRESTORE_DB);
                 const docId = task.id;
                 const listIds = task.listIds;
                 const postRef = doc(postsRef);
-                batch.set(postRef, {
+                batch.set(postRef, { // store post
                     userId: currentUser.uid,
                     name: task.name,
                     description: task.description,
                     timePosted: new Date(),
                     priority: task.priority,
                     reminders: task.reminders,
-                    repeat: task.repeat,
-                    repeatEnds: task.repeatEnds,
                     completeByDate: task.completeByDate,
                     isCompletionTime: task.isCompletionTime,
                     listIds: task.listIds,
                     timeTaskCreated: task.timeTaskCreated,
-                    parentTaskID: null
                 })
 
                 let listRef;
-                listIds.forEach((listId) => {
+                listIds.forEach((listId) => { // add post to same lists
                     listRef = doc(listsRef, listId);
-                    batch.update(listRef, { taskIds: arrayRemove(docId) });
                     batch.update(listRef, { postIds: arrayUnion(postRef.id) });
                 })
 
-                batch.update(userProfileRef, { posts: increment(1) });
+                batch.update(userProfileRef, { posts: increment(1) }); // increment post count
 
-                const imageURI = await addImage(); // delete image if error occurs
+                const imageURI = await addImage(); // add image to post
                 if (!imageURI) {
                     return; // make error
                 }
-                await cancelNotifications(task.notificationIds);
+                await cancelNotifications(task.notificationIds); // cancel any upcoming notifications
 
                 const taskRef = doc(tasksRef, task.id);
-                const newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat);
-                if (newCompleteByDate) {
-                    batch.update(taskRef, {completeByDate: newCompleteByDate, childCounter: increment(1), currentChild: task.childCounter + 1});
-                    batch.update(postRef, {parentTaskID: task.id, childNumber: task.childCounter});
-                    if (task.reminders.length !== 0) {
-                        if (await configureNotifications()) {
+                const newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat); // check if task repeats and return next possible date
+                if (newCompleteByDate) { // if it does repeat
+                    batch.update(taskRef, {completeByDate: newCompleteByDate}); // set new completebydate, add one to post child counter, should be on its youngest child meaning no child has been uncompleted
+                    if (task.reminders.length !== 0) { // schedule notifications
+                        if (await configureNotifications()) { 
                             const tempNotifIds = await scheduleNotifications(task.reminders, newCompleteByDate, task.isCompletionTime, task.name);
                             batch.update(taskRef, {notificationIds: tempNotifIds});
                         }
                     }
                 }
-                else {
+                else { // if task does not repeat
                     batch.delete(taskRef);
                     batch.update(userProfileRef, { tasks: increment(-1) });
+                    listIds.forEach((listId) => { // remove task from lists
+                        listRef = doc(listsRef, listId);
+                        batch.update(listRef, { taskIds: arrayRemove(docId) });
+                    })
                 }
                 batch.update(postRef, { image: imageURI });
                 await batch.commit();
@@ -317,31 +316,17 @@ const TaskListScreen = (props) => {
             const listIds = post.listIds;
             try {
                 const postRef = doc(postsRef, docId);
-                let taskRef;
-                const parentTask = getTaskWithID(post.parentTaskID)
-                if (post.parentTaskID && parentTask) {
-                    if (parentTask.currentChild > post.childNumber) {
-                        taskRef = doc(tasksRef, post.parentTaskID);
-                    }
-                    else {
-                        deleteItem(index, true);
-                        return;
-                    }
-                }
-                else {
-                    taskRef = doc(tasksRef);
-                }
+                const taskRef = doc(tasksRef);
                 batch.set(taskRef, {
                     name: post.name,
                     description: post.description,
                     priority: post.priority,
                     reminders: post.reminders,
-                    repeat: post.repeat,
-                    repeatEnds: post.repeatEnds,
                     completeByDate: post.completeByDate,
                     isCompletionTime: post.isCompletionTime,
                     listIds: post.listIds,
                     timeTaskCreated: post.timeTaskCreated,
+                    notificationIds: [],
                 });
                 let listRef;
                 listIds.forEach((listId) => {
@@ -351,19 +336,12 @@ const TaskListScreen = (props) => {
                 })
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1)});
-                if (parentTask) {
-                    batch.update(taskRef, {childCounter: parentTask.childCounter, currentChild: post.childNumber});
-                }
-                else {
-                    batch.update(userProfileRef, { posts: increment(-1)});
-                }
                 if (post.reminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.name);
                         batch.update(taskRef, {notificationIds: tempNotifIds});
                     }
                 }
-
                 const image = post.image;
                 if (image) {
                     const imageRef = ref(getStorage(), image);
@@ -378,13 +356,8 @@ const TaskListScreen = (props) => {
         }
     }
 
-    const getTaskWithID = (id) => {
-        const task = taskItems.find(item => item.id == id);
-        return task;
-    }
-
     const isRepeatingTask = (currDueDate, repeatEnds, selectedRepeat) => {
-        if (currDueDate === null || selectedRepeat === null) {
+        if (currDueDate == null || selectedRepeat == null) {
             return 0;
         }
         let flag = 0;
@@ -392,8 +365,14 @@ const TaskListScreen = (props) => {
             flag = 1;
         }
         while (currDueDate < new Date() || flag === 1) { //completed task late
-            if (repeatEnds && currDueDate > repeatEnds)
-                return 0;
+            if (repeatEnds) {
+                let tempCurrDueDate = currDueDate;
+                tempCurrDueDate.setHours(0, 0, 0, 0);
+                repeatEnds.setHours(0, 0, 0, 0);
+                if (currDueDate > repeatEnds) {
+                    return 0;
+                }
+            }
             if (selectedRepeat == 0) {
                 currDueDate.setDate(currDueDate.getDate() + 1);
             }
@@ -421,16 +400,21 @@ const TaskListScreen = (props) => {
                 break;
             }
         }
-        if (repeatEnds && currDueDate > repeatEnds) {
-            return 0;
+        if (repeatEnds) {
+            let tempCurrDueDate = currDueDate;
+            tempCurrDueDate.setHours(0, 0, 0, 0);
+            repeatEnds.setHours(0, 0, 0, 0);
+            if (currDueDate > repeatEnds) {
+                return 0;
+            }
         }
         return {
-                    day: currDueDate.getDate(),
-                    month: currDueDate.getMonth() + 1,
-                    year: currDueDate.getFullYear(),
-                    timestamp: currDueDate,
-                    dateString: currDueDate.toISOString().split('T')[0],
-                };
+            day: currDueDate.getDate(),
+            month: currDueDate.getMonth() + 1,
+            year: currDueDate.getFullYear(),
+            timestamp: currDueDate,
+            dateString: currDueDate.toISOString().split('T')[0],
+        };
     }
 
     //diffentiate delete post and task and make batch
@@ -471,7 +455,7 @@ const TaskListScreen = (props) => {
                     batch.update(listRef, { taskIds: arrayRemove(docId) })
                 });
                 batch.update(userProfileRef, { tasks: increment(-1) });
-                batch.delete(taskRef)
+                batch.delete(taskRef);
                 await cancelNotifications(taskItems[index].notificationIds);
             }
             await batch.commit();
@@ -561,7 +545,6 @@ const TaskListScreen = (props) => {
                 }
             })
         }
-        console.log(notificationArray);
         return await scheduleAllNotifications(notificationArray);
     }
 

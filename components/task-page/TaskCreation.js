@@ -95,8 +95,6 @@ const TaskCreation = (props) => {
                 listIds: selectedLists,
                 timeTaskCreated: new Date(),
                 notificationIds: [],
-                childCounter: 0,
-                currentChild: 0,
             });
             let listRef;
             selectedLists.forEach((listId) => {
@@ -134,8 +132,6 @@ const TaskCreation = (props) => {
                 isCompletionTime: isTime,
                 priority: selectedPriority,
                 reminders: selectedReminders,
-                repeat: selectedRepeat,
-                repeatEnds: dateRepeatEnds,
                 listIds: selectedLists,
             })
             let listRef;
@@ -146,8 +142,7 @@ const TaskCreation = (props) => {
             const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, selectedRepeat, selectedRepeat);
             if (newCompleteByDate) {
                 batch = await storeIncompletedTask(true, taskRef, batch);
-                batch.update(taskRef, {completeByDate: newCompleteByDate, childCounter: 1, currentChild: 1});
-                batch.update(postRef, {parentTaskID: taskRef.id, childNumber: 0});
+                batch.update(taskRef, {completeByDate: newCompleteByDate});
                 if (selectedReminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, newTask);

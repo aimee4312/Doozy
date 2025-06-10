@@ -91,7 +91,6 @@ const ListModal = (props) => {
         <Ionicons name="list-outline" size={18} color="black" />
         <Text style={styles.listName}>{item.name}</Text>
       </View>
-      <Text style={styles.taskNumber}>{item.taskIds.length}</Text>
     </TouchableOpacity>
   );
 

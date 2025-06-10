@@ -223,6 +223,9 @@ const ScheduleMenu = (props) => {
         if (isDateRepeatEnds) {
             setDateRepeatEnds(tempDateRepeatEnds);
         }
+        else {
+            setDateRepeatEnds(null)
+        }
         setCalendarModalVisible(false);
     }
 

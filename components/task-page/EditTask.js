@@ -118,18 +118,11 @@ const EditTask = (props) => {
                     isCompletionTime: isTime,
                     priority: selectedPriority,
                     reminders: selectedReminders,
-                    repeat: selectedRepeat,
-                    repeatEnds: dateRepeatEnds,
                     listIds: selectedLists,
-                    parentTaskID: null
                 })
                 // remove task id from every list in original array
                 // add post id to every list in new array
                 let listRef;
-                task.listIds.forEach((list) => {
-                    listRef = doc(userProfileRef, 'Lists', list);
-                    batch.update(listRef, {taskIds: arrayRemove(task.id)});
-                })
 
                 selectedLists.forEach((list) => {
                     listRef = doc(userProfileRef, 'Lists', list);
@@ -145,8 +138,7 @@ const EditTask = (props) => {
                 const taskRef = doc(tasksRef, task.id);
                 const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat);
                 if (newCompleteByDate) {
-                    batch.update(taskRef, {completeByDate: newCompleteByDate, childCounter: increment(1), currentChild: task.childCounter + 1});
-                    batch.update(postRef, {parentTaskID: task.id, childNumber: task.childCounter});
+                    batch.update(taskRef, {completeByDate: newCompleteByDate});
                     if (selectedReminders.length !== 0) {
                         if (await configureNotifications()) {
                             const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, editedTaskName);
@@ -157,6 +149,10 @@ const EditTask = (props) => {
                 else {
                     batch.delete(taskRef);
                     batch.update(userProfileRef, { tasks: increment(-1) });
+                    task.listIds.forEach((list) => {
+                        listRef = doc(userProfileRef, 'Lists', list);
+                        batch.update(listRef, {taskIds: arrayRemove(task.id)});
+                    })
                 }
                 
                 batch.update(postRef, { image: imageURI });
