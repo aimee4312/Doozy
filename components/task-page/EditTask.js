@@ -23,7 +23,7 @@ const EditTask = (props) => {
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
     const [isPriorityModalVisible, setPriorityModalVisible] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(task.completeByDate);
+    const [selectedDate, setSelectedDate] = useState(task ? task.completeByDate : null);
     const [isTime, setIsTime] = useState(task ? task.isCompletionTime : null);
     const [selectedReminders, setSelectedReminders] = useState(task ? task.reminders : null);
     const [selectedRepeat, setSelectedRepeat] = useState(task ? task.repeat : null)
@@ -136,8 +136,9 @@ const EditTask = (props) => {
 
                 await cancelNotifications(task.notificationIds);
                 const taskRef = doc(tasksRef, task.id);
-                const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat);
-                if (newCompleteByDate) {
+
+                let newCompleteByDate;
+                if (selectedDate && (newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat))) {
                     batch.update(taskRef, {completeByDate: newCompleteByDate});
                     if (selectedReminders.length !== 0) {
                         if (await configureNotifications()) {

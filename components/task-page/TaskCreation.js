@@ -139,8 +139,8 @@ const TaskCreation = (props) => {
                 listRef = doc(userProfileRef, 'Lists', listId);
                 batch.update(listRef, {postIds: arrayUnion(postRef.id)});
             });
-            const newCompleteByDate = isRepeatingTask(selectedDate.timestamp, selectedRepeat, selectedRepeat);
-            if (newCompleteByDate) {
+            let newCompleteByDate;
+            if (selectedDate && (newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat))) {
                 batch = await storeIncompletedTask(true, taskRef, batch);
                 batch.update(taskRef, {completeByDate: newCompleteByDate});
                 if (selectedReminders.length !== 0) {

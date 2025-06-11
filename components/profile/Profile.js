@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl } from 'react-native';
@@ -7,156 +7,153 @@ import { Ionicons } from '@expo/vector-icons';
 import UploadImage from './profilePic';
 import NavBar from '../auth/NavigationBar';
 
-export class ProfileScreen extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      userProfile: null,
-      posts: [],
-      refreshing: false,
-    };
-  }
+const ProfileScreen = ({ navigation, route }) => {
+  const { userID, status } = route.params;
+  const currentUser = FIREBASE_AUTH.currentUser;
+  const [userProfile, setUserProfile] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [friendStatus, setFriendStatus] = useState(null)
 
-  componentDidMount() {
-    this.fetchData();
-  }
-
-  fetchData = async () => {
-    const currentUser = FIREBASE_AUTH.currentUser;
-    let isMounted = true;
-
-    if (!currentUser) return;
+  const fetchData = async () => {
+    let tempUserID;
+    let tempFriendStatus;
+    if (!userID) {
+      tempUserID = currentUser.uid;
+      setFriendStatus("currentUser");
+      tempFriendStatus = "currentUser";
+    }
+    else {
+      tempUserID = userID;
+      setFriendStatus(status);
+      tempFriendStatus = status;
+    }
 
     try {
-      const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', tempUserID);
       const postsRef = collection(FIRESTORE_DB, 'Posts');
-      
-      if (!isMounted) return;
 
-      const docSnapshot = await getDoc(userProfileRef)
+      const docSnapshot = await getDoc(userProfileRef);
       if (docSnapshot.exists()) {
-        this.setState({ userProfile: docSnapshot.data() });
+        setUserProfile({ id: docSnapshot.id, ...docSnapshot.data()});
       } else {
         console.log("No such document!");
       }
 
-      const q = query(postsRef, where("userId", "==", currentUser.uid));
-
-      const querySnapshot = await getDocs(q);
-      const posts = [];
-      querySnapshot.forEach((doc) => {
-        posts.push({ id: doc.id, ...doc.data() });
-      });
-      this.setState({ posts });
+      if (tempFriendStatus == "currentUser" || tempFriendStatus == "friend") {
+        const q = query(postsRef, where("userId", "==", tempUserID));
+        const querySnapshot = await getDocs(q);
+        const postsArray = [];
+        querySnapshot.forEach((doc) => {
+          postsArray.push({ id: doc.id, ...doc.data() });
+        });
+        setPosts(postsArray);
+      }
     } catch (error) {
       console.error("Error fetching posts: ", error);
     } finally {
-      if (isMounted) {
-        this.setState({ refreshing: false });
-      }
+      setRefreshing(false);
+    }
   }
-  return () => {
-    isMounted = false; // Set flag to false when unmounting
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const onRefresh =() => {
+    setRefreshing(true);
+    fetchData();
   };
-}
 
-  onRefresh = () => {
-    this.setState({ refreshing: true });
-    this.fetchData().finally(() => {
-      this.setState({ refreshing: false });
-    });
-  }
-
-  onLogOut = () => {
-    FIREBASE_AUTH.signOut().then(() => {
-      this.props.navigation.dispatch(
+  const onLogOut = async () => {
+    try {
+      await FIREBASE_AUTH.signOut();
+      navigation.dispatch(
         CommonActions.reset({
           index: 0,
           routes: [{ name: 'Landing' }],
         })
       );
-    }).catch((error) => {
+    } catch (error) {
       console.error("Error logging out: ", error);
-    });
-  }
+    }
+  };
 
-  goToSettingsScreen = () => {
-    this.props.navigation.navigate('Settings');
-  }
+  const goToSettingsScreen = () => {
+    navigation.navigate('Settings');
+  };
 
-  goToFriendsScreen = () => {
-    this.props.navigation.navigate('Friends');
-  }
+  const goToFriendsScreen = () => {
+    navigation.navigate('Friends');
+  };
 
-  render() {
-    const { userProfile, posts, refreshing } = this.state;
 
-    return (
-      <ImageBackground
-        source={require('../../assets/background4.jpg')}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <TouchableOpacity onPress={this.goToSettingsScreen} style={styles.settingsButton}>
-              <Ionicons name="settings-sharp" size={32} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={this.goToFriendsScreen} style={styles.friendsButton}>
-              <Ionicons name="people-outline" size={32} color="black" />
-            </TouchableOpacity>
-          <ScrollView 
-            style={styles.scrollView} 
-            contentContainerStyle={styles.scrollContent}
-            refreshControl={
-              <RefreshControl 
-                refreshing={refreshing}
-                onRefresh={this.onRefresh}
-              />
-            }
-          >
-            {userProfile && (
-              <View style={styles.content}>
-                <UploadImage refreshing={refreshing} />
-                <View style={styles.bioTextContainer}>
-                  <Text style={styles.bioText}>{userProfile.name}</Text>
-                  <View style={styles.detailsContainer}>
-                    <View style={styles.detail}>
-                      <Text style={styles.detailText}>Friends</Text>
-                      <Text style={styles.detailStat}>{userProfile.friends}</Text>
-                    </View>
-                    <View style={styles.detail}>
-                      <Text style={styles.detailText}>Posts</Text>
-                      <Text style={styles.detailStat}>{userProfile.posts}</Text>
-                    </View>
+  return (
+    <ImageBackground
+      source={require('../../assets/background4.jpg')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.container}>
+        <TouchableOpacity onPress={goToSettingsScreen} style={styles.settingsButton}>
+          <Ionicons name="settings-sharp" size={32} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={goToFriendsScreen} style={styles.friendsButton}>
+          <Ionicons name="people-outline" size={32} color="black" />
+        </TouchableOpacity>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
+        >
+          {userProfile && (
+            <View style={styles.content}>
+              <UploadImage refreshing={refreshing} userID={userProfile.id} status={friendStatus} />
+              <View style={styles.bioTextContainer}>
+                <Text style={styles.bioText}>{userProfile.name}</Text>
+                <View style={styles.detailsContainer}>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Friends</Text>
+                    <Text style={styles.detailStat}>{userProfile.friends}</Text>
+                  </View>
+                  <View style={styles.detail}>
+                    <Text style={styles.detailText}>Posts</Text>
+                    <Text style={styles.detailStat}>{userProfile.posts}</Text>
                   </View>
                 </View>
               </View>
-            )}
+            </View>
+          )}
 
-            <View style={styles.tasksContainer}>
-              <View style={styles.grid}>
-                {posts.map((task, index) => (
-                  <View key={index} onPress={() => this.handleImagePress(task)}>
-                    <View style={styles.postContainer}>
-                      <Image source={{ uri: task.image }} style={styles.photo} />
-                      <View style={styles.postDescription}>
-                        <Text style={styles.taskTitle}>{task.name}</Text>
-                        <Text>{task.description}</Text>
-                      </View>
+          <View style={styles.tasksContainer}>
+            <View style={styles.grid}>
+              {posts.map((task, index) => (
+                <TouchableOpacity key={task.id} onPress={() => handleImagePress(task)}>
+                  <View style={styles.postContainer}>
+                    <Image source={{ uri: task.image }} style={styles.photo} />
+                    <View style={styles.postDescription}>
+                      <Text style={styles.taskTitle}>{task.name}</Text>
+                      <Text>{task.description}</Text>
                     </View>
                   </View>
-                ))}
-              </View>
+                </TouchableOpacity>
+              ))}
             </View>
-          </ScrollView>
-          <NavBar navigation={this.props.navigation}></NavBar>
-        </SafeAreaView>
-      </ImageBackground>
-    );
-  }
-}
+          </View>
+        </ScrollView>
+        <NavBar navigation={navigation} />
+      </SafeAreaView>
+    </ImageBackground>
+  );
+};
 
 const styles = StyleSheet.create({
+  // ... (same as your original styles)
   container: {
     flex: 1,
   },

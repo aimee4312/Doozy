@@ -5,7 +5,7 @@ import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot, increment } f
 import SwitchSelector from 'react-native-switch-selector';
 
 
-const FriendsScreen = () => {
+const FriendsScreen = ({navigation}) => {
     const [page, setPage] = useState("friends-page");
     const [friends, setFriends] = useState([]);
     const [reqFriends, setReqFriends] = useState([]);
@@ -241,7 +241,7 @@ const FriendsScreen = () => {
 
 
    const ProfileCard = ({ item, status }) => (
-        <View style={styles.profileCard}>
+        <TouchableOpacity onPress={() => {console.log(item); navigation.replace('Profile', {userID: item.id, status: status})}} style={styles.profileCard}>
             <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
             <View style={styles.profileCardNames}>
                 <Text style={styles.nameText}> {item.name} </Text>
@@ -271,7 +271,7 @@ const FriendsScreen = () => {
                     </TouchableOpacity>
                 </View>
                 )}
-        </View>
+        </TouchableOpacity>
    );
 
 
@@ -298,7 +298,7 @@ const FriendsScreen = () => {
                 <View style={styles.profileCardContainer}>
                     <FlatList
                         data={filteredFriends}
-                        renderItem={ProfileCard}
+                        renderItem={({item}) => (<ProfileCard item={item} status={"friend"} />)}
                         keyExtractor={(item) => item.id} />
                 </View>
            </View>)}

@@ -7,28 +7,24 @@ import { doc, updateDoc, getDoc, writeBatch, getDocs, collection, deleteDoc } fr
 import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/storage';
 
 
-export default function UploadImage({ refreshing }) {
+export default function UploadImage( props ) {
+    const { refreshing, userID, status } = props;
     const [image, setImage] = useState(null);
-    const [userProfile, setUserProfile] = useState(null);
-    const currentUser = FIREBASE_AUTH.currentUser;
 
     useEffect(() => {
         fetchUserProfile();
     }, [refreshing, image]);
 
     const fetchUserProfile = async () => {
-        if (currentUser) {
-            const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+        const userProfileRef = doc(FIRESTORE_DB, 'Users', userID);
 
-            try {
-                const docSnapshot = await getDoc(userProfileRef);
-                if (docSnapshot.exists()) {
-                    setUserProfile(docSnapshot.data());
-                    setImage(docSnapshot.data().profilePic);
-                }
-            } catch (error) {
-                console.error('Error fetching user profile: ', error);
+        try {
+            const docSnapshot = await getDoc(userProfileRef);
+            if (docSnapshot.exists()) {
+                setImage(docSnapshot.data().profilePic);
             }
+        } catch (error) {
+            console.error('Error fetching user profile: ', error);
         }
     };
 
@@ -52,7 +48,6 @@ export default function UploadImage({ refreshing }) {
             if (_image.assets && !_image.cancelled) {
                 const { uri } = _image.assets[0];
                 const fileName = uri.split('/').pop();
-                console.log(fileName);
                 const uploadResp = await uploadToFirebase(uri, `profilePics/${fileName}`, (progress) =>
                     console.log(progress)
                 );
@@ -111,7 +106,6 @@ export default function UploadImage({ refreshing }) {
                 }
                 await batch.commit()
                 const storagePath = getStoragePathFromUrl(prevProfilePic);
-                console.log(storagePath);
                 if (storagePath !== "profilePics/default.jpg") {
                     const profilePicRef = ref(getStorage(), storagePath);
                     deleteObject(profilePicRef);
@@ -127,7 +121,7 @@ export default function UploadImage({ refreshing }) {
     return (
         <View style={imageUploaderStyles.container}>
             {
-                image && <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100 }} />
+                image && <Image source={{ uri: image }} style={{ width: 100, height: 100 }} />
             }
             <View style={imageUploaderStyles.uploadBtnContainer}>
                 <TouchableOpacity onPress={addImage} style={imageUploaderStyles.uploadBtn} >

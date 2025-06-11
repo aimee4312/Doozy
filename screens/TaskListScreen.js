@@ -283,8 +283,8 @@ const TaskListScreen = (props) => {
                 await cancelNotifications(task.notificationIds); // cancel any upcoming notifications
 
                 const taskRef = doc(tasksRef, task.id);
-                const newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat); // check if task repeats and return next possible date
-                if (newCompleteByDate) { // if it does repeat
+                let newCompleteByDate;
+                if (task.completeByDate && (newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat))) {// check if task repeats and return next possible date
                     batch.update(taskRef, {completeByDate: newCompleteByDate}); // set new completebydate, add one to post child counter, should be on its youngest child meaning no child has been uncompleted
                     if (task.reminders.length !== 0) { // schedule notifications
                         if (await configureNotifications()) { 
@@ -366,6 +366,7 @@ const TaskListScreen = (props) => {
         }
         while (currDueDate < new Date() || flag === 1) { //completed task late
             if (repeatEnds) {
+                console.log(repeatEnds);
                 let tempCurrDueDate = currDueDate;
                 tempCurrDueDate.setHours(0, 0, 0, 0);
                 repeatEnds.setHours(0, 0, 0, 0);

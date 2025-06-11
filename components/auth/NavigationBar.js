@@ -19,7 +19,7 @@ const Bar = ({ navigation }) => {
                 <Text>Task</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                onPress={() => navigation.replace('Profile')}
+                onPress={() => navigation.replace('Profile', {userID: null, status: null})}
                 style={styles.button}>
                 <Text>Profile</Text>
             </TouchableOpacity>
