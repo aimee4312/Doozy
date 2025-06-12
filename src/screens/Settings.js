@@ -92,7 +92,7 @@ export default function Settings() {
 
     return (
         <ImageBackground
-            source={require('../../assets/background3.jpg')}
+            source={require('../assets/background3.jpg')}
             style={styles.backgroundImage}
             resizeMode="cover"
         >

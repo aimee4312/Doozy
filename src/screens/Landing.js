@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, ImageBackground } from 'react
 
 export default function LandingScreen({ navigation }) {
   return (
-    <ImageBackground source={require('../../assets/background.jpg')} style={styles.background}>
+    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
         <Text style={styles.appName}>Doozy</Text>
         <TouchableOpacity

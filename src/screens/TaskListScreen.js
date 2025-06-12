@@ -5,7 +5,7 @@ import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
 import ListSelect from '../components/task-page/ListSelect';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion, orderBy } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';

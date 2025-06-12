@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Dimensions, FlatList, Animated, TextInput, KeyboardAvoidingView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, doc, setDoc } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../../firebaseConfig';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const ListModal = (props) => {

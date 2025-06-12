@@ -4,16 +4,14 @@ import { FIREBASE_AUTH } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import LandingScreen from './components/auth/Landing';
-import RegisterScreen from './components/auth/Register';
-import LoginScreen from './components/auth/Login';
-import ProfileScreen from './components/profile/Profile';
-import SettingsScreen from './components/profile/Settings';
-import TimelineScreen from './screens/Timeline';
-import TaskListScreen from './screens/TaskListScreen';
-import TaskDetailsScreen from './components/profile/TaskDetails';
-import AddTaskScreen from './components/tasks/Task_db';
-import FriendsScreen from './screens/Friends';
+import LandingScreen from './src/screens/Landing';
+import RegisterScreen from './src/screens/Register';
+import LoginScreen from './src/screens/Login';
+import ProfileScreen from './src/screens/Profile';
+import SettingsScreen from './src/screens/Settings';
+import TimelineScreen from './src/screens/Timeline';
+import TaskListScreen from './src/screens/TaskListScreen';
+import FriendsScreen from './src/screens/Friends';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 // import { MenuProvider } from 'react-native-popup-menu';
@@ -68,8 +66,6 @@ export default function App() {
                 <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="TaskDetails" component={TaskDetailsScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="AddTask" component={AddTaskScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
               </>
             ) : (

@@ -4,7 +4,7 @@ import ScheduleMenu from './ScheduleMenu';
 import ListModal from './PopUpMenus/ListModal';
 import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../../firebaseConfig';
 import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from "expo-notifications";

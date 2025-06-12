@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Image, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase, FIREBASE_STORAGE} from '../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase, FIREBASE_STORAGE} from '../../../firebaseConfig';
 import { doc, updateDoc, getDoc, writeBatch, getDocs, collection, deleteDoc } from 'firebase/firestore';
 import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/storage';
 

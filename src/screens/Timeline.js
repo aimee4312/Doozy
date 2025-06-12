@@ -1,8 +1,8 @@
 import React, { Component, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, where, query } from "firebase/firestore";
-import NavBar from '../components/auth/NavigationBar';
+import NavBar from '../components/NavigationBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TimelineScreen = (props) => {

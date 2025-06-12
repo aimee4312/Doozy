@@ -1,25 +1,38 @@
 import React from 'react';
 import { View, Text, Button , StyleSheet, SafeAreaView, TextInput, Alert, TouchableOpacity} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, CommonActions } from '@react-navigation/native';
 
 
 const Bar = ({ navigation }) => {
     
+    const navigateTo = (screen, userID, status) => {
+        navigation.dispatch(
+            CommonActions.reset({
+                index: 0,
+                routes: [
+                    {
+                        name: screen,
+                        params: {userID: userID, status: status}
+                    }
+                ]
+            })
+        )
+    }
     return (
         <View style={styles.bar}>
             <View style={styles.emptySpace} />
             <TouchableOpacity 
-                onPress={() => navigation.replace('Timeline')}
+                onPress={() => {navigateTo('Timeline')}}
                 style={styles.button}>
                 <Text>Home</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                onPress={() => navigation.replace('TaskList')}
+                onPress={() => {navigateTo('TaskList')}}
                 style={styles.button}>
                 <Text>Task</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                onPress={() => navigation.replace('Profile', {userID: null, status: null})}
+                onPress={() => {navigateTo('Profile', null, null)}}
                 style={styles.button}>
                 <Text>Profile</Text>
             </TouchableOpacity>

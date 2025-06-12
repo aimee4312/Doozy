@@ -6,8 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import ListModal from './PopUpMenus/ListModal';
 import ScheduleMenu from './ScheduleMenu';
 import { doc, collection, addDoc, runTransaction, writeBatch, increment, arrayUnion } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
-import NavBar from "../auth/NavigationBar";
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebaseConfig';
+import NavBar from "../NavigationBar";
 import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from "expo-notifications";
 

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View, TouchableWithoutFeedback, TextInput, Animated, Keyboard, Dimensions, Image} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { arrayRemove, collection, doc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
-import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebaseConfig";
 
 
 const ListSelect = (props) => {

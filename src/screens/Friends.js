@@ -1,8 +1,9 @@
 import React, {useEffect, useState, useRef} from 'react';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
 import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot, increment } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
+import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions'
 
 
 const FriendsScreen = ({navigation}) => {
@@ -27,7 +28,6 @@ const FriendsScreen = ({navigation}) => {
         unsubscribeRef.current = [unsubscribeFriends, unsubscribeRequests, unsubscribeRequesting];
 
         return () => {
-            console.log(unsubscribeRef);
             unsubscribeRef.current.forEach(unsub => unsub());
           };
     
@@ -129,109 +129,14 @@ const FriendsScreen = ({navigation}) => {
         // || profile.username.toLowerCase().startsWith(searchProfilesText.toLowerCase())
     }); // error occuring because there isnt a username property on some of the users
 
-
-    const addFriend = async (friend) => { // add person to AllFriends, remove person from FriendRequests, add current user to AllFriends, remove currentUser from SentRequests
-        if (!currentUser) return;
-
-        const currUserProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-        const otherUserProfileRef = doc(FIRESTORE_DB, 'Users', friend.id);
-        const allFriendProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
-        const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "FriendRequests", friend.id);
-        const currUserAllFriendsRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
-        const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", friend.id, "SentRequests", currentUser.uid);
-        try {
-            const batch = writeBatch(FIRESTORE_DB);
-            const userSnap = await getDoc(currUserProfileRef);
-            const userData = userSnap.data()
-            batch.set(allFriendProfileRef, {name: friend.name, username: friend.username, profilePic: friend.profilePic});
-            batch.set(currUserAllFriendsRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
-            batch.delete(friendReqProfileRef);
-            batch.delete(currUserSentReqRef);
-            batch.update(currUserProfileRef, {friends: increment(1)});
-            batch.update(otherUserProfileRef, {friends: increment(1)});
-
-
-            await batch.commit()
-        } catch (error) {
-            console.error("Error adding friend:", error);
-        }
-    }
-
-
-    const deleteRequest = async (friend) => {
-        if (!currentUser) return;
-        const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "FriendRequests", friend.id);
-        const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", friend.id, "SentRequests", currentUser.uid);
-
-        try {
-           const batch = writeBatch(FIRESTORE_DB);
-           batch.delete(friendReqProfileRef);
-           batch.delete(currUserSentReqRef);
-           await batch.commit();
-        } catch(error) {
-            console.error("Error deleting request:", error);
-        }
-    }
-
-    const deletePendingRequest = async (user) => {
-        if (!currentUser) return;
-        const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests", user.id);
-        const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", user.id, "FriendRequests", currentUser.uid);
-
-        try {
-           const batch = writeBatch(FIRESTORE_DB);
-           batch.delete(friendReqProfileRef);
-           batch.delete(currUserSentReqRef);
-           await batch.commit();
-        } catch(error) {
-            console.error("Error deleting pending request:", error);
-        }
-    }
-
-    const deleteFriend = async (friend) => { // add this later
-        if (!currentUser) return;
-        const currUserFriendRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
-        const recUserFriendRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
-
-        try {
-           const batch = writeBatch(FIRESTORE_DB);
-           batch.delete(currUserFriendRef);
-           batch.delete(recUserFriendRef);
-           // add decrement friend 
-           await batch.commit();
-        } catch(error) {
-            console.error("Error deleting friend:", error);
-        }
-    }
-
-
-    const requestUser = async (user) => { // update currentusers requesting, update other user's requested
-        const currUserProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-        const requestingRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests", user.id);
-        const requestedRef = doc(FIRESTORE_DB, "Requests", user.id, "FriendRequests", currentUser.uid);
-
-        try {
-            const batch = writeBatch(FIRESTORE_DB);
-            const userSnapshot = await getDoc(currUserProfileRef);
-            const userData = userSnapshot.data();
-            batch.set(requestedRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
-            batch.set(requestingRef, {name: user.name, username: user.username, profilePic: user.profilePic});
-            await batch.commit();
-            console.log("user request successful")
-        } catch(error) {
-            console.error("Error requesting user:", error);
-        }
-    } 
-
-
     const renderProfileCard = ({item}) => {
         let status;
         const reqFriendsIds = reqFriends.map(data => data.id);
         if (reqFriendsIds.includes(item.id)) {
-            status = "requested";
+            status = "userReceivedRequest"; //requested
         }
         else if (requesting.some(obj => obj.id === item.id)){
-            status = "requesting";
+            status = "userSentRequest"; //requesting
         }
         else {
             status = "stranger";
@@ -241,13 +146,13 @@ const FriendsScreen = ({navigation}) => {
 
 
    const ProfileCard = ({ item, status }) => (
-        <TouchableOpacity onPress={() => {console.log(item); navigation.replace('Profile', {userID: item.id, status: status})}} style={styles.profileCard}>
+        <TouchableOpacity onPress={() => {console.log(item); navigation.navigate('Profile', {userID: item.id, status: status})}} style={styles.profileCard}>
             <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
             <View style={styles.profileCardNames}>
                 <Text style={styles.nameText}> {item.name} </Text>
                 <Text style={styles.usernameText}> {item.username} </Text>
             </View>
-                {page === "add-friends-page" && status === "requested" &&
+                {page === "add-friends-page" && status === "userReceivedRequest" &&
                 (<View style={styles.requestConfirmationButtons}>
                     <TouchableOpacity style={styles.deleteButton} onPress={() => {deleteRequest(item)}}>
                         <Text style={styles.deleteButtonText}>Delete</Text>
@@ -257,7 +162,7 @@ const FriendsScreen = ({navigation}) => {
                     </TouchableOpacity>
                 </View>
                 )}
-                {page ==="add-friends-page" && status === "requesting" &&
+                {page ==="add-friends-page" && status === "userSentRequest" &&
                 (<View style={styles.requestConfirmationButtons}>
                     <TouchableOpacity style={styles.confirmButton} onPress={() => {deletePendingRequest(item)}}>
                         <Text style={styles.confirmButtonText}>Requested</Text>
