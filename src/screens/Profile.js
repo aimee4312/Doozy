@@ -1,24 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground, RefreshControl } from 'react-native';
+import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground } from 'react-native';
 import { CommonActions, useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import UploadImage from '../components/profile/profilePic';
 import NavBar from '../components/NavigationBar';
 import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions'
-const ProfileScreen = ({ navigation, route }) => {
+
+const ProfileScreen = ({ route, navigation }) => {
   const { userID, status } = route.params;
   const routes = useNavigationState(state => state.routes)
   const currentUser = FIREBASE_AUTH.currentUser;
   const [userProfile, setUserProfile] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
   const [friendStatus, setFriendStatus] = useState(null)
 
-  const fetchData = async () => {
+  function fetchData() {
     let tempUserID;
     let tempFriendStatus;
+    let unsubscribeProfile = () => {};
+
     if (!userID) {
       tempUserID = currentUser.uid;
       setFriendStatus("currentUser");
@@ -34,37 +35,39 @@ const ProfileScreen = ({ navigation, route }) => {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', tempUserID);
       const postsRef = collection(FIRESTORE_DB, 'Posts');
 
-      const docSnapshot = await getDoc(userProfileRef);
-      if (docSnapshot.exists()) {
-        setUserProfile({ id: docSnapshot.id, ...docSnapshot.data()});
-      } else {
-        console.log("No such document!");
-      }
+      unsubscribeProfile = onSnapshot(userProfileRef, (userSnap) => {
+        if (userSnap.exists()) {
+          setUserProfile({ id: userSnap.id, ...userSnap.data() });
+        }
+        else {
+          console.log("No such document!");
+        }
+      })
 
       if (tempFriendStatus == "currentUser" || tempFriendStatus == "friend") {
         const q = query(postsRef, where("userId", "==", tempUserID));
-        const querySnapshot = await getDocs(q);
-        const postsArray = [];
-        querySnapshot.forEach((doc) => {
-          postsArray.push({ id: doc.id, ...doc.data() });
-        });
-        setPosts(postsArray);
+        getDocs(q).then((querySnapshot) => {
+          const postsArray = [];
+          querySnapshot.forEach((doc) => {
+            postsArray.push({ id: doc.id, ...doc.data() });
+          });
+          setPosts(postsArray);
+        })
+        .catch((error) => {
+          console.error("Error fetching posts: ", error);
+        })
       }
+      return unsubscribeProfile;
     } catch (error) {
       console.error("Error fetching posts: ", error);
-    } finally {
-      setRefreshing(false);
     }
   }
 
   useEffect(() => {
-    fetchData();
+    const unsubscribeProfile = fetchData();
+    
+    return () => unsubscribeProfile();
   }, []);
-
-  const onRefresh =() => {
-    setRefreshing(true);
-    fetchData();
-  };
 
   const onLogOut = async () => {
     try {
@@ -89,9 +92,8 @@ const ProfileScreen = ({ navigation, route }) => {
   };
 
   const handleStatusChange = () => {
-    console.log(status);
     if (friendStatus == "currentUser") {
-      openEditProfile();
+      navigation.navigate("EditProfile", {user: userProfile});
     }
     else if (friendStatus == "friend") {
       deleteFriend(userProfile);
@@ -105,10 +107,6 @@ const ProfileScreen = ({ navigation, route }) => {
       deletePendingRequest(userProfile);
       setFriendStatus("stranger")
     }
-  }
-
-  const openEditProfile = () => {
-
   }
 
   return (
@@ -138,18 +136,11 @@ const ProfileScreen = ({ navigation, route }) => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-            />
-          }
         >
           {userProfile && (
             <View style={styles.profileContainer}>
               <View style={styles.upperProfileContainer}>
                 <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100, borderRadius: 50 }} />
-                {/* <UploadImage refreshing={refreshing} userID={userProfile.id} status={friendStatus} /> */}
                 <View style={styles.detailsContainer}>
                   <View style={styles.dataContainer}>
                     <View style={styles.data}>

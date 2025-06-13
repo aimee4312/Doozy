@@ -71,6 +71,7 @@ export const deleteFriend = async (friend) => { // add this later
 
     if (!currentUser) return;
     
+    const currUserProfileRef = doc(FIRESTORE_DB, "Users", currentUser.uid);
     const currUserFriendRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
     const recUserFriendRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
 
@@ -79,6 +80,7 @@ export const deleteFriend = async (friend) => { // add this later
         batch.delete(currUserFriendRef);
         batch.delete(recUserFriendRef);
         // add decrement friend 
+        batch.update(currUserProfileRef, {friends: increment(-1)});
         await batch.commit();
     } catch(error) {
         console.error("Error deleting friend:", error);

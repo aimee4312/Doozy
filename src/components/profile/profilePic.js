@@ -8,12 +8,12 @@ import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/sto
 
 
 export default function UploadImage( props ) {
-    const { refreshing, userID, status } = props;
+    const { userID } = props;
     const [image, setImage] = useState(null);
 
     useEffect(() => {
         fetchUserProfile();
-    }, [refreshing, image]);
+    }, [image]);
 
     const fetchUserProfile = async () => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', userID);

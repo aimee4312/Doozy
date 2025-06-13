@@ -12,6 +12,8 @@ import SettingsScreen from './src/screens/Settings';
 import TimelineScreen from './src/screens/Timeline';
 import TaskListScreen from './src/screens/TaskListScreen';
 import FriendsScreen from './src/screens/Friends';
+import EditProfileScreen from './src/screens/EditProfile';
+import EditFieldScreen from './src/screens/EditField';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 // import { MenuProvider } from 'react-native-popup-menu';
@@ -67,6 +69,8 @@ export default function App() {
                 <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{headerShown: false}} />
+                <Stack.Screen name="EditField" component={EditFieldScreen} options={{headerShown: false}} />
               </>
             ) : (
               <>
