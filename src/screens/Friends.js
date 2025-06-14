@@ -4,6 +4,7 @@ import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, S
 import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot, increment } from "firebase/firestore";
 import SwitchSelector from 'react-native-switch-selector';
 import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions'
+import { Ionicons } from '@expo/vector-icons';
 
 
 const FriendsScreen = ({navigation}) => {
@@ -47,7 +48,6 @@ const FriendsScreen = ({navigation}) => {
 
         try {
             const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
-            console.log("reading friends")
             const unsubscribeFriends = onSnapshot(AllFriendsRef, 
                 (snapshot) => {
                     const tempFriends = [];
@@ -66,7 +66,6 @@ const FriendsScreen = ({navigation}) => {
 
         try {
             const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
-            console.log("reading requests")
             const unsubscribeRequests = onSnapshot(friendsReqRef, 
                 (snapshot) => {
                     const tempFriendsReq = []
@@ -85,7 +84,6 @@ const FriendsScreen = ({navigation}) => {
 
         try {
             const requestingRef = collection(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests");
-            console.log("reading requesting")
             const unsubscribeRequesting = onSnapshot(requestingRef, 
                 (snapshot) => {
                     const tempRequesting = []
@@ -106,7 +104,6 @@ const FriendsScreen = ({navigation}) => {
         try {
             const friendUIDs = friends.map(doc => doc.id);
             const profilesRef = collection(FIRESTORE_DB, 'Users');
-            console.log("reading profiles");
             const unsubscribeProfiles = onSnapshot(profilesRef, 
                 (snapshot) => {
                     const tempProfiles = snapshot.docs
@@ -146,7 +143,7 @@ const FriendsScreen = ({navigation}) => {
 
 
    const ProfileCard = ({ item, status }) => (
-        <TouchableOpacity onPress={() => {console.log(item); navigation.navigate('Profile', {userID: item.id, status: status})}} style={styles.profileCard}>
+        <TouchableOpacity onPress={() => {navigation.navigate('Profile', {userID: item.id, status: status})}} style={styles.profileCard}>
             <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
             <View style={styles.profileCardNames}>
                 <Text style={styles.nameText}> {item.name} </Text>
@@ -184,6 +181,11 @@ const FriendsScreen = ({navigation}) => {
 
    return (
        <SafeAreaView style={styles.container}>
+            <View style={styles.topContainer}>
+              <TouchableOpacity onPress={navigation.goBack}>
+                <Ionicons name='chevron-back' size={24} color='black'/>
+              </TouchableOpacity>
+          </View>
            <SwitchSelector
                options=
                    {[{label: "Friends", value: "friends-page"},
@@ -243,6 +245,11 @@ const styles = StyleSheet.create ({
         flexDirection: 'column',
         justifyContent: 'flex-start'
    },
+   topContainer: {
+        marginHorizontal: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
    searchBrowseContainer: {
         flex: 1,
    },
