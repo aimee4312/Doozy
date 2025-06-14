@@ -91,6 +91,10 @@ const ProfileScreen = ({ route, navigation }) => {
     navigation.navigate('Friends');
   };
 
+  const goToAddFriendsScreen = () => {
+    navigation.navigate('AddFriends');
+  };
+
   const handleStatusChange = () => {
     if (friendStatus == "currentUser") {
       navigation.navigate("EditProfile", {user: userProfile});
@@ -125,7 +129,7 @@ const ProfileScreen = ({ route, navigation }) => {
             <Text style={styles.usernameText}>{userProfile ? userProfile.username : ""}</Text>
           </View>
           {friendStatus == "currentUser" && (<View style={styles.topContainerButtons}>
-            <TouchableOpacity onPress={goToFriendsScreen} style={styles.friendsButton}>
+            <TouchableOpacity onPress={goToAddFriendsScreen} style={styles.friendsButton}>
               <Ionicons name="people-outline" size={32} color="black" />
             </TouchableOpacity>
             <TouchableOpacity onPress={goToSettingsScreen} style={styles.settingsButton}>
@@ -143,10 +147,10 @@ const ProfileScreen = ({ route, navigation }) => {
                 <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100, borderRadius: 50 }} />
                 <View style={styles.detailsContainer}>
                   <View style={styles.dataContainer}>
-                    <View style={styles.data}>
+                    <TouchableOpacity onPress={goToFriendsScreen} style={styles.data}>
                       <Text style={styles.dataText}>Friends</Text>
                       <Text style={styles.dataStat}>{userProfile.friends}</Text>
-                    </View>
+                    </TouchableOpacity>
                     <View style={styles.data}>
                       <Text style={styles.dataText}>Posts</Text>
                       <Text style={styles.dataStat}>{userProfile.posts}</Text>

@@ -1,183 +1,36 @@
-import React, {useEffect, useState, useRef} from 'react';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
+import React, {useEffect, useState} from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
-import { collection, getDocs, writeBatch, doc, getDoc, onSnapshot, increment } from "firebase/firestore";
-import SwitchSelector from 'react-native-switch-selector';
-import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions'
+import { fetchFriends } from '../utils/friendFunctions'
 import { Ionicons } from '@expo/vector-icons';
 
 
 const FriendsScreen = ({navigation}) => {
-    const [page, setPage] = useState("friends-page");
     const [friends, setFriends] = useState([]);
-    const [reqFriends, setReqFriends] = useState([]);
-    const [requesting, setRequesting] = useState([]);
-    const [profiles, setProfiles] = useState([]);
     const [searchText, setSearchText] = useState("");
-    const [searchProfilesText, setSearchProfilesText] = useState("");
-    const unsubscribeRef = useRef([]);
-
-    const currentUser = FIREBASE_AUTH.currentUser;
-
 
     useEffect(() => {
 
-        const unsubscribeFriends = fetchFriends();
-        const unsubscribeRequests = fetchRequests();
-        const unsubscribeRequesting = fetchRequesting();
+        const unsubscribeFriends = fetchFriends(setFriends);
 
-        unsubscribeRef.current = [unsubscribeFriends, unsubscribeRequests, unsubscribeRequesting];
-
-        return () => {
-            unsubscribeRef.current.forEach(unsub => unsub());
-          };
+        return () => unsubscribeFriends()
     
     }, []);
 
-    useEffect(() => {
-
-        const unsubscribeProfiles = fetchProfiles();
-
-        return () => unsubscribeProfiles();
-
-    }, [friends, reqFriends, requesting]);
-
-
-
-    function fetchFriends() {
-
-        try {
-            const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
-            const unsubscribeFriends = onSnapshot(AllFriendsRef, 
-                (snapshot) => {
-                    const tempFriends = [];
-                    snapshot.forEach((doc) => {
-                        tempFriends.push({ id: doc.id, ...doc.data() });
-                    });
-                    setFriends(tempFriends);
-                });
-            return unsubscribeFriends;
-        } catch (error) {
-            console.error("Error fetching friends:", error);
-        }
-    }
-  
-    function fetchRequests () {
-
-        try {
-            const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
-            const unsubscribeRequests = onSnapshot(friendsReqRef, 
-                (snapshot) => {
-                    const tempFriendsReq = []
-                    snapshot.forEach((doc) => {
-                        tempFriendsReq.push({ id: doc.id, ...doc.data() });
-                    });
-                    setReqFriends(tempFriendsReq);
-                }
-            );
-            return unsubscribeRequests;
-        } catch (error) {
-            console.error("Error fetching friend requests:", error);
-        }
-    }
-    function fetchRequesting() {
-
-        try {
-            const requestingRef = collection(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests");
-            const unsubscribeRequesting = onSnapshot(requestingRef, 
-                (snapshot) => {
-                    const tempRequesting = []
-                    snapshot.forEach((doc) => {
-                        tempRequesting.push({ id: doc.id });
-                    });
-                    setRequesting(tempRequesting);
-                }
-            );
-            return unsubscribeRequesting;
-        } catch (error) {
-            console.error("Error fetching requesting:", error);
-        }
-    }
-
-    function fetchProfiles() {
-
-        try {
-            const friendUIDs = friends.map(doc => doc.id);
-            const profilesRef = collection(FIRESTORE_DB, 'Users');
-            const unsubscribeProfiles = onSnapshot(profilesRef, 
-                (snapshot) => {
-                    const tempProfiles = snapshot.docs
-                    .filter(doc => doc.id !== currentUser.uid && !friendUIDs.includes(doc.id))
-                    .map(doc => ({ id: doc.id, ...doc.data()}));
-                    setProfiles(tempProfiles);
-                }
-            );
-            return unsubscribeProfiles;
-        } catch (error) {
-            console.error("Error fetching profiles:", error);
-        }
-    }
 
     const filteredFriends = friends.filter((friend) => {
         return friend.name.toLowerCase().startsWith(searchText.toLowerCase()) || friend.username.toLowerCase().startsWith(searchText.toLowerCase())
     });
-    const filteredProfiles = profiles.filter((profile) => {
-        return profile.name.toLowerCase().startsWith(searchProfilesText.toLowerCase()) 
-        // || profile.username.toLowerCase().startsWith(searchProfilesText.toLowerCase())
-    }); // error occuring because there isnt a username property on some of the users
-
-    const renderProfileCard = ({item}) => {
-        let status;
-        const reqFriendsIds = reqFriends.map(data => data.id);
-        if (reqFriendsIds.includes(item.id)) {
-            status = "userReceivedRequest"; //requested
-        }
-        else if (requesting.some(obj => obj.id === item.id)){
-            status = "userSentRequest"; //requesting
-        }
-        else {
-            status = "stranger";
-        }
-        return <ProfileCard item={item} status={status}/>
-    };
 
 
-   const ProfileCard = ({ item, status }) => (
-        <TouchableOpacity onPress={() => {navigation.navigate('Profile', {userID: item.id, status: status})}} style={styles.profileCard}>
+   const ProfileCard = ({ item }) => (
+        <TouchableOpacity onPress={() => {navigation.navigate('Profile', {userID: item.id, status: "friend"})}} style={styles.profileCard}>
             <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
             <View style={styles.profileCardNames}>
                 <Text style={styles.nameText}> {item.name} </Text>
                 <Text style={styles.usernameText}> {item.username} </Text>
             </View>
-                {page === "add-friends-page" && status === "userReceivedRequest" &&
-                (<View style={styles.requestConfirmationButtons}>
-                    <TouchableOpacity style={styles.deleteButton} onPress={() => {deleteRequest(item)}}>
-                        <Text style={styles.deleteButtonText}>Delete</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.confirmButton} onPress={() => {addFriend(item)}}>
-                        <Text style={styles.confirmButtonText}>Confirm</Text>
-                    </TouchableOpacity>
-                </View>
-                )}
-                {page ==="add-friends-page" && status === "userSentRequest" &&
-                (<View style={styles.requestConfirmationButtons}>
-                    <TouchableOpacity style={styles.confirmButton} onPress={() => {deletePendingRequest(item)}}>
-                        <Text style={styles.confirmButtonText}>Requested</Text>
-                    </TouchableOpacity>
-                </View>
-                )}
-                {page ==="add-friends-page" && status === "stranger" &&
-                (<View style={styles.requestConfirmationButtons}>
-                    <TouchableOpacity style={styles.confirmButton} onPress={() =>{requestUser(item)}}>
-                        <Text style={styles.confirmButtonText}>Add Friend</Text>
-                    </TouchableOpacity>
-                </View>
-                )}
         </TouchableOpacity>
    );
-
-
-
 
    return (
        <SafeAreaView style={styles.container}>
@@ -186,15 +39,7 @@ const FriendsScreen = ({navigation}) => {
                 <Ionicons name='chevron-back' size={24} color='black'/>
               </TouchableOpacity>
           </View>
-           <SwitchSelector
-               options=
-                   {[{label: "Friends", value: "friends-page"},
-                   {label: "Add Friends", value: "add-friends-page"}]}
-               initial={0}
-               onPress={value => {setSearchProfilesText(""); setSearchText(""); setPage(value);}}
-           />
-           {page === "friends-page" &&
-           (<View style={styles.searchBrowseContainer}>
+           <View style={styles.searchBrowseContainer}>
                 <View style={styles.searchBoxContainer}>
                     <TextInput 
                         placeholder='Search Friends...' 
@@ -205,35 +50,10 @@ const FriendsScreen = ({navigation}) => {
                 <View style={styles.profileCardContainer}>
                     <FlatList
                         data={filteredFriends}
-                        renderItem={({item}) => (<ProfileCard item={item} status={"friend"} />)}
+                        renderItem={({item}) => (<ProfileCard item={item} />)}
                         keyExtractor={(item) => item.id} />
                 </View>
-           </View>)}
-           {page === "add-friends-page" &&
-           (<View style={styles.searchBrowseContainer}>
-                <View style={styles.searchBoxContainer}>
-                    <TextInput 
-                        placeholder='Search Profiles...' 
-                        style={styles.searchBox}
-                        onChangeText={setSearchProfilesText}
-                    />
-                </View>
-                {searchProfilesText === "" && (
-                <View style={styles.profileCardContainer}>
-                    <FlatList
-                        data={reqFriends}
-                        renderItem={renderProfileCard}
-                        keyExtractor={(item) => item.id} />
-                </View>)}
-                {searchProfilesText !== "" && 
-                (
-                    <View style={styles.profileCardContainer}>
-                        <FlatList
-                            data={filteredProfiles}
-                            renderItem={renderProfileCard}
-                            keyExtractor={(item) => item.id} />
-                    </View>)}
-            </View>)}
+           </View>
        </SafeAreaView>
    );
 };

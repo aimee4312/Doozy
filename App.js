@@ -12,6 +12,7 @@ import SettingsScreen from './src/screens/Settings';
 import TimelineScreen from './src/screens/Timeline';
 import TaskListScreen from './src/screens/TaskListScreen';
 import FriendsScreen from './src/screens/Friends';
+import AddFriendsScreen from './src/screens/AddFriends';
 import EditProfileScreen from './src/screens/EditProfile';
 import EditFieldScreen from './src/screens/EditField';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -69,6 +70,7 @@ export default function App() {
                 <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="AddFriends" component={AddFriendsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{headerShown: false}} />
                 <Stack.Screen name="EditField" component={EditFieldScreen} options={{headerShown: false}} />
               </>

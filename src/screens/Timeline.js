@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc, collection, getDocs, where, query } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, where, query, orderBy } from "firebase/firestore";
 import NavBar from '../components/NavigationBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -65,7 +65,7 @@ const TimelineScreen = (props) => {
 
       let tempPosts = [];
       for (const batch of batches) {
-        const q = query(postsRef, where("userId", "in", batch));
+        const q = query(postsRef, where("userId", "in", batch), orderBy("timePosted", "desc"));
         const snapshot = await getDocs(q);
         tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({id: doc.id, ...doc.data(), ...friendMap[doc.data().userId]})))
       }

@@ -1,9 +1,9 @@
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { writeBatch, doc, getDoc, increment } from "firebase/firestore";
+import { writeBatch, doc, getDoc, increment, onSnapshot, collection } from "firebase/firestore";
 
 export const addFriend = async (friend) => { // add person to AllFriends, remove person from FriendRequests, add current user to AllFriends, remove currentUser from SentRequests
     const currentUser = FIREBASE_AUTH.currentUser;
-    
+
     if (!currentUser) return;
 
     const currUserProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
@@ -16,12 +16,12 @@ export const addFriend = async (friend) => { // add person to AllFriends, remove
         const batch = writeBatch(FIRESTORE_DB);
         const userSnap = await getDoc(currUserProfileRef);
         const userData = userSnap.data()
-        batch.set(allFriendProfileRef, {name: friend.name, username: friend.username, profilePic: friend.profilePic});
-        batch.set(currUserAllFriendsRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
+        batch.set(allFriendProfileRef, { name: friend.name, username: friend.username, profilePic: friend.profilePic });
+        batch.set(currUserAllFriendsRef, { name: userData.name, username: userData.username, profilePic: userData.profilePic });
         batch.delete(friendReqProfileRef);
         batch.delete(currUserSentReqRef);
-        batch.update(currUserProfileRef, {friends: increment(1)});
-        batch.update(otherUserProfileRef, {friends: increment(1)});
+        batch.update(currUserProfileRef, { friends: increment(1) });
+        batch.update(otherUserProfileRef, { friends: increment(1) });
 
 
         await batch.commit()
@@ -43,7 +43,7 @@ export const deleteRequest = async (friend) => {
         batch.delete(friendReqProfileRef);
         batch.delete(currUserSentReqRef);
         await batch.commit();
-    } catch(error) {
+    } catch (error) {
         console.error("Error deleting request:", error);
     }
 }
@@ -52,7 +52,7 @@ export const deletePendingRequest = async (user) => {
     const currentUser = FIREBASE_AUTH.currentUser;
 
     if (!currentUser) return;
-    
+
     const friendReqProfileRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests", user.id);
     const currUserSentReqRef = doc(FIRESTORE_DB, "Requests", user.id, "FriendRequests", currentUser.uid);
 
@@ -61,7 +61,7 @@ export const deletePendingRequest = async (user) => {
         batch.delete(friendReqProfileRef);
         batch.delete(currUserSentReqRef);
         await batch.commit();
-    } catch(error) {
+    } catch (error) {
         console.error("Error deleting pending request:", error);
     }
 }
@@ -70,7 +70,7 @@ export const deleteFriend = async (friend) => { // add this later
     const currentUser = FIREBASE_AUTH.currentUser;
 
     if (!currentUser) return;
-    
+
     const currUserProfileRef = doc(FIRESTORE_DB, "Users", currentUser.uid);
     const currUserFriendRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
     const recUserFriendRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
@@ -80,9 +80,9 @@ export const deleteFriend = async (friend) => { // add this later
         batch.delete(currUserFriendRef);
         batch.delete(recUserFriendRef);
         // add decrement friend 
-        batch.update(currUserProfileRef, {friends: increment(-1)});
+        batch.update(currUserProfileRef, { friends: increment(-1) });
         await batch.commit();
-    } catch(error) {
+    } catch (error) {
         console.error("Error deleting friend:", error);
     }
 }
@@ -98,11 +98,85 @@ export const requestUser = async (user) => { // update currentusers requesting, 
         const batch = writeBatch(FIRESTORE_DB);
         const userSnapshot = await getDoc(currUserProfileRef);
         const userData = userSnapshot.data();
-        batch.set(requestedRef, {name: userData.name, username: userData.username, profilePic: userData.profilePic});
-        batch.set(requestingRef, {name: user.name, username: user.username, profilePic: user.profilePic});
+        batch.set(requestedRef, { name: userData.name, username: userData.username, profilePic: userData.profilePic });
+        batch.set(requestingRef, { name: user.name, username: user.username, profilePic: user.profilePic });
         await batch.commit();
         console.log("user request successful")
-    } catch(error) {
+    } catch (error) {
         console.error("Error requesting user:", error);
+    }
+}
+
+export function fetchFriends(setFriends) { //setFriends
+    const currentUser = FIREBASE_AUTH.currentUser;
+    try {
+        const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
+        const unsubscribeFriends = onSnapshot(AllFriendsRef,
+            (snapshot) => {
+                const tempFriends = [];
+                snapshot.forEach((doc) => {
+                    tempFriends.push({ id: doc.id, ...doc.data() });
+                });
+                setFriends(tempFriends);
+            });
+        return unsubscribeFriends;
+    } catch (error) {
+        console.error("Error fetching friends:", error);
+    }
+}
+
+export function fetchRequests(setReqFriends) { //setReqFriends
+    const currentUser = FIREBASE_AUTH.currentUser;
+    try {
+        const friendsReqRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'FriendRequests');
+        const unsubscribeRequests = onSnapshot(friendsReqRef,
+            (snapshot) => {
+                const tempFriendsReq = []
+                snapshot.forEach((doc) => {
+                    tempFriendsReq.push({ id: doc.id, ...doc.data() });
+                });
+                setReqFriends(tempFriendsReq);
+            }
+        );
+        return unsubscribeRequests;
+    } catch (error) {
+        console.error("Error fetching friend requests:", error);
+    }
+}
+export function fetchRequesting(setRequesting) { //setRequesting(user sent requests)
+    const currentUser = FIREBASE_AUTH.currentUser;
+    try {
+        const requestingRef = collection(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests");
+        const unsubscribeRequesting = onSnapshot(requestingRef,
+            (snapshot) => {
+                const tempRequesting = []
+                snapshot.forEach((doc) => {
+                    tempRequesting.push({ id: doc.id });
+                });
+                setRequesting(tempRequesting);
+            }
+        );
+        return unsubscribeRequesting;
+    } catch (error) {
+        console.error("Error fetching requesting:", error);
+    }
+}
+
+export function fetchProfiles(friends, setProfiles) { //friends, setProfiles
+    const currentUser = FIREBASE_AUTH.currentUser;
+    try {
+        const friendUIDs = friends.map(doc => doc.id);
+        const profilesRef = collection(FIRESTORE_DB, 'Users');
+        const unsubscribeProfiles = onSnapshot(profilesRef,
+            (snapshot) => {
+                const tempProfiles = snapshot.docs
+                    .filter(doc => doc.id !== currentUser.uid && !friendUIDs.includes(doc.id))
+                    .map(doc => ({ id: doc.id, ...doc.data() }));
+                setProfiles(tempProfiles);
+            }
+        );
+        return unsubscribeProfiles;
+    } catch (error) {
+        console.error("Error fetching profiles:", error);
     }
 }
