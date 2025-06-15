@@ -4,6 +4,7 @@ import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
 import ListSelect from '../components/task-page/ListSelect';
+import CameraOptionMenu from '../components/task-page/PopUpMenus/CameraOptionMenu';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion, orderBy } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import * as ImagePicker from 'expo-image-picker';
@@ -27,6 +28,9 @@ const TaskListScreen = (props) => {
     const [sortModalVisible, setSortModalVisible] = useState(false);
     const [userProfile, setUserProfile] = useState();
     const [sortYPosition, setSortYPosition] = useState();
+    const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
+    const [resolver, setResolver] = useState(null);
+    const [hide, setHide] = useState(false);
     const unsubscribeRef = useRef();
     const sortRef = useRef(null);
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -223,7 +227,41 @@ const TaskListScreen = (props) => {
 
     const addImage = async () => {
         try {
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permissionResult.granted) {
+                alert("You need to allow permissions to access the library");
+                return;
+            }
+            console.log("hii")
             let _image = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+            });
+console.log("hii")
+            if (_image.assets && !_image.canceled) {
+                const { uri } = _image.assets[0];
+                const fileName = uri.split('/').pop();
+                const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
+                    console.log(progress)
+                );
+                return uploadResp.downloadUrl;
+            }
+        } catch (e) {
+            Alert.alert("Error Uploading Image " + e.message);
+        }
+    };
+
+    const takePhoto = async() => {
+        try{
+            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+            if (!permissionResult.granted) {
+                alert("Permission to access camera is required!")
+            }
+
+            let _image = await ImagePicker.launchCameraAsync({
                 mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [4, 3],
@@ -241,7 +279,7 @@ const TaskListScreen = (props) => {
         } catch (e) {
             Alert.alert("Error Uploading Image " + e.message);
         }
-    };
+    }
 
     const completeTask = async (index, complete) => { // clean this
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
@@ -266,6 +304,7 @@ const TaskListScreen = (props) => {
                     isCompletionTime: task.isCompletionTime,
                     listIds: task.listIds,
                     timeTaskCreated: task.timeTaskCreated,
+                    image: null,
                 })
 
                 let listRef;
@@ -276,10 +315,34 @@ const TaskListScreen = (props) => {
 
                 batch.update(userProfileRef, { posts: increment(1) }); // increment post count
 
-                const imageURI = await addImage(); // add image to post
-                if (!imageURI) {
-                    return; // make error
+                let imageURI;
+                while (true) {
+                    const cameraOption = await openCameraOptionMenu();
+                    if (cameraOption == 'cancel') {
+                        return;
+                    }
+                    else if (cameraOption == 'library') {
+                        console.log("here")
+                        imageURI = await addImage();
+                        if (imageURI) {
+                            break;
+                        }
+                    }
+                    else if (cameraOption == 'camera') {
+                        imageURI = await takePhoto();
+                        if (imageURI) {
+                            break;
+                        }
+                    }
+                    else {
+                        imageURI = null;
+                        break;
+                    }
                 }
+                // const imageURI = await addImage(); // add image to post
+                // if (!imageURI) {
+                //     return; // make error
+                // }
                 await cancelNotifications(task.notificationIds); // cancel any upcoming notifications
 
                 const taskRef = doc(tasksRef, task.id);
@@ -301,7 +364,9 @@ const TaskListScreen = (props) => {
                         batch.update(listRef, { taskIds: arrayRemove(docId) });
                     })
                 }
-                batch.update(postRef, { image: imageURI });
+                if (imageURI) {
+                    batch.update(postRef, { image: imageURI });
+                }
                 await batch.commit();
 
             } catch (error) {
@@ -606,6 +671,19 @@ const TaskListScreen = (props) => {
         setSortModalVisible(true);
     }
 
+    const openCameraOptionMenu = () => {
+        setCameraOptionModalVisible(true);
+        return new Promise((resolve) => setResolver(() => resolve));
+    }
+
+    const handleCameraOptionSelect = (option) => {
+        setCameraOptionModalVisible(false);
+        if (resolver) {
+            resolver(option);
+            setResolver(null);
+        }
+    }
+
     const testFunction = async () => {
         await Notifications.cancelScheduledNotificationAsync("aee5ac74-2f06-49a2-a5a0-d7d0501ea0fc");
     }
@@ -675,6 +753,18 @@ const TaskListScreen = (props) => {
                                     </TouchableWithoutFeedback>
                                 </View>
                             </TouchableWithoutFeedback>
+                        </Modal>
+                        <Modal
+                            visible={cameraOptionModalVisible}
+                            transparent={true}
+                            animationType='slide'
+                        >
+                            <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel")}}>
+                                <View style={{ flex: 1 }} />
+                            </TouchableWithoutFeedback>
+                            <CameraOptionMenu
+                                onChoose={handleCameraOptionSelect}
+                            />
                         </Modal>
                         <View style={styles.topBorder}>
                             <TouchableOpacity onPress={() => {closeSwipeCard(); setOpenDrawer(true)}}>
