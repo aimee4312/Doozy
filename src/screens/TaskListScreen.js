@@ -7,13 +7,13 @@ import ListSelect from '../components/task-page/ListSelect';
 import CameraOptionMenu from '../components/task-page/PopUpMenus/CameraOptionMenu';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion, orderBy } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
-import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from 'react-native-drawer-layout';
-import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Notifications from "expo-notifications";
+import { addImage, takePhoto } from '../utils/photoFunctions';
 
 const TaskListScreen = (props) => {
 
@@ -30,7 +30,6 @@ const TaskListScreen = (props) => {
     const [sortYPosition, setSortYPosition] = useState();
     const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
     const [resolver, setResolver] = useState(null);
-    const [hide, setHide] = useState(false);
     const unsubscribeRef = useRef();
     const sortRef = useRef(null);
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -225,62 +224,6 @@ const TaskListScreen = (props) => {
         setTaskItems(sortedFetchedTasks);
     }
 
-    const addImage = async () => {
-        try {
-            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (!permissionResult.granted) {
-                alert("You need to allow permissions to access the library");
-                return;
-            }
-            console.log("hii")
-            let _image = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-            });
-console.log("hii")
-            if (_image.assets && !_image.canceled) {
-                const { uri } = _image.assets[0];
-                const fileName = uri.split('/').pop();
-                const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
-                    console.log(progress)
-                );
-                return uploadResp.downloadUrl;
-            }
-        } catch (e) {
-            Alert.alert("Error Uploading Image " + e.message);
-        }
-    };
-
-    const takePhoto = async() => {
-        try{
-            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-            if (!permissionResult.granted) {
-                alert("Permission to access camera is required!")
-            }
-
-            let _image = await ImagePicker.launchCameraAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-            });
-
-            if (_image.assets && !_image.canceled) {
-                const { uri } = _image.assets[0];
-                const fileName = uri.split('/').pop();
-                const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
-                    console.log(progress)
-                );
-                return uploadResp.downloadUrl;
-            }
-        } catch (e) {
-            Alert.alert("Error Uploading Image " + e.message);
-        }
-    }
-
     const completeTask = async (index, complete) => { // clean this
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
@@ -319,10 +262,10 @@ console.log("hii")
                 while (true) {
                     const cameraOption = await openCameraOptionMenu();
                     if (cameraOption == 'cancel') {
+                        setCameraOptionModalVisible(false);
                         return;
                     }
                     else if (cameraOption == 'library') {
-                        console.log("here")
                         imageURI = await addImage();
                         if (imageURI) {
                             break;
@@ -339,6 +282,7 @@ console.log("hii")
                         break;
                     }
                 }
+                setCameraOptionModalVisible(false);
                 // const imageURI = await addImage(); // add image to post
                 // if (!imageURI) {
                 //     return; // make error
@@ -392,6 +336,8 @@ console.log("hii")
                     listIds: post.listIds,
                     timeTaskCreated: post.timeTaskCreated,
                     notificationIds: [],
+                    repeat: null,
+                    repeatEnds: null,
                 });
                 let listRef;
                 listIds.forEach((listId) => {
@@ -431,7 +377,6 @@ console.log("hii")
         }
         while (currDueDate < new Date() || flag === 1) { //completed task late
             if (repeatEnds) {
-                console.log(repeatEnds);
                 let tempCurrDueDate = currDueDate;
                 tempCurrDueDate.setHours(0, 0, 0, 0);
                 repeatEnds.setHours(0, 0, 0, 0);
@@ -677,7 +622,6 @@ console.log("hii")
     }
 
     const handleCameraOptionSelect = (option) => {
-        setCameraOptionModalVisible(false);
         if (resolver) {
             resolver(option);
             setResolver(null);
@@ -712,8 +656,7 @@ console.log("hii")
                                 setEditTaskVisible={setEditTaskVisible} 
                                 configureNotifications={configureNotifications} 
                                 scheduleNotifications={scheduleNotifications} 
-                                cancelNotifications={cancelNotifications} 
-                                addImage={addImage}
+                                cancelNotifications={cancelNotifications}
                                 isRepeatingTask={isRepeatingTask}
                             />
                         </ Modal>
@@ -759,7 +702,7 @@ console.log("hii")
                             transparent={true}
                             animationType='slide'
                         >
-                            <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel")}}>
+                            <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false)}}>
                                 <View style={{ flex: 1 }} />
                             </TouchableWithoutFeedback>
                             <CameraOptionMenu

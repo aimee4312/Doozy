@@ -6,11 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../../firebaseConfig';
 import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
-import * as ImagePicker from 'expo-image-picker';
-import * as Notifications from "expo-notifications";
+import { addImage, takePhoto } from '../../utils/photoFunctions';
+import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
 
 const EditTask = (props) => {
-    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, addImage, isRepeatingTask} = props;
+    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask} = props;
 
     const priorityRef = useRef(null);
 
@@ -30,6 +30,9 @@ const EditTask = (props) => {
     const [dateRepeatEnds, setDateRepeatEnds] = useState(task ? task.repeatEnds : null);
     const [selectedPriority, setSelectedPriority] = useState(task ? task.priority : null);
     const [selectedLists, setSelectedLists] = useState(task ? task.listIds : null)
+
+    const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
+    const [resolver, setResolver] = useState(null);
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -129,10 +132,31 @@ const EditTask = (props) => {
                     batch.update(listRef, {postIds: arrayUnion(postRef.id)});
                 })
 
-                const imageURI = await addImage(); // delete image if error occurs
-                if (!imageURI) {
-                    return; // make error
+                let imageURI;
+                while (true) {
+                    const cameraOption = await openCameraOptionMenu();
+                    if (cameraOption == 'cancel') {
+                        setCameraOptionModalVisible(false);
+                        return;
+                    }
+                    else if (cameraOption == 'library') {
+                        imageURI = await addImage();
+                        if (imageURI) {
+                            break;
+                        }
+                    }
+                    else if (cameraOption == 'camera') {
+                        imageURI = await takePhoto();
+                        if (imageURI) {
+                            break;
+                        }
+                    }
+                    else {
+                        imageURI = null;
+                        break;
+                    }
                 }
+                setCameraOptionModalVisible(false);
 
                 await cancelNotifications(task.notificationIds);
                 const taskRef = doc(tasksRef, task.id);
@@ -163,6 +187,18 @@ const EditTask = (props) => {
             setEditTaskVisible(false);
         } catch (error) {
             console.error("Error posting post:", error);
+        }
+    }
+
+    const openCameraOptionMenu = () => {
+        setCameraOptionModalVisible(true);
+        return new Promise((resolve) => setResolver(() => resolve));
+    }
+
+    const handleCameraOptionSelect = (option) => {
+        if (resolver) {
+            resolver(option);
+            setResolver(null);
         }
     }
 
@@ -260,6 +296,18 @@ const EditTask = (props) => {
                         </TouchableWithoutFeedback>
                     </View>
                 </TouchableWithoutFeedback>
+            </Modal>
+            <Modal
+                visible={cameraOptionModalVisible}
+                transparent={true}
+                animationType='slide'
+            >
+                <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false);}}>
+                    <View style={{ flex: 1 }} />
+                </TouchableWithoutFeedback>
+                <CameraOptionMenu
+                    onChoose={handleCameraOptionSelect}
+                />
             </Modal>
             <TouchableWithoutFeedback onPress={() => setEditTaskVisible(false)}>
                 <View style={{ flex: 1 }} />

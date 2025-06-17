@@ -2,7 +2,7 @@ import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native"
 
 
-const CameraOptionsMenu = (props) => {
+const CameraOptionMenu = (props) => {
     const {onChoose} = props;
 
     return (
@@ -55,4 +55,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default CameraOptionsMenu;
+export default CameraOptionMenu;

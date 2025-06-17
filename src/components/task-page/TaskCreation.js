@@ -5,11 +5,11 @@ import Feather from 'react-native-vector-icons/Feather';
 import { Ionicons } from '@expo/vector-icons';
 import ListModal from './PopUpMenus/ListModal';
 import ScheduleMenu from './ScheduleMenu';
+import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
 import { doc, collection, addDoc, runTransaction, writeBatch, increment, arrayUnion } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebaseConfig';
 import NavBar from "../NavigationBar";
-import * as ImagePicker from 'expo-image-picker';
-import * as Notifications from "expo-notifications";
+import { addImage, takePhoto } from '../../utils/photoFunctions';
 
 
 const TaskCreation = (props) => {
@@ -27,12 +27,13 @@ const TaskCreation = (props) => {
     const [isCompleted, setCompleted] = useState(false);
     const [isTime, setIsTime] = useState(false);
     const [dateRepeatEnds, setDateRepeatEnds] = useState(null);
-    
+
     const [showPriority, setShowPriority] = useState(false);
     const [isTaskCreationModalVisible, setTaskCreationModalVisible] = useState(false);
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
-
+    const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
+    const [resolver, setResolver] = useState(null);
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -42,27 +43,27 @@ const TaskCreation = (props) => {
     const animatedHeight = useRef(new Animated.Value(taskCreationHeight)).current;
 
     useEffect(() => {
-            const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
-                Animated.timing(animatedHeight, {
-                    toValue: taskCreationHeight + e.endCoordinates.height,
-                    duration: e.duration,
-                    useNativeDriver: false
-                }).start();
-            });
-    
-            const willHideSub = Keyboard.addListener('keyboardWillHide', (e) => {
-                Animated.timing(animatedHeight, {
-                    toValue: 0,
-                    duration: e.duration,
-                    useNativeDriver: false
-                }).start();
-            });
-    
-            return () => {
-                willShowSub.remove();
-                willHideSub.remove();
-            };
-        }, []);
+        const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
+            Animated.timing(animatedHeight, {
+                toValue: taskCreationHeight + e.endCoordinates.height,
+                duration: e.duration,
+                useNativeDriver: false
+            }).start();
+        });
+
+        const willHideSub = Keyboard.addListener('keyboardWillHide', (e) => {
+            Animated.timing(animatedHeight, {
+                toValue: 0,
+                duration: e.duration,
+                useNativeDriver: false
+            }).start();
+        });
+
+        return () => {
+            willShowSub.remove();
+            willHideSub.remove();
+        };
+    }, []);
 
     const storeTask = async (imageURI) => {
         if (!currentUser) {
@@ -77,7 +78,7 @@ const TaskCreation = (props) => {
         let cookedBatch;
         isCompleted ? cookedBatch = await storeCompletedTask(taskRef, batch, imageURI) : cookedBatch = await storeIncompletedTask(false, taskRef, batch);
         await cookedBatch.commit();
-        
+        setTaskCreationModalVisible(false);
     }
 
     const storeIncompletedTask = async (blockNotifications, taskRef, batch) => {
@@ -99,14 +100,14 @@ const TaskCreation = (props) => {
             let listRef;
             selectedLists.forEach((listId) => {
                 listRef = doc(userProfileRef, 'Lists', listId);
-                batch.update(listRef, {taskIds: arrayUnion(taskRef.id)});
+                batch.update(listRef, { taskIds: arrayUnion(taskRef.id) });
             });
             batch.update(userProfileRef, { tasks: increment(1) });
             if (!blockNotifications && selectedReminders.length !== 0) {
                 if (await configureNotifications()) {
                     console.log("notifications not blocked");
                     const tempNotifIds = await scheduleNotifications(selectedReminders, selectedDate, isTime, newTask);
-                    batch.update(taskRef, {notificationIds: tempNotifIds});
+                    batch.update(taskRef, { notificationIds: tempNotifIds });
                 }
             }
             return batch;
@@ -119,7 +120,7 @@ const TaskCreation = (props) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const postsRef = collection(FIRESTORE_DB, 'Posts');
         const postRef = doc(postsRef);
-        
+
         try {
             batch.set(postRef, {
                 userId: currentUser.uid,
@@ -137,16 +138,16 @@ const TaskCreation = (props) => {
             let listRef;
             selectedLists.forEach((listId) => {
                 listRef = doc(userProfileRef, 'Lists', listId);
-                batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+                batch.update(listRef, { postIds: arrayUnion(postRef.id) });
             });
             let newCompleteByDate;
             if (selectedDate && (newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat))) {
                 batch = await storeIncompletedTask(true, taskRef, batch);
-                batch.update(taskRef, {completeByDate: newCompleteByDate});
+                batch.update(taskRef, { completeByDate: newCompleteByDate });
                 if (selectedReminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, newTask);
-                        batch.update(taskRef, {notificationIds: tempNotifIds});
+                        batch.update(taskRef, { notificationIds: tempNotifIds });
                     }
                 }
             }
@@ -157,29 +158,6 @@ const TaskCreation = (props) => {
         }
     }
 
-    const addImage = async () => {
-        try {
-            let _image = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-            });
-
-            if (_image.assets && !_image.cancelled) {
-                const { uri } = _image.assets[0];
-                const fileName = uri.split('/').pop();
-                const uploadResp = await uploadToFirebase(uri, `images/${fileName}`, (progress) =>
-                    console.log(progress)
-                );
-                return uploadResp.downloadUrl;
-            }
-        } catch (e) {
-            Alert.alert("Error Uploading Image " + e.message);
-        }
-    };
-
-
     const toggleCalendarModal = () => {
         setCalendarModalVisible(!isCalendarModalVisible);
     };
@@ -188,7 +166,7 @@ const TaskCreation = (props) => {
         setListModalVisible(!isListModalVisible);
     };
 
-    const openTaskCreatonModal = () => {
+    const openTaskCreationModal = () => {
         closeSwipeCard();
         setTaskCreationModalVisible(true);
         setTimeout(() => {
@@ -203,14 +181,46 @@ const TaskCreation = (props) => {
         }, 100);
     }
 
+    const openCameraOptionMenu = () => {
+        setCameraOptionModalVisible(true);
+        return new Promise((resolve) => setResolver(() => resolve));
+    }
+
+    const handleCameraOptionSelect = (option) => {
+        if (resolver) {
+            resolver(option);
+            setResolver(null);
+        }
+    }
+
     const handleSubmitHelper = async () => {
         if (newTask.length !== 0) {
             if (isCompleted) {
-                const imageURI = await addImage();
-                console.log(imageURI);
-                if (!imageURI) {
-                    return;
+                let imageURI;
+                while (true) {
+                    const cameraOption = await openCameraOptionMenu();
+                    if (cameraOption == 'cancel') {
+                        setCameraOptionModalVisible(false);
+                        return;
+                    }
+                    else if (cameraOption == 'library') {
+                        imageURI = await addImage();
+                        if (imageURI) {
+                            break;
+                        }
+                    }
+                    else if (cameraOption == 'camera') {
+                        imageURI = await takePhoto();
+                        if (imageURI) {
+                            break;
+                        }
+                    }
+                    else {
+                        imageURI = null;
+                        break;
+                    }
                 }
+                setCameraOptionModalVisible(false); //add loading screen here
                 storeTask(imageURI);
             }
             else {
@@ -229,7 +239,6 @@ const TaskCreation = (props) => {
         setIsTime(false);
         setDateRepeatEnds('');
         setSelectedLists([]);
-        setTaskCreationModalVisible(false);
     };
 
 
@@ -247,15 +256,15 @@ const TaskCreation = (props) => {
                 animationType='slide'
             >
                 <Modal
-                visible={isCalendarModalVisible}
-                transparent={true}
-                animationType="slide"
-            >
-                <TouchableWithoutFeedback onPress={toggleCalendarModal}>
-                    <View style={{ flex: 1 }}>
-                    </View>
-                </TouchableWithoutFeedback>
-                    <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20}}>
+                    visible={isCalendarModalVisible}
+                    transparent={true}
+                    animationType="slide"
+                >
+                    <TouchableWithoutFeedback onPress={toggleCalendarModal}>
+                        <View style={{ flex: 1 }}>
+                        </View>
+                    </TouchableWithoutFeedback>
+                    <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20 }}>
                         <ScheduleMenu
                             setCalendarModalVisible={setCalendarModalVisible}
                             selectedDate={selectedDate}
@@ -272,14 +281,14 @@ const TaskCreation = (props) => {
                     </View>
                 </Modal>
                 <Modal
-                visible={isListModalVisible}
-                transparent={true}
-                animationType='slide'
-            >
-                <TouchableWithoutFeedback onPress={toggleListModal}>
-                    <View style={{ flex: 1}}>
-                    </View>
-                </TouchableWithoutFeedback>
+                    visible={isListModalVisible}
+                    transparent={true}
+                    animationType='slide'
+                >
+                    <TouchableWithoutFeedback onPress={toggleListModal}>
+                        <View style={{ flex: 1 }}>
+                        </View>
+                    </TouchableWithoutFeedback>
                     <ListModal
                         selectedLists={selectedLists}
                         setSelectedLists={setSelectedLists}
@@ -287,11 +296,23 @@ const TaskCreation = (props) => {
                         setListModalVisible={setListModalVisible}
                     />
                 </Modal>
+                <Modal
+                    visible={cameraOptionModalVisible}
+                    transparent={true}
+                    animationType='slide'
+                >
+                    <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false)}}>
+                        <View style={{ flex: 1 }} />
+                    </TouchableWithoutFeedback>
+                    <CameraOptionMenu
+                        onChoose={handleCameraOptionSelect}
+                    />
+                </Modal>
                 <TouchableWithoutFeedback onPress={closeTaskCreationModal}>
                     <View style={{ flex: 1 }}>
                     </View>
                 </TouchableWithoutFeedback>
-                <Animated.View style={{height: animatedHeight, ...styles.taskCreationContainer}}>
+                <Animated.View style={{ height: animatedHeight, ...styles.taskCreationContainer }}>
                     <View>
                         <View style={styles.inputWrapper}>
                             <TouchableOpacity
@@ -341,9 +362,9 @@ const TaskCreation = (props) => {
                                     <Ionicons name="list-outline" size={28} color="black" />
                                 </View>
                             </TouchableHighlight>
-                             <TouchableHighlight
+                            <TouchableHighlight
                                 style={styles.submitButton}
-                                onPress={() => {setShowPriority(!showPriority)}}
+                                onPress={() => { setShowPriority(!showPriority) }}
                             >
                                 <View style={styles.iconContainer}>
                                     {!showPriority ? (<Icon
@@ -351,11 +372,11 @@ const TaskCreation = (props) => {
                                         size={28}
                                         color={flagColor[selectedPriority]}
                                     />)
-                                    : (<Feather name="x-circle" size={28} color={'black'}/>)}
+                                        : (<Feather name="x-circle" size={28} color={'black'} />)}
                                 </View>
                             </TouchableHighlight>
                             {showPriority && (<View style={styles.priorityContainer}>
-                                <TouchableHighlight onPress={() => {selectedPriority == 1 ? setSelectedPriority(0) : setSelectedPriority(1)}} style={[selectedPriority == 1 ? {width: 75, ...styles.selectedPriorityButton} : {width: 60}, styles.priorityButtonLow]}>
+                                <TouchableHighlight onPress={() => { selectedPriority == 1 ? setSelectedPriority(0) : setSelectedPriority(1) }} style={[selectedPriority == 1 ? { width: 75, ...styles.selectedPriorityButton } : { width: 60 }, styles.priorityButtonLow]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -363,10 +384,10 @@ const TaskCreation = (props) => {
                                             color={'blue'}
                                         />
                                         <Text style={styles.priorityText}>Low</Text>
-                                        {selectedPriority == 1 && <Feather name="x" size={16} color={'black'}/>}
+                                        {selectedPriority == 1 && <Feather name="x" size={16} color={'black'} />}
                                     </View>
                                 </TouchableHighlight>
-                                <TouchableHighlight onPress={() => {selectedPriority == 2 ? setSelectedPriority(0) : setSelectedPriority(2)}} style={[selectedPriority == 2 ? {width: 80, ...styles.selectedPriorityButton} : {width: 65}, styles.priorityButtonMed]}>
+                                <TouchableHighlight onPress={() => { selectedPriority == 2 ? setSelectedPriority(0) : setSelectedPriority(2) }} style={[selectedPriority == 2 ? { width: 80, ...styles.selectedPriorityButton } : { width: 65 }, styles.priorityButtonMed]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -374,10 +395,10 @@ const TaskCreation = (props) => {
                                             color={'orange'}
                                         />
                                         <Text style={styles.priorityText}>Med</Text>
-                                        {selectedPriority == 2 && <Feather name="x" size={16} color={'black'}/>}
+                                        {selectedPriority == 2 && <Feather name="x" size={16} color={'black'} />}
                                     </View>
                                 </TouchableHighlight>
-                                <TouchableHighlight onPress={() => {selectedPriority == 3 ? setSelectedPriority(0) : setSelectedPriority(3)}} style={[selectedPriority == 3 ? {width: 85, ...styles.selectedPriorityButton} : {width: 70}, styles.priorityButtonHigh]}>
+                                <TouchableHighlight onPress={() => { selectedPriority == 3 ? setSelectedPriority(0) : setSelectedPriority(3) }} style={[selectedPriority == 3 ? { width: 85, ...styles.selectedPriorityButton } : { width: 70 }, styles.priorityButtonHigh]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
@@ -385,7 +406,7 @@ const TaskCreation = (props) => {
                                             color={'red'}
                                         />
                                         <Text style={styles.priorityText}>High</Text>
-                                        {selectedPriority == 3 && <Feather name="x" size={16} color={'black'}/>}
+                                        {selectedPriority == 3 && <Feather name="x" size={16} color={'black'} />}
                                     </View>
                                 </TouchableHighlight>
                             </View>)}
@@ -395,8 +416,8 @@ const TaskCreation = (props) => {
             </Modal>
             <View style={styles.bottomBar}>
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={openTaskCreatonModal}>
-                        <Ionicons name="add-circle-outline" size={72} color='black'/>
+                    <TouchableOpacity onPress={openTaskCreationModal}>
+                        <Ionicons name="add-circle-outline" size={72} color='black' />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.navBar}>
