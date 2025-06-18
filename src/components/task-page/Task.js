@@ -1,7 +1,7 @@
 import React, {useState, useRef} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import {GestureHandlerRootView} from 'react-native-gesture-handler'
+import CheckedPost from '../../assets/checked-post-sent.svg';
 
 const Task = (props) => {
 
@@ -51,7 +51,9 @@ const Task = (props) => {
         simultaneousHandlers={rowRef}
       >
                 <View style={styles.item}>
-                    <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}></TouchableOpacity>
+                    <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}>
+                        <CheckedPost width={36} height={36}/>
+                    </TouchableOpacity>
                     <Text style={styles.itemText}>{text}</Text>
                 </View>
             </Swipeable>
@@ -67,19 +69,9 @@ const Task = (props) => {
             borderRadius: 5,
         },
         checkedbox: {
-            width: 24,
-            height: 24,
-            opacity: 0.4,
-            backgroundColor: '#55BCF6',
-            borderRadius: 5,
             marginRight: 15,
         },
         uncheckedbox: {
-            width: 24,
-            height: 24,
-            opacity: 0.4,
-            backgroundColor: 'grey',
-            borderRadius: 5,
             marginRight: 15,
         },
         itemText: {

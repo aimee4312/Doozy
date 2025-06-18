@@ -14,6 +14,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Notifications from "expo-notifications";
 import { addImage, takePhoto } from '../utils/photoFunctions';
+import CheckedPost from '../assets/checked-post-sent.svg';
 
 const TaskListScreen = (props) => {
 
@@ -713,8 +714,9 @@ const TaskListScreen = (props) => {
                             <TouchableOpacity onPress={() => {closeSwipeCard(); setOpenDrawer(true)}}>
                                 <Ionicons name="menu" size={32} color="black" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={testFunction}>
-                                <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Doozy</Text>
+                            <TouchableOpacity onPress={testFunction} style={{flexDirection: 'row', alignItems:'center'}}>
+                                <CheckedPost width={42} height={42}/>
+                                <Text style={{ fontSize: 32, fontWeight: 'bold' }}>Doozy</Text>
                             </TouchableOpacity>
                             <TouchableOpacity ref={sortRef} onPress={() => {closeSwipeCard(); openSortModal();}}>
                                 <MaterialCommunityIcons name="sort" size={32} color="black" />
