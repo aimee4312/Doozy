@@ -17,6 +17,7 @@ import EditProfileScreen from './src/screens/EditProfile';
 import EditFieldScreen from './src/screens/EditField';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts, Poppins_400Regular, Poppins_700Bold, Poppins_400Regular_Italic } from '@expo-google-fonts/poppins';
 // import { MenuProvider } from 'react-native-popup-menu';
 
 const Stack = createStackNavigator();
@@ -26,6 +27,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [listId, setListId] = useState("0");
   const [order, setOrder] = useState("default");
+
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_700Bold,
+    Poppins_400Regular_Italic,
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {

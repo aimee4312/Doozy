@@ -1,126 +1,195 @@
-import React, { Component } from 'react';
-import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Button, TextInput, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView } from 'react-native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
 
-class Login extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            email: '',
-            password: ''
-        };
-        this.onSignIn = this.onSignIn.bind(this);
-    }
+const Login = ({ navigation }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-    onSignIn() {
-        const { email, password } = this.state;
+    const onSignIn = () => {
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
-            .then((result) => {
-                console.log(result);
-            })
             .catch((error) => {
                 console.log(error);
             });
-    }
+    };
 
-    goBackHome() {
-        this.props.navigation.goBack();
-    }
-
-    dismissKeyboard() {
+    const dismissKeyboard = () => {
         Keyboard.dismiss();
-    }
+    };
 
-    render() {
-        return (
-            <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
-                <ImageBackground
-                    source={require('../assets/background2.jpg')}
-                    style={styles.backgroundImage}
-                    resizeMode="cover"
-                >
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+                <View style={styles.container}>
+                    <View style={styles.topContainer}>
+                        <TouchableOpacity onPress={navigation.goBack}>
+                            <Ionicons name='chevron-back' size={24} color='black' />
+                        </TouchableOpacity>
+                    </View>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        style={styles.container}
+                        style={{ flex: 1 }}
+                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                     >
-                        <Text style={styles.title}>Login</Text>
-                        <View style={styles.formContainer}>
-                            <Text style={styles.label}>Email</Text>
-                            <TextInput
-                                placeholder="Email"
-                                onChangeText={(email) => this.setState({ email })}
-                                style={styles.textBox}
-                            />
-                            <Text style={styles.label}>Password</Text>
-                            <TextInput
-                                placeholder="Password"
-                                secureTextEntry={true}
-                                onChangeText={(password) => this.setState({ password })}
-                                style={styles.textBox}
-                            />
-                            <Button
-                                onPress={() => this.onSignIn()}
-                                title="Sign In"
-                                color="#007bff"
-                            />
-                            <Button
-                                onPress={() => this.goBackHome()}
-                                title="Home"
-                                color="#CCC"
-                                style={styles.smallButton}
-                            />
+                    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                        <View style={styles.loginContainer}>
+                            <View style={styles.topSpacer} />
+                            <View style={styles.titleContainer}>
+                                <Text style={styles.title}>Login</Text>
+                                <Text style={styles.welcome}>Welcome back</Text>
+                            </View>
+                            <View style={styles.midSpacer} />
+                            <View style={styles.formContainer}>
+                                <Text style={styles.label}>Email</Text>
+                                <TextInput
+                                    placeholder="hello@example.com"
+                                    onChangeText={setEmail}
+                                    style={styles.textBox}
+                                    autoCapitalize="none"
+                                    keyboardType="email-address"
+                                    textContentType="emailAddress"
+                                />
+                                <Text style={styles.label}>Password</Text>
+                                <TextInput
+                                    placeholder="Password"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    style={styles.textBox}
+                                    secureTextEntry
+                                    textContentType="password"
+                                />
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={styles.loginButton}
+                                        onPress={onSignIn}
+                                    >
+                                        <Text style={styles.loginText}>Login</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => navigation.replace("Register")}
+                                    >
+                                        <Text style={styles.signUpText}>Create an account</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            <View style={styles.bottomSpacer} />
                         </View>
-                    </KeyboardAvoidingView>
-                </ImageBackground>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+                </View>
             </TouchableWithoutFeedback>
-        );
-    }
-}
+        </SafeAreaView>
+    );
+};
+
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+    },
+    topContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
+        marginHorizontal: 10,
+    },
+    scroll: {
+        flexGrow: 1,
+    },
+    loginContainer: {
+        flex: 1,
+        justifyContent: 'space-between'
+    },
+    topSpacer: {
+        flex: 1,
+        minHeight: 10,
+    },
+    titleContainer: {
+        marginHorizontal: 30,
+    },
+    title: {
+        fontSize: 32,
+        color: colors.primary,
+        fontFamily: fonts.bold,
+        textAlign: 'left',
+        marginBottom: 10
+    },
+    welcome: {
+        fontSize: 18,
+        color: colors.secondary,
+        fontFamily: fonts.regular,
+    },
+    midSpacer: {
+        flex: 1,
+        minHeight: 40,
     },
     formContainer: {
-        width: '80%',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: 20,
-        borderRadius: 10,
+        marginHorizontal: 30,
+        marginTop: 0,
     },
     label: {
-        fontSize: 18,
+        fontSize: 20,
         marginBottom: 5,
-        color: '#333',
+        color: colors.primary,
         textAlign: 'left',
     },
     textBox: {
         fontSize: 16,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
+        borderRadius: 15,
         width: '100%',
-        height: 40,
+        height: 50,
         paddingHorizontal: 10,
         marginBottom: 20,
+        backgroundColor: '#ffffff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'left',
+    buttonContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
     },
-    backgroundImage: {
-        flex: 1,
+    loginButton: {
         width: '100%',
+        height: 50,
+        alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: colors.accent,
+        borderRadius: 30,
+        marginTop: 20,
+        marginBottom: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+    },
+    loginText: {
+        fontSize: 20,
+        color: colors.text,
+        fontFamily: fonts.bold,
+    },
+    signUpText: {
+        fontSize: 16,
+        color: colors.secondary,
+        fontFamily: fonts.regular,
+        textDecorationLine: 'underline'
     },
     smallButton: {
         fontSize: 12,
         paddingVertical: 5,
         paddingHorizontal: 10,
+    },
+    bottomSpacer: {
+        flex: 1,
+        minHeight: 150
     },
 });
 

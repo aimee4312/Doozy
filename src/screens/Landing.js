@@ -1,64 +1,87 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ImageBackground } from 'react-native';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
+import CheckedBox from '../assets/checked-post-sent.svg';
 
 export default function LandingScreen({ navigation }) {
   return (
-    <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
-      <View style={styles.container}>
-        <Text style={styles.appName}>Doozy</Text>
+    <View style={styles.container}>
+      <View style={styles.topContainer}>
+        <View style={styles.title}>
+          <CheckedBox width={84} height={84}/>
+          <Text style={styles.appName}>Doozy</Text>
+        </View>
+        <Text style={styles.slogan}>check, share, repeat</Text>
+      </View>
+      <View style={styles.bottomContainer}>
         <TouchableOpacity
-          style={styles.todoItem}
-          onPress={() => navigation.navigate("Register")}
-        >
-          <View style={styles.bubble}>
-            <View style={styles.checkbox}></View>
-            <Text style={[styles.todoText, styles.todoTextLeft]}>Register</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.todoItem}
+          style={styles.loginButton}
           onPress={() => navigation.navigate("Login")}
         >
-          <View style={styles.bubble}>
-            <View style={styles.checkbox}></View>
-            <Text style={[styles.todoText, styles.todoTextLeft]}>Login</Text>
-          </View>
+          <Text style={styles.loginText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Register")}
+        >
+          <Text style={styles.signUpText}>Create an account</Text>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-    justifyContent: 'center',
-  },
   container: {
     flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  topContainer: {
+    flex: 1,
+    flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    alignItems: 'center'
   },
-  appName: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#fff',
-  },
-  todoItem: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  bubble: {
+  title: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0e0e0',
-    borderRadius: 20,
-    padding: 10,
-    margin: 10,
-    width: '90%',
+    margin: 20,
+  },
+  appName: {
+    fontSize: 64,
+    color: colors.primary,
+    paddingRight: 10,
+    fontFamily: fonts.bold,
+  },
+  slogan: {
+    color: colors.surface,
+    fontFamily: fonts.italic,
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  bottomContainer: {
+    flex: 1,
+    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    width: '60%',
+  },
+  loginButton: {
+    width: '100%',
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: 30,
+    marginVertical: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
   },
   checkbox: {
     width: 20,
@@ -68,12 +91,15 @@ const styles = StyleSheet.create({
     borderColor: '#007bff',
     marginRight: 10,
   },
-  todoText: {
-    fontSize: 18,
-    color: '#333',
+  loginText: {
+    fontSize: 20,
+    color: colors.text,
+    fontFamily: fonts.bold,
   },
-  todoTextLeft: {
-    flex: 1,
-    textAlign: 'left',
+  signUpText: {
+    fontSize: 16,
+    color: colors.secondary,
+    fontFamily: fonts.regular,
+    textDecorationLine: 'underline'
   },
 });
