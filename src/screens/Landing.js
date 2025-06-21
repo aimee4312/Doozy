@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accent,
     borderRadius: 30,
-    marginVertical: 40,
+    marginVertical: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,

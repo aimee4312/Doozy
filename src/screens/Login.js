@@ -27,7 +27,7 @@ const Login = ({ navigation }) => {
                 <View style={styles.container}>
                     <View style={styles.topContainer}>
                         <TouchableOpacity onPress={navigation.goBack}>
-                            <Ionicons name='chevron-back' size={24} color='black' />
+                            <Ionicons name='chevron-back' size={32} color={colors.primary} />
                         </TouchableOpacity>
                     </View>
                     <KeyboardAvoidingView
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
         marginTop: 0,
     },
     label: {
-        fontSize: 20,
+        fontSize: 18,
         marginBottom: 5,
         color: colors.primary,
         textAlign: 'left',

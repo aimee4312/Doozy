@@ -1,179 +1,232 @@
-import React, { Component, useEffect } from 'react';
-import { View, Button, TextInput, StyleSheet, Text, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import React, { useState } from 'react';
+import { View, Button, TextInput, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView } from 'react-native';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB, FIREBASE_STORAGE } from '../../firebaseConfig';
 import { ref, updateMetadata } from "firebase/storage";
+import { FIREBASE_AUTH, FIRESTORE_DB, FIREBASE_STORAGE } from '../../firebaseConfig';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
 
-class Register extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            name: '',
-            email: '',
-            username: '',
-            password: '',
-        };
-        this.onSignUp = this.onSignUp.bind(this);
-    }
+const Register = () => {
+    const navigation = useNavigation();
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        username: '',
+        password: '',
+        confirmPassword: ''
+    });
 
-    async onSignUp() {
-        const { name, email, username, password } = this.state;
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const onSignUp = async () => {
+        const { name, email, username, password, confirmPassword } = formData;
         try {
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
 
-            const userRef = doc(FIRESTORE_DB, "Users", user.uid);
-            await setDoc(userRef, {
-                name: name,
-                email: email,
-                username: username,
+            // Create user document
+            await setDoc(doc(FIRESTORE_DB, "Users", user.uid), {
+                name,
+                email,
+                username,
                 posts: 0,
                 tasks: 0,
                 friends: 0,
+                bio: "",
                 profilePic: "https://firebasestorage.googleapis.com/v0/b/doozy-3d54c.appspot.com/o/profilePics%2Fdefault.jpg?alt=media&token=c4b20aae-830c-4d47-aa90-2a3ebd6e16fb"
             });
 
+            // Update storage metadata
             const forestRef = ref(FIREBASE_STORAGE, 'profilePics/default.jpg');
+            await updateMetadata(forestRef, { cacheControl: 'public,max-age=31536000' });
 
-            const newMetadata = {
-                cacheControl: 'public,max-age=31536000'
-              };
-              
-              // Update metadata properties
-              await updateMetadata(forestRef, newMetadata);
-
-            console.log("User information stored in Firestore successfully!");
-
-        } catch (error) {
-            console.error("Error signing up and storing user information: ", error);
+        } catch (error) { // if error.code == 
+            console.error("Registration failed: ", error);
         }
-    }
+    };
 
-    goToLoginScreen = () => {
-        this.props.navigation.replace('Login');
-    }
+    const dismissKeyboard = () => Keyboard.dismiss();
 
-    goBackHome = () => {
-        this.props.navigation.goBack();
-    }
-
-    dismissKeyboard() {
-        Keyboard.dismiss();
-    }
-
-    render() {
-        return (
-            <TouchableWithoutFeedback onPress={this.dismissKeyboard}>
-                <ImageBackground
-                    source={require('../assets/background2.jpg')}
-                    style={styles.backgroundImage}
-                    resizeMode="cover"
-                >
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+                <View style={styles.container}>
+                    <View style={styles.topContainer}>
+                        <TouchableOpacity onPress={navigation.goBack}>
+                            <Ionicons name='chevron-back' size={32} color={colors.primary} />
+                        </TouchableOpacity>
+                    </View>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        style={styles.container}
+                        style={{ flex: 1 }}
                     >
-                        <View style={styles.formContainer}>
-                            <Text style={styles.title}>Create an Account</Text>
-                            <Text style={styles.label}>Name</Text>
-                            <TextInput
-                                placeholder="Name"
-                                onChangeText={(name) => this.setState({ name })}
-                                style={styles.textBox}
-                            />
-                            <Text style={styles.label}>Email</Text>
-                            <TextInput
-                                placeholder="Email"
-                                onChangeText={(email) => this.setState({ email })}
-                                style={styles.textBox}
-                                keyboardType="email-address"
-                            />
-                            <Text style={styles.label}>Username</Text>
-                            <TextInput
-                                placeholder="Username"
-                                onChangeText={(username) => this.setState({ username })}
-                                style={styles.textBox}
-                            />
-                            <Text style={styles.label}>Password</Text>
-                            <TextInput
-                                placeholder="Password"
-                                secureTextEntry={true}
-                                onChangeText={(password) => this.setState({ password })}
-                                style={styles.textBox}
-                            />
-                            <Button
-                                onPress={() => this.onSignUp()}
-                                title="Sign Up"
-                                color="#007bff"
-                            />
-                            <Button
-                                onPress={this.goToLoginScreen}
-                                title="Already have an account?"
-                                color="#007bff"
-                            />
-                            <Button
-                                onPress={this.goBackHome}
-                                title="Home"
-                                color="#ccc"
-                                style={styles.smallButton}
-                            />
+                        <ScrollView contentContainerStyle={{flexGrow: 1}} automaticallyAdjustKeyboardInsets={true}>
+                        <View style={styles.signUpContainer}>
+                            <View style={styles.topSpacer} />
+                            <View style={styles.titleContainer}>
+                                <Text style={styles.title}>Sign Up</Text>
+                            </View>
+                            <View style={styles.midSpacer} />
+                            <View style={styles.formContainer}>
+                                <Text style={styles.label}>Name</Text>
+                                <TextInput
+                                    placeholder="Name"
+                                    value={formData.name}
+                                    onChangeText={(text) => handleChange('name', text)}
+                                    style={styles.textBox}
+                                />
+
+                                <Text style={styles.label}>Email</Text>
+                                <TextInput
+                                    placeholder="Email"
+                                    value={formData.email}
+                                    onChangeText={(text) => handleChange('email', text)}
+                                    style={styles.textBox}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+
+                                <Text style={styles.label}>Username</Text>
+                                <TextInput
+                                    placeholder="Username"
+                                    value={formData.username}
+                                    onChangeText={(text) => handleChange('username', text)}
+                                    style={styles.textBox}
+                                    autoCapitalize="none"
+                                />
+
+                                <Text style={styles.label}>Password</Text>
+                                <TextInput
+                                    placeholder="Password"
+                                    value={formData.password}
+                                    onChangeText={(text) => handleChange('password', text)}
+                                    style={styles.textBox}
+                                    secureTextEntry
+                                />
+                                <Text style={styles.label}>Confirm Password</Text>
+                                <TextInput
+                                    placeholder="Password"
+                                    value={formData.confirmPassword}
+                                    onChangeText={(text) => handleChange('confirmPassword', text)}
+                                    style={styles.textBox}
+                                    secureTextEntry
+                                />
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={styles.signUpButton}
+                                        onPress={onSignUp}
+                                    >
+                                        <Text style={styles.signUpText}>Sign Up</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => navigation.replace("Login")}
+                                    >
+                                        <Text style={styles.loginText}>Create an account</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            <View style={styles.bottomSpacer} />
                         </View>
+                        </ScrollView>
                     </KeyboardAvoidingView>
-                </ImageBackground>
+                </View>
             </TouchableWithoutFeedback>
-        );
-    }
-}
+        </SafeAreaView>
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+    },
+    topContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
+        marginHorizontal: 10,
+    },
+    signUpContainer: {
+        flex: 1,
+        justifyContent: 'space-between'
+    },
+    topSpacer: {
+        flex: 1,
+        minHeight: 10,
     },
     formContainer: {
-        width: '80%',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: 20,
-        borderRadius: 10,
+        marginHorizontal: 30,
+    },
+    midSpacer: {
+        flex: 1,
+        minHeight: 10,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    textBox: {
-        fontSize: 16,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        width: '100%',
-        height: 40,
-        paddingHorizontal: 10,
-        marginBottom: 20,
-    },
-    successMessage: {
-        color: 'green',
-        marginTop: 10,
-        textAlign: 'center',
+        fontFamily: fonts.bold,
+        color: colors.primary,
+        fontSize: 32,
+        textAlign: 'left',
+        marginHorizontal: 30,
     },
     label: {
         fontSize: 18,
         marginBottom: 5,
-        color: '#333',
+        color: colors.primary,
+        textAlign: 'left',
     },
-    backgroundImage: {
-        flex: 1,
+    textBox: {
+        fontSize: 16,
+        borderRadius: 15,
         width: '100%',
-        justifyContent: 'center',
-    },
-    smallButton: {
-        fontSize: 12,
-        paddingVertical: 5,
+        height: 50,
         paddingHorizontal: 10,
+        marginBottom: 20,
+        backgroundColor: '#ffffff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
+    buttonContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+    signUpButton: {
+        width: '100%',
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.accent,
+        borderRadius: 30,
+        marginTop: 20,
+        marginBottom: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+    },
+    signUpText: {
+        fontSize: 20,
+        color: colors.text,
+        fontFamily: fonts.bold,
+    },
+    loginText: {
+        fontSize: 16,
+        color: colors.secondary,
+        fontFamily: fonts.regular,
+        textDecorationLine: 'underline'
+    },
+    bottomSpacer: {
+        flex: 1,
+        minHeight: 0,
+    }
 });
 
 export default Register;
