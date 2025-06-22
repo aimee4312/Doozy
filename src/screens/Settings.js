@@ -91,11 +91,6 @@ export default function Settings() {
     };
 
     return (
-        <ImageBackground
-            source={require('../assets/background3.jpg')}
-            style={styles.backgroundImage}
-            resizeMode="cover"
-        >
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -149,7 +144,6 @@ export default function Settings() {
                     </View>
                 </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
-        </ImageBackground>
     )
 }
 

@@ -156,7 +156,15 @@ export default ListModal;
 const styles = {
   container: {
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
   },
   rowOneView: {
     height: 50,

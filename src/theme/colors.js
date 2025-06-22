@@ -4,8 +4,8 @@ export default {
     secondary: '#75a5b8',
     accent: '#e0c323',
     second_accent: '#a7d0d8',
-    background: '#F8F9FA',
-    surface: '#8e9aa1',
-    text: '#ffffff',
-    link: '#0000EE',
+    background: '#f1f3f6',
+    surface: '#fff',
+    button_text: '#ffffff',
+    red: '#d32f2f',
 }

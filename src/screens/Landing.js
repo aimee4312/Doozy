@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   slogan: {
-    color: colors.surface,
+    color: colors.second_accent,
     fontFamily: fonts.italic,
     fontSize: 18,
     marginBottom: 10,
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 20,
-    color: colors.text,
+    color: colors.button_text,
     fontFamily: fonts.bold,
   },
   signUpText: {

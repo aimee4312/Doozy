@@ -15,6 +15,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Notifications from "expo-notifications";
 import { addImage, takePhoto } from '../utils/photoFunctions';
 import CheckedPost from '../assets/checked-post-sent.svg';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
 
 const TaskListScreen = (props) => {
 
@@ -638,7 +640,7 @@ const TaskListScreen = (props) => {
             <View style={styles.container}>
                 <Drawer
                     open={openDrawer}
-                    onOpen={() => setOpenDrawer(true)}
+                    onOpen={() => {closeSwipeCard(); setOpenDrawer(true);}}
                     onClose={() => setOpenDrawer(false)}
                     renderDrawerContent={() => {
                         return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
@@ -673,24 +675,20 @@ const TaskListScreen = (props) => {
                                             <View style={styles.sortBy}>
                                                 <Text style={styles.sortByText}>Sort by:</Text>
                                             </View>
-                                            <View style={styles.divider} />
                                             <TouchableOpacity onPress={() => {setOrder("default")}} style={[order == "default" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <MaterialCommunityIcons name="sort" size={16} color="black" />
+                                                <MaterialCommunityIcons name="sort" size={16} color={colors.primary} />
                                                 <Text style={styles.sortText}>Default</Text>
                                             </TouchableOpacity>
-                                            <View style={styles.divider} />
                                             <TouchableOpacity onPress={() => {setOrder("dueDate")}} style={[order == "dueDate" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <MaterialCommunityIcons name="sort-calendar-ascending" size={16} color="black" />
+                                                <MaterialCommunityIcons name="sort-calendar-ascending" size={16} color={colors.primary} />
                                                 <Text style={styles.sortText}>Due Date</Text>
                                             </TouchableOpacity>
-                                            <View style={styles.divider} />
                                             <TouchableOpacity onPress={() => {setOrder("priority")}} style={[order == "priority" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <Icon name="flag" size={16} color={'black'} />
+                                                <Icon name="flag" size={16} color={colors.primary} />
                                                 <Text style={styles.sortText}>Priority</Text>
                                             </TouchableOpacity>
-                                            <View style={styles.divider} />
                                             <TouchableOpacity onPress={() => {setOrder("name")}} style={[order == "name" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <MaterialCommunityIcons name="sort-alphabetical-ascending" size={16} color="black" />
+                                                <MaterialCommunityIcons name="sort-alphabetical-ascending" size={16} color={colors.primary} />
                                                 <Text style={styles.sortText}>Name</Text>
                                             </TouchableOpacity>
                                         </View>
@@ -712,14 +710,14 @@ const TaskListScreen = (props) => {
                         </Modal>
                         <View style={styles.topBorder}>
                             <TouchableOpacity onPress={() => {closeSwipeCard(); setOpenDrawer(true)}}>
-                                <Ionicons name="menu" size={32} color="black" />
+                                <Ionicons name="menu" size={32} color={colors.primary} />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={testFunction} style={{flexDirection: 'row', alignItems:'center'}}>
+                            <TouchableOpacity onPress={testFunction} style={{flexDirection: 'row', alignItems:'center', padding: 1}}>
                                 <CheckedPost width={42} height={42}/>
-                                <Text style={{ fontSize: 32, fontWeight: 'bold' }}>Doozy</Text>
+                                <Text style={styles.title}>Doozy</Text>
                             </TouchableOpacity>
                             <TouchableOpacity ref={sortRef} onPress={() => {closeSwipeCard(); openSortModal();}}>
-                                <MaterialCommunityIcons name="sort" size={32} color="black" />
+                                <MaterialCommunityIcons name="sort" size={32} color={colors.primary} />
                             </TouchableOpacity>
                         </View>
                         <ScrollView style={styles.ScrollView}>
@@ -727,8 +725,10 @@ const TaskListScreen = (props) => {
                                 <Text style={styles.sectionTitle}>Tasks</Text>
                                 <View style={styles.tasks}>
                                     {taskItems.map((task, index) => {
+                                        const isFirst = index == 0;
+                                        const isLast = index == taskItems.length - 1;
                                         return (
-                                            <TouchableOpacity onPress={() => handleTaskPress(index)} key={index}>
+                                            <TouchableOpacity onPress={() => handleTaskPress(index)} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
                                                     text={task.name}
                                                     tick={completeTask}
@@ -737,6 +737,8 @@ const TaskListScreen = (props) => {
                                                     deleteItem={deleteItem}
                                                     onOpen={onOpen}
                                                     onClose={onClose}
+                                                    isFirst={isFirst}
+                                                    isLast={isLast}
                                                 />
                                             </TouchableOpacity>
                                         )
@@ -747,8 +749,10 @@ const TaskListScreen = (props) => {
                                 <Text style={styles.sectionTitle}>Completed</Text>
                                 <View style={styles.tasks}>
                                     {completedTaskItems.map((task, index) => {
+                                        const isFirst = index == 0;
+                                        const isLast = index == completedTaskItems.length - 1;
                                         return (
-                                            <View key={index}>
+                                            <View key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
                                                     text={task.name}
                                                     tick={completeTask}
@@ -757,6 +761,8 @@ const TaskListScreen = (props) => {
                                                     deleteItem={deleteItem}
                                                     onOpen={onOpen}
                                                     onClose={onClose}
+                                                    isFirst={isFirst}
+                                                    isLast={isLast}
                                                 />
                                             </View>
                                         )
@@ -782,6 +788,7 @@ const TaskListScreen = (props) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     topBorder: {
         flexDirection: 'row',
@@ -790,14 +797,25 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginBottom: 10
     },
+    title: { 
+        fontSize: 32, 
+        fontWeight: 'bold',
+        color: colors.primary,
+        fontFamily: fonts.bold, 
+    },
     sortContainer: {
         flex: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
     sortButtonContainer: {
-        height: 195,
-        backgroundColor: 'white',
+        height: 190,
+        backgroundColor: colors.surface,
         width: 150,
-        borderWidth: 1,
         borderRadius: 15,
         flexDirection: 'column',
         justifyContent: 'flex-start',
@@ -813,7 +831,9 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
     sortByText: {
-
+        fontFamily: fonts.regular,
+        fontSize: 16,
+        color: colors.primary,
     },
     selectedSortButton: {
         backgroundColor: 'yellow',
@@ -827,14 +847,22 @@ const styles = StyleSheet.create({
     },
     sortText: {
         marginLeft: 10,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#e0e0e0',
-        width: '100%',
+        color: colors.primary,
+        fontFamily: fonts.regular,
     },
     scrollView: {
 
+    },
+    taskContainer: {
+        backgroundColor: colors.red,
+    },
+    firstTask: {
+        borderTopRightRadius: 15,
+        borderTopLeftRadius: 15,
+    },
+    lastTask: {
+        borderBottomRightRadius: 15,
+        borderBottomLeftRadius: 15,
     },
     tasksContainer: {
         paddingBottom: 20,
@@ -842,12 +870,19 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: fonts.bold,
+        color: colors.primary,
     },
     tasks: {
-        backgroundColor: '#E5F4FA',
+        backgroundColor: colors.surface,
         marginTop: 5,
-        borderRadius: 5,
+        borderRadius: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
 })
 export default TaskListScreen;

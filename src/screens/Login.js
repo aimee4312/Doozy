@@ -61,6 +61,8 @@ const Login = ({ navigation }) => {
                                     style={styles.textBox}
                                     secureTextEntry
                                     textContentType="password"
+                                    returnKeyType="go"
+                                    onSubmitEditing={onSignIn}
                                 />
                                 <View style={styles.buttonContainer}>
                                     <TouchableOpacity
@@ -143,9 +145,11 @@ const styles = StyleSheet.create({
         height: 50,
         paddingHorizontal: 10,
         marginBottom: 20,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.surface,
+        fontFamily: fonts.regular,
+        color: colors.primary,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.12,
         shadowRadius: 8,
         // Android shadow
@@ -165,7 +169,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 30,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.12,
         shadowRadius: 8,
         // Android shadow
@@ -173,7 +177,7 @@ const styles = StyleSheet.create({
     },
     loginText: {
         fontSize: 20,
-        color: colors.text,
+        color: colors.button_text,
         fontFamily: fonts.bold,
     },
     signUpText: {

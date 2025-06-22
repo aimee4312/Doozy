@@ -123,11 +123,6 @@ const TimelineScreen = (props) => {
   );
 
   return (
-    <ImageBackground
-      source={require('../assets/background.jpg')}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
       <SafeAreaView style={styles.container}>
         <FlatList
           data={posts}
@@ -140,7 +135,6 @@ const TimelineScreen = (props) => {
         />
         <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
       </SafeAreaView>
-    </ImageBackground>
   );
 }
 

@@ -10,6 +10,10 @@ import { doc, collection, addDoc, runTransaction, writeBatch, increment, arrayUn
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebaseConfig';
 import NavBar from "../NavigationBar";
 import { addImage, takePhoto } from '../../utils/photoFunctions';
+import colors from '../../theme/colors';
+import fonts from '../../theme/fonts';
+import UncheckedTask from '../../assets/unchecked-task.svg';
+import CheckedTask from '../../assets/checked-task.svg';
 
 
 const TaskCreation = (props) => {
@@ -226,19 +230,18 @@ const TaskCreation = (props) => {
             else {
                 storeTask(null);
             }
+            setNewTask('');
+            setNewDescription('');
+            setCompleted(false);
+            setSelectedLists([]);
+            setSelectedDate('');
+            setSelectedPriority(0);
+            setSelectedReminders([]);
+            setSelectedRepeat([]);
+            setIsTime(false);
+            setDateRepeatEnds('');
+            setSelectedLists([]);
         }
-
-        setNewTask('');
-        setNewDescription('');
-        setCompleted(false);
-        setSelectedLists([]);
-        setSelectedDate('');
-        setSelectedPriority(0);
-        setSelectedReminders([]);
-        setSelectedRepeat([]);
-        setIsTime(false);
-        setDateRepeatEnds('');
-        setSelectedLists([]);
     };
 
 
@@ -246,7 +249,7 @@ const TaskCreation = (props) => {
         isCompleted ? setCompleted(false) : setCompleted(true);
     }
 
-    const flagColor = ['black', 'blue', 'orange', 'red'];
+    const flagColor = [colors.primary, 'blue', 'orange', 'red'];
 
     return (
         <SafeAreaView style={styles.container}>
@@ -264,7 +267,7 @@ const TaskCreation = (props) => {
                         <View style={{ flex: 1 }}>
                         </View>
                     </TouchableWithoutFeedback>
-                    <View style={{ height: modalHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', borderTopRightRadius: 20, borderTopLeftRadius: 20 }}>
+                    <View style={{height: modalHeight, ...styles.calendarModalContainer}}>
                         <ScheduleMenu
                             setCalendarModalVisible={setCalendarModalVisible}
                             selectedDate={selectedDate}
@@ -315,10 +318,13 @@ const TaskCreation = (props) => {
                 <Animated.View style={{ height: animatedHeight, ...styles.taskCreationContainer }}>
                     <View>
                         <View style={styles.inputWrapper}>
-                            <TouchableOpacity
-                                style={isCompleted ? styles.checkedbox : styles.uncheckedbox}
-                                onPress={checker}
-                            />
+                            <TouchableOpacity onPress={checker} style={styles.checkedbox}>
+                                {isCompleted ? (
+                                    <CheckedTask width={32} height={32} />
+                                ) : (
+                                    <UncheckedTask width={32} height={32} />
+                                )}
+                            </TouchableOpacity>
                             <TextInput
                                 ref={textTaskInputRef}
                                 style={styles.inputTask}
@@ -327,11 +333,9 @@ const TaskCreation = (props) => {
                                 placeholder={'Please type here…'}
                                 autoCorrect={false}
                             />
-                            <Button
-                                style={styles.submitButton}
-                                title="go"
-                                onPress={handleSubmitHelper}
-                            />
+                            <TouchableOpacity onPress={handleSubmitHelper}>
+                                <Ionicons name={'arrow-up-circle'} size={28} color={colors.accent}/>
+                            </TouchableOpacity>
                         </View>
                         <View style={styles.descriptionWrapper}>
                             <TextInput
@@ -350,7 +354,7 @@ const TaskCreation = (props) => {
                                     <Icon
                                         name="calendar"
                                         size={28}
-                                        color={'black'}
+                                        color={colors.primary}
                                     />
                                 </View>
                             </TouchableHighlight>
@@ -359,7 +363,7 @@ const TaskCreation = (props) => {
                                 onPress={toggleListModal}
                             >
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name="list-outline" size={28} color="black" />
+                                    <Ionicons name="list-outline" size={28} color={colors.primary} />
                                 </View>
                             </TouchableHighlight>
                             <TouchableHighlight
@@ -372,7 +376,7 @@ const TaskCreation = (props) => {
                                         size={28}
                                         color={flagColor[selectedPriority]}
                                     />)
-                                        : (<Feather name="x-circle" size={28} color={'black'} />)}
+                                        : (<Feather name="x-circle" size={28} color={colors.primary} />)}
                                 </View>
                             </TouchableHighlight>
                             {showPriority && (<View style={styles.priorityContainer}>
@@ -384,7 +388,7 @@ const TaskCreation = (props) => {
                                             color={'blue'}
                                         />
                                         <Text style={styles.priorityText}>Low</Text>
-                                        {selectedPriority == 1 && <Feather name="x" size={16} color={'black'} />}
+                                        {selectedPriority == 1 && <Feather name="x" size={16} color={colors.primary} />}
                                     </View>
                                 </TouchableHighlight>
                                 <TouchableHighlight onPress={() => { selectedPriority == 2 ? setSelectedPriority(0) : setSelectedPriority(2) }} style={[selectedPriority == 2 ? { width: 80, ...styles.selectedPriorityButton } : { width: 65 }, styles.priorityButtonMed]}>
@@ -406,7 +410,7 @@ const TaskCreation = (props) => {
                                             color={'red'}
                                         />
                                         <Text style={styles.priorityText}>High</Text>
-                                        {selectedPriority == 3 && <Feather name="x" size={16} color={'black'} />}
+                                        {selectedPriority == 3 && <Feather name="x" size={16} color={colors.primary} />}
                                     </View>
                                 </TouchableHighlight>
                             </View>)}
@@ -435,6 +439,19 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
     },
+    calendarModalContainer: {
+        paddingRight: 20, 
+        paddingLeft: 20, 
+        backgroundColor: colors.surface, 
+        borderTopRightRadius: 20, 
+        borderTopLeftRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4
+    },
     writeTaskWrapper: {
         width: '100%',
         flexDirection: 'column',
@@ -448,28 +465,30 @@ const styles = StyleSheet.create({
         right: 16,
         bottom: 32,
     },
-    taskCustomization: {
-        backgroundColor: '#FFF',
-        borderColor: '#C0C0C0',
-        borderWidth: 1,
-        borderTopLeftRadius: 5,
-        borderTopRightRadius: 5,
-    },
     taskCreationContainer: {
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
     inputWrapper: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingRight: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#C0C0C0',
     },
     inputTask: {
+        fontSize: 14,
         paddingVertical: 15,
-        paddingHorizontal: 15,
+        paddingHorizontal: 10,
         width: '80%',
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     submitButton: {
 
@@ -493,25 +512,16 @@ const styles = StyleSheet.create({
         fontSize: 48,
     },
     checkedbox: {
-        width: 24,
-        height: 24,
-        opacity: 0.4,
-        backgroundColor: '#55BCF6',
-        borderRadius: 5,
-        marginLeft: 15,
-    },
-    uncheckedbox: {
-        width: 24,
-        height: 24,
-        opacity: 0.4,
-        backgroundColor: 'grey',
-        borderRadius: 5,
-        marginLeft: 15,
+        marginLeft: 10,
+        padding: 1,
     },
     inputDescription: {
+        fontSize: 13,
         paddingVertical: 10,
         paddingHorizontal: 15,
         width: '100%',
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     detailsWrapper: {
         marginHorizontal: 5,

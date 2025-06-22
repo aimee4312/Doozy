@@ -75,7 +75,7 @@ const Register = () => {
                             <View style={styles.formContainer}>
                                 <Text style={styles.label}>Name</Text>
                                 <TextInput
-                                    placeholder="Name"
+                                    placeholder="John Doe"
                                     value={formData.name}
                                     onChangeText={(text) => handleChange('name', text)}
                                     style={styles.textBox}
@@ -83,7 +83,7 @@ const Register = () => {
 
                                 <Text style={styles.label}>Email</Text>
                                 <TextInput
-                                    placeholder="Email"
+                                    placeholder="johndoe@email.com"
                                     value={formData.email}
                                     onChangeText={(text) => handleChange('email', text)}
                                     style={styles.textBox}
@@ -93,7 +93,7 @@ const Register = () => {
 
                                 <Text style={styles.label}>Username</Text>
                                 <TextInput
-                                    placeholder="Username"
+                                    placeholder="johndoe123"
                                     value={formData.username}
                                     onChangeText={(text) => handleChange('username', text)}
                                     style={styles.textBox}
@@ -102,7 +102,7 @@ const Register = () => {
 
                                 <Text style={styles.label}>Password</Text>
                                 <TextInput
-                                    placeholder="Password"
+                                    placeholder="8+ characters, 1 number"
                                     value={formData.password}
                                     onChangeText={(text) => handleChange('password', text)}
                                     style={styles.textBox}
@@ -110,11 +110,13 @@ const Register = () => {
                                 />
                                 <Text style={styles.label}>Confirm Password</Text>
                                 <TextInput
-                                    placeholder="Password"
+                                    placeholder="Re-enter your password"
                                     value={formData.confirmPassword}
                                     onChangeText={(text) => handleChange('confirmPassword', text)}
                                     style={styles.textBox}
                                     secureTextEntry
+                                    returnKeyType="go" // or "done"
+                                    onSubmitEditing={onSignIn}
                                 />
                                 <View style={styles.buttonContainer}>
                                     <TouchableOpacity
@@ -126,7 +128,7 @@ const Register = () => {
                                     <TouchableOpacity
                                         onPress={() => navigation.replace("Login")}
                                     >
-                                        <Text style={styles.loginText}>Create an account</Text>
+                                        <Text style={styles.loginText}>Already have an account? Log in</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -205,6 +207,8 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         marginTop: 20,
         marginBottom: 30,
+        fontFamily: fonts.regular,
+        color: colors.primary,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.12,
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
     },
     signUpText: {
         fontSize: 20,
-        color: colors.text,
+        color: colors.button_text,
         fontFamily: fonts.bold,
     },
     loginText: {

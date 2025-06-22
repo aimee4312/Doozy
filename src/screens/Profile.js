@@ -114,11 +114,6 @@ const ProfileScreen = ({ route, navigation }) => {
   }
 
   return (
-    <ImageBackground
-      source={require('../assets/background4.jpg')}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
       <SafeAreaView style={styles.container}>
         <View style={styles.topContainer}>
           <View style={styles.usernameContainer}>
@@ -198,7 +193,6 @@ const ProfileScreen = ({ route, navigation }) => {
         </ScrollView>
         <NavBar navigation={navigation} />
       </SafeAreaView>
-    </ImageBackground>
   );
 };
 

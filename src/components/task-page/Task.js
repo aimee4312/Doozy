@@ -1,27 +1,31 @@
-import React, {useState, useRef} from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import CheckedPost from '../../assets/checked-post-sent.svg';
+import UncheckedTask from '../../assets/unchecked-task.svg';
+import colors from '../../theme/colors';
+import fonts from '../../theme/fonts';
+import { Ionicons } from '@expo/vector-icons';
 
 const Task = (props) => {
 
-    const { text, tick, i, complete, deleteItem, onOpen, onClose } = props;
-    
+    const { text, tick, i, complete, deleteItem, onOpen, onClose, isFirst, isLast } = props;
+
     const [isOpened, setIsOpened] = useState(false);
     const rowRef = useRef(null);
 
     const onSwipeOpen = () => {
         if (!isOpened) {
-          setIsOpened(true);
-          onOpen(rowRef);
+            setIsOpened(true);
+            onOpen(rowRef);
         }
-      };
-      const onSwipeClose = () => {
+    };
+    const onSwipeClose = () => {
         if (isOpened) {
             setIsOpened(false);
-          onClose(rowRef);
+            onClose(rowRef);
         }
-      };
+    };
 
     const checkoff = () => {
         tick(i, complete);
@@ -36,59 +40,66 @@ const Task = (props) => {
         return (
             <TouchableOpacity onPress={onPress}>
                 <View style={styles.rightAction}>
-                    <Text style={styles.rightActionText}>Delete</Text>
+                    <Ionicons name="trash-outline" size={24} color={colors.button_text} />
                 </View>
             </TouchableOpacity>
         )
     }
-  
+
     return (
         <Swipeable
-        ref={rowRef}
-        renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
-        onSwipeableWillOpen={() => onSwipeOpen(rowRef)}
-        onSwipeableWillClose={() => onSwipeClose(rowRef)}
-        simultaneousHandlers={rowRef}
-      >
-                <View style={styles.item}>
-                    <TouchableOpacity style={ complete ? styles.checkedbox : styles.uncheckedbox } key={i} onPress={checkoff}>
-                        <CheckedPost width={36} height={36}/>
-                    </TouchableOpacity>
-                    <Text style={styles.itemText}>{text}</Text>
-                </View>
-            </Swipeable>
+            ref={rowRef}
+            renderRightActions={() => <RightActions onPress={deleteItemHelper} />}
+            onSwipeableWillOpen={() => onSwipeOpen(rowRef)}
+            onSwipeableWillClose={() => onSwipeClose(rowRef)}
+            simultaneousHandlers={rowRef}
+        >
+            <View style={[styles.item, isFirst && styles.firstTask, isLast && styles.lastTask]}>
+                <TouchableOpacity style={styles.checkedbox} key={i} onPress={checkoff}>
+                    {complete ? (
+                        <CheckedPost width={32} height={32} />
+                    ):(
+                        <UncheckedTask width={32} height={32} />
+                    )}
+                </TouchableOpacity>
+                <Text style={styles.itemText}>{text}</Text>
+            </View>
+        </Swipeable>
     )
 }
 
-    const styles = StyleSheet.create({
-        item: {
-            padding: 15,
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: '#E5F4FA',
-            borderRadius: 5,
-        },
-        checkedbox: {
-            marginRight: 15,
-        },
-        uncheckedbox: {
-            marginRight: 15,
-        },
-        itemText: {
-            maxWidth: '80%',
-        },
-        rightAction: {
-            backgroundColor: 'red',
-            justifyContent: 'center',
-            alignItems: 'flex-end',
-            borderBottomRightRadius: 5,
-            borderTopRightRadius: 5,
-        },
-        rightActionText: {
-            color: 'white',
-            fontWeight: '600',
-            padding: 20,
-        }
-    });
+const styles = StyleSheet.create({
+    item: {
+        padding: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+        height: 50,
+    },
+    firstTask: {
+        borderTopRightRadius: 15,
+        borderTopLeftRadius: 15,
+    },
+    lastTask: {
+        borderBottomRightRadius: 15,
+        borderBottomLeftRadius: 15,
+    },
+    checkedbox: {
+        marginRight: 10,
+        padding: 1,
+    },
+    itemText: {
+        maxWidth: '80%',
+        color: colors.primary,
+        fontFamily: fonts.regular,
+        fontSize: 14,
+    },
+    rightAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%',
+        width: 60,
+    },
+});
 
 export default Task;
