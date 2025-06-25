@@ -4,13 +4,17 @@ import ScheduleMenu from './ScheduleMenu';
 import ListModal from './PopUpMenus/ListModal';
 import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase} from '../../../firebaseConfig';
+import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebaseConfig';
 import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { addImage, takePhoto } from '../../utils/photoFunctions';
 import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
+import colors from '../../theme/colors';
+import fonts from '../../theme/fonts';
+import UncheckedTask from '../../assets/unchecked-task.svg';
+import CheckedTask from '../../assets/checked-task.svg';
 
 const EditTask = (props) => {
-    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask} = props;
+    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask } = props;
 
     const priorityRef = useRef(null);
 
@@ -38,12 +42,12 @@ const EditTask = (props) => {
 
     const screenHeight = Dimensions.get('window').height;
     const defaultHeight = screenHeight * 0.5;
-    const scheduleMenuHeight = 700;
+    const scheduleMenuHeight = 730;
     const maxHeight = screenHeight * 0.9;
 
     const animatedHeight = useRef(new Animated.Value(defaultHeight)).current;
 
-    const flagColor = ['black', 'blue', 'orange', 'red'];
+    const flagColor = [colors.primary, colors.secondary, colors.accent, colors.red];
 
     useEffect(() => {
         const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
@@ -94,18 +98,18 @@ const EditTask = (props) => {
                 let listRef;
                 listsToRemoveFrom.forEach((list) => {
                     listRef = doc(userProfileRef, 'Lists', list);
-                    batch.update(listRef, {taskIds: arrayRemove(task.id)});
+                    batch.update(listRef, { taskIds: arrayRemove(task.id) });
                 });
                 liststoAddTo.forEach((list) => {
                     listRef = doc(userProfileRef, 'Lists', list);
-                    batch.update(listRef, {taskIds: arrayUnion(task.id)});
+                    batch.update(listRef, { taskIds: arrayUnion(task.id) });
                 })
                 await cancelNotifications(task.notificationIds);
 
                 if (selectedReminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(selectedReminders, selectedDate, isTime, editedTaskName);
-                        batch.update(taskRef, {notificationIds: tempNotifIds});
+                        batch.update(taskRef, { notificationIds: tempNotifIds });
                     }
                 }
             }
@@ -129,7 +133,7 @@ const EditTask = (props) => {
 
                 selectedLists.forEach((list) => {
                     listRef = doc(userProfileRef, 'Lists', list);
-                    batch.update(listRef, {postIds: arrayUnion(postRef.id)});
+                    batch.update(listRef, { postIds: arrayUnion(postRef.id) });
                 })
 
                 let imageURI;
@@ -163,11 +167,11 @@ const EditTask = (props) => {
 
                 let newCompleteByDate;
                 if (selectedDate && (newCompleteByDate = isRepeatingTask(selectedDate.timestamp, dateRepeatEnds, selectedRepeat))) {
-                    batch.update(taskRef, {completeByDate: newCompleteByDate});
+                    batch.update(taskRef, { completeByDate: newCompleteByDate });
                     if (selectedReminders.length !== 0) {
                         if (await configureNotifications()) {
                             const tempNotifIds = await scheduleNotifications(selectedReminders, newCompleteByDate, isTime, editedTaskName);
-                            batch.update(taskRef, {notificationIds: tempNotifIds});
+                            batch.update(taskRef, { notificationIds: tempNotifIds });
                         }
                     }
                 }
@@ -176,13 +180,13 @@ const EditTask = (props) => {
                     batch.update(userProfileRef, { tasks: increment(-1) });
                     task.listIds.forEach((list) => {
                         listRef = doc(userProfileRef, 'Lists', list);
-                        batch.update(listRef, {taskIds: arrayRemove(task.id)});
+                        batch.update(listRef, { taskIds: arrayRemove(task.id) });
                     })
                 }
-                
+
                 batch.update(postRef, { image: imageURI });
                 batch.update(userProfileRef, { posts: increment(1) });
-            } 
+            }
             await batch.commit();
             setEditTaskVisible(false);
         } catch (error) {
@@ -204,14 +208,14 @@ const EditTask = (props) => {
 
     const getDateString = (timestamp) => {
         return timestamp.toLocaleDateString();
-      }
-    
+    }
+
     const getTimeString = (timestamp) => {
-    return timestamp.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-    });
+        return timestamp.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
     }
 
     const openPriorityModal = () => { // set a timeout
@@ -232,7 +236,7 @@ const EditTask = (props) => {
                 <TouchableWithoutFeedback onPress={() => setCalendarModalVisible(false)}>
                     <View style={{ flex: 1 }} />
                 </TouchableWithoutFeedback>
-                <View style={{ height: scheduleMenuHeight, paddingRight: 20, paddingLeft: 20, backgroundColor: 'white', }}>
+                <View style={[{ height: scheduleMenuHeight}, styles.scheduleMenuContainer] }>
                     <ScheduleMenu
                         isCalendarModalVisible={isCalendarModalVisible}
                         setCalendarModalVisible={setCalendarModalVisible}
@@ -255,7 +259,7 @@ const EditTask = (props) => {
                 animationType='slide'
             >
                 <TouchableWithoutFeedback onPress={() => setListModalVisible(false)}>
-                    <View style={{ flex: 1}} />
+                    <View style={{ flex: 1 }} />
                 </TouchableWithoutFeedback>
                 <ListModal
                     selectedLists={selectedLists}
@@ -272,26 +276,25 @@ const EditTask = (props) => {
                 <TouchableWithoutFeedback onPress={() => setPriorityModalVisible(false)}>
                     <View style={styles.priorityContainer}>
                         <TouchableWithoutFeedback>
-                            <View style={{top: priorityYPosition + 30, ...styles.priorityButtonContainer}}>
-                                <TouchableOpacity onPress={() => {setSelectedPriority(0)}} style={[selectedPriority == 0 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                            <View style={{ top: priorityYPosition + 30, ...styles.priorityButtonContainer }}>
+                                <View style={{overflow: 'hidden', borderRadius: 15}}>
+                                <TouchableOpacity onPress={() => { setSelectedPriority(0) }} style={[selectedPriority == 0 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
                                     <Text style={styles.priorityText}>No Priority</Text>
-                                    <Icon name="flag" size={16} color={'black'} />
+                                    <Icon name="flag" size={16} color={colors.primary} />
                                 </TouchableOpacity>
-                                <View style={styles.divider} />
-                                <TouchableOpacity onPress={() => {setSelectedPriority(1)}} style={[selectedPriority == 1 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                <TouchableOpacity onPress={() => { setSelectedPriority(1) }} style={[selectedPriority == 1 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
                                     <Text style={styles.priorityText}>Low Priority</Text>
-                                    <Icon name="flag" size={16} color={'blue'} />
+                                    <Icon name="flag" size={16} color={colors.secondary} />
                                 </TouchableOpacity>
-                                <View style={styles.divider} />
-                                <TouchableOpacity onPress={() => {setSelectedPriority(2)}} style={[selectedPriority == 2 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                <TouchableOpacity onPress={() => { setSelectedPriority(2) }} style={[selectedPriority == 2 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
                                     <Text style={styles.priorityText}>Medium Priority</Text>
-                                    <Icon name="flag" size={16} color={'orange'} />
+                                    <Icon name="flag" size={16} color={colors.accent} />
                                 </TouchableOpacity>
-                                <View style={styles.divider} />
-                                <TouchableOpacity onPress={() => {setSelectedPriority(3)}} style={[selectedPriority == 3 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
+                                <TouchableOpacity onPress={() => { setSelectedPriority(3) }} style={[selectedPriority == 3 ? styles.selectedPriorityButton : {}, styles.priorityButtons]}>
                                     <Text style={styles.priorityText}>High Priority</Text>
-                                    <Icon name="flag" size={16} color={'red'} />
+                                    <Icon name="flag" size={16} color={colors.red} />
                                 </TouchableOpacity>
+                                </View>
                             </View>
                         </TouchableWithoutFeedback>
                     </View>
@@ -302,7 +305,7 @@ const EditTask = (props) => {
                 transparent={true}
                 animationType='slide'
             >
-                <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false);}}>
+                <TouchableWithoutFeedback onPress={() => { handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false); }}>
                     <View style={{ flex: 1 }} />
                 </TouchableWithoutFeedback>
                 <CameraOptionMenu
@@ -315,31 +318,37 @@ const EditTask = (props) => {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Animated.View style={[styles.modalContainer, { height: animatedHeight }]}>
                     <View style={styles.rowOneView}>
-                        <TouchableOpacity onPress={() => setEditTaskVisible(false)} style={{width: 45}}>
-                            <Ionicons name="chevron-down-outline" size={32} color="black" />
+                        <TouchableOpacity onPress={() => setEditTaskVisible(false)} style={{ width: 50 }}>
+                            <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setListModalVisible(true)} style={styles.listButton}>
-                            <Text style={styles.listPicker}>{selectedLists.length == 0 ? "No Lists Selected" : listItems.find(item => item.id == selectedLists[0]).name + (selectedLists.length == 1 ? "" : ", ...")}</Text>
-                            <Ionicons name="chevron-down-outline" size={18} color="black" />
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.listPicker}>{selectedLists.length == 0 ? "No Lists Selected" : listItems.find(item => item.id == selectedLists[0]).name + (selectedLists.length == 1 ? "" : ", ...")}</Text>
+                            <Ionicons name="chevron-down-outline" size={18} color={colors.primary}/>
                         </TouchableOpacity>
-                        <TouchableOpacity style={{width: 45}} onPress={() => saveChanges()}>
+                        <TouchableOpacity style={{ width: 50, alignItems: 'center' }} onPress={() => saveChanges()}>
                             {isComplete ? (<Text style={styles.save}>Post</Text>) : (<Text style={styles.save}>Save</Text>)}
                         </TouchableOpacity>
                     </View>
                     <View style={styles.rowTwoView}>
-                        <TouchableOpacity style={ isComplete ? styles.checkedbox : styles.uncheckedbox } onPress={() => setComplete(!isComplete)} />
-                        <TouchableOpacity style={styles.dateContainer} onPress={() => {setCalendarModalVisible(true)}}>
-                            <Text>Due Date:</Text>
+                        <TouchableOpacity onPress={() => setComplete(!isComplete)} style={styles.checkedbox}>
+                            {isComplete ? (
+                                <CheckedTask width={42} height={42} />
+                            ) : (
+                                <UncheckedTask width={42} height={42} />
+                            )}
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.dateContainer} onPress={() => { setCalendarModalVisible(true) }}>
+                            <Text style={styles.timePicker}>Due Date:</Text>
                             {isTime ? (
                                 <Text style={styles.timePicker}>{getDateString(selectedDate.timestamp)}, {getTimeString(selectedDate.timestamp)}</Text>
-                                ) : selectedDate ? (
+                            ) : selectedDate ? (
                                 <Text style={styles.timePicker}>{getDateString(selectedDate.timestamp)}</Text>
-                                ) : (
+                            ) : (
                                 <Text style={styles.timePicker}>No time set</Text>
-                                )
+                            )
                             }
                         </TouchableOpacity>
-                        <TouchableOpacity ref={priorityRef} onPress={openPriorityModal} style={{width: 24}}>
+                        <TouchableOpacity ref={priorityRef} onPress={openPriorityModal} style={{ marginLeft: 10, width: 24 }}>
                             <Icon
                                 name="flag"
                                 size={24}
@@ -347,7 +356,7 @@ const EditTask = (props) => {
                             />
                         </TouchableOpacity>
                     </View>
-                    <ScrollView>
+                    <ScrollView style={{paddingHorizontal: 20}}>
                         <View style={styles.taskNameContainer}>
                             <TextInput
                                 onChangeText={text => setEditedTaskName(text)}
@@ -377,42 +386,56 @@ const EditTask = (props) => {
 };
 
 const styles = StyleSheet.create({
+    scheduleMenuContainer: {
+        paddingRight: 20, 
+        paddingLeft: 20, 
+        backgroundColor: colors.surface, 
+        borderTopRightRadius: 20, 
+        borderTopLeftRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4
+    },
     priorityContainer: {
         flex: 1,
     },
     priorityButtonContainer: {
         height: 160,
-        backgroundColor: 'white',
-        width: 150,
-        borderWidth: 1,
+        backgroundColor: colors.surface,
+        width: 160,
         borderRadius: 15,
         flexDirection: 'column',
         justifyContent: 'space-around',
         right: 20,
         position: 'absolute',
-        overflow: 'hidden'
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4
     },
     selectedPriorityButton: {
-        backgroundColor: 'yellow',
+        backgroundColor: colors.tint,
     },
     priorityButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        height: 39,
+        height: 40,
         alignItems: 'center',
         paddingHorizontal: 10,
     },
-    divider: {
-        height: 1,
-        backgroundColor: '#e0e0e0',
-        width: '100%',
+    priorityText: {
+        color: colors.primary,
+        fontFamily: fonts.regular
     },
     modalContainer: {
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        paddingLeft: 20,
-        paddingRight: 20,
         position: 'absolute',
         left: 0,
         right: 0,
@@ -420,6 +443,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
     },
     rowOneView: {
+        paddingHorizontal: 20,
         height: 50,
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -432,34 +456,22 @@ const styles = StyleSheet.create({
     },
     save: {
         fontSize: 18,
-        textAlign: 'center',
-        color: 'blue',
-        fontWeight: 'bold'
+        color: colors.link,
+        fontFamily: fonts.bold,
     },
     listPicker: {
         textAlign: 'center',
         fontSize: 18,
-        height: 20,
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     rowTwoView: {
         height: 40,
+        paddingRight: 20,
+        paddingLeft: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-    },
-    checkedbox: {
-        width: 24,
-        height: 24,
-        opacity: 0.4,
-        backgroundColor: '#55BCF6',
-        borderRadius: 5,
-    },
-    uncheckedbox: {
-        width: 24,
-        height: 24,
-        opacity: 0.4,
-        backgroundColor: 'grey',
-        borderRadius: 5,
     },
     dateContainer: {
         flexDirection: 'column',
@@ -467,6 +479,8 @@ const styles = StyleSheet.create({
     },
     timePicker: {
         textAlign: 'center',
+        color: colors.primary,
+        fontFamily: fonts.regular,
     },
     taskNameContainer: {
         marginTop: 15,
@@ -474,13 +488,16 @@ const styles = StyleSheet.create({
     },
     taskNameInput: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: fonts.bold,
+        color: colors.primary,
     },
     descriptionContainer: {
         marginTop: 10,
     },
     descriptionInput: {
         fontSize: 16,
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     taskText: {
         fontSize: 16

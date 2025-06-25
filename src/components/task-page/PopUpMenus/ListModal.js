@@ -106,7 +106,7 @@ const ListModal = (props) => {
           <TouchableOpacity onPress={() => setListModalVisible(false)} style={{ width: 45 }}>
             <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={{width: 45}} onPress={() => saveChanges()}>
+          <TouchableOpacity style={{width: 50}} onPress={() => saveChanges()}>
             <Text style={styles.save}>Save</Text>
           </TouchableOpacity>
         </View>
@@ -184,10 +184,8 @@ const styles = {
   },
   save: {
     fontSize: 18,
-    textAlign: 'center',
     color: colors.link,
     fontFamily: fonts.bold,
-    height: 20
   },
   topContainer: {
     flexDirection: 'column',
