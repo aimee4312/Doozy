@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Dimensions, FlatList, Animated, TextInput, KeyboardAvoidingView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../../firebaseConfig';
 import { LinearGradient } from 'expo-linear-gradient';
+import colors from '../../../theme/colors';
+import fonts from '../../../theme/fonts';
 
 const ListModal = (props) => {
 
@@ -88,9 +90,12 @@ const ListModal = (props) => {
   const renderList = ({ item }) => (
     <TouchableOpacity onPress={() => { handleListPress(item.id) }} style={{ ...(tempSelectedLists.includes(item.id) ? styles.listContainerSelected : {}), ...styles.listContainer }}>
       <View style={styles.nameContainer}>
-        <Ionicons name="list-outline" size={18} color="black" />
-        <Text style={styles.listName}>{item.name}</Text>
+        <Ionicons name="list-outline" size={18} color={tempSelectedLists.includes(item.id) ? (colors.accent) : (colors.primary)} />
+        <Text style={[tempSelectedLists.includes(item.id) ? {color: colors.accent} : {color: colors.primary}, styles.listName]}>{item.name}</Text>
       </View>
+      {tempSelectedLists.includes(item.id) && (<View>
+          <FontAwesome6 name={'check'} size={20} color={colors.accent} />
+      </View>)}
     </TouchableOpacity>
   );
 
@@ -99,7 +104,7 @@ const ListModal = (props) => {
       <View style={styles.topContainer}>
         <View style={styles.rowOneView}>
           <TouchableOpacity onPress={() => setListModalVisible(false)} style={{ width: 45 }}>
-            <Ionicons name="chevron-down-outline" size={32} color="black" />
+            <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={{width: 45}} onPress={() => saveChanges()}>
             <Text style={styles.save}>Save</Text>
@@ -138,13 +143,13 @@ const ListModal = (props) => {
             autoFocus={true}
           />
           <TouchableOpacity onPress={addList} style={styles.saveListButton}>
-            <Ionicons name="add-circle-outline" size={28} color='black' />
+            <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
           </TouchableOpacity>
         </View>)}
       </View>
       
         {!showAddList && (<TouchableOpacity onPress={handleAddListPress} style={styles.addListButton}>
-          <Ionicons name="add-circle-outline" size={28} color='black' />
+          <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
           <Text style={styles.addListText}>Add List</Text>
         </TouchableOpacity>)}
     </Animated.View>
@@ -176,8 +181,9 @@ const styles = {
   save: {
     fontSize: 18,
     textAlign: 'center',
-    color: 'blue',
-    fontWeight: 'bold'
+    color: colors.link,
+    fontFamily: fonts.bold,
+    height: 20
   },
   topContainer: {
     flexDirection: 'column',
@@ -190,16 +196,21 @@ const styles = {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderTopWidth: 1,
-    borderColor: 'C0C0C0',
+    borderTopRightRadius: 15,
+    borderTopLeftRadius: 15,
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
     },
   addListInput: {
     fontSize: 18,
     paddingHorizontal: 15,
+    fontFamily: fonts.regular,
+    color: colors.primary,
   },
   saveListButton: {
     marginRight: 15,
@@ -215,7 +226,8 @@ const styles = {
   addListText: {
     fontSize: 18,
     marginLeft: 5,
-    fontWeight: 'bold'
+    fontFamily: fonts.bold,
+    color: colors.primary,
   },
   listContainer: {
     flexDirection: 'row',
@@ -224,10 +236,6 @@ const styles = {
     paddingLeft: 20,
     paddingRight: 20,
     height: 50,
-    borderBottomWidth: 1,
-  },
-  listContainerSelected: {
-    backgroundColor: '#ffe066',
   },
   nameContainer: {
     flexDirection: 'row',
@@ -240,6 +248,7 @@ const styles = {
     textAlign: 'center',
     alignSelf: 'center',
     height: 24,
+    fontFamily: fonts.regular,
   },
   taskNumber: {
 

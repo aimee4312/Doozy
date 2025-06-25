@@ -5,7 +5,9 @@ import RepeatModal from './PopUpMenus/RepeatModal';
 import TimePopupMenu from './PopUpMenus/TimePopupMenu';
 import RepeatEndsModal from './PopUpMenus/RepeatEndsModal';
 import { Calendar } from 'react-native-calendars';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather} from '@expo/vector-icons';
+import colors from '../../theme/colors';
+import fonts from '../../theme/fonts';
 
 const ScheduleMenu = (props) => {
 
@@ -154,7 +156,7 @@ const ScheduleMenu = (props) => {
             setReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label : reminderNoTime[tempSelectedReminders[0]].label);
         }
         else {
-            setReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label + ",..." : reminderNoTime[tempSelectedReminders[0]].label + ",...");
+            setReminderString(isTempTime ? reminderWithTime[tempSelectedReminders[0]].label + ", ..." : reminderNoTime[tempSelectedReminders[0]].label + ", ...");
         }
     }
 
@@ -274,7 +276,7 @@ const ScheduleMenu = (props) => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.bigContainer}>
-                <View style={{height: 40}}>
+                <View style={{height: 50}}>
                     <View style={styles.saveChanges}>
                         <TouchableOpacity onPress={() => setCalendarModalVisible(false)}>
                             <Ionicons name="chevron-down-outline" size={32} color="black" />
@@ -284,12 +286,30 @@ const ScheduleMenu = (props) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={{height: 360}}>
+                <View style={{height: 380}}>
                     <Calendar
                         current={tempSelectedDate.dateString}
                         onDayPress={(day) => handleDateSelect(day)}
                         markedDates={{
-                        [tempSelectedDate.dateString]: { selected: true, selectedColor: 'blue' }
+                        [tempSelectedDate.dateString]: { selected: true }
+                        }}
+                        style={{borderRadius: 15}}
+                        theme={{
+                            calendarBackground: colors.surface,
+                            textSectionTitleColor: colors.secondary,
+                            selectedDayTextColor: colors.button_text,
+                            selectedDayBackgroundColor: colors.accent,
+                            dayTextColor: colors.primary,
+                            todayTextColor: colors.second_accent,
+                            textDisabledColor: '#d9e1e8',
+                            arrowColor: colors.accent,
+                            monthTextColor: colors.primary,
+                            textDayFontFamily: fonts.regular,
+                            textMonthFontFamily: fonts.bold,
+                            textDayHeaderFontFamily: fonts.regular,
+                            textDayFontSize: 16,
+                            textMonthFontSize: 16,
+                            textDayHeaderFontSize: 14,
                         }}
                     />
                 </View>
@@ -298,9 +318,9 @@ const ScheduleMenu = (props) => {
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Time</Text>
                             <View style={styles.cancelContainer}>
-                                <Text style={styles.menuText}>{isTempTime ? timeString : 'None'}</Text>
-                                {isTempTime && <TouchableOpacity onPress={handleTimeCancel}>
-                                    <Text> X</Text>
+                                <Text style={styles.menuInputs}>{isTempTime ? timeString : 'None'}</Text>
+                                {isTempTime && <TouchableOpacity style={{ marginLeft: 5}} onPress={handleTimeCancel}>
+                                    <Feather name="x" size={20} color={colors.primary} />
                                 </TouchableOpacity>}
                             </View>
                         </View>
@@ -309,9 +329,9 @@ const ScheduleMenu = (props) => {
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Reminder</Text>
                             <View style={styles.cancelContainer}>
-                                <Text style={styles.menuText}>{reminderString}</Text>
-                                {(tempSelectedReminders.length !== 0) && <TouchableOpacity onPress={handleReminderCancel}>
-                                    <Text> X</Text>
+                                <Text style={styles.menuInputs}>{reminderString}</Text>
+                                {(tempSelectedReminders.length !== 0) && <TouchableOpacity style={{ marginLeft: 5}} onPress={handleReminderCancel}>
+                                    <Feather name="x" size={20} color={colors.primary} />
                                 </TouchableOpacity>}
                             </View>
                         </View>
@@ -320,9 +340,9 @@ const ScheduleMenu = (props) => {
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat</Text>
                             <View style={styles.cancelContainer}>
-                                <Text style={styles.menuText}>{repeatString}</Text>
-                                {(tempSelectedRepeat !== null) && <TouchableOpacity onPress={handleRepeatCancel}>
-                                    <Text> X</Text>
+                                <Text style={styles.menuInputs}>{repeatString}</Text>
+                                {(tempSelectedRepeat !== null) && <TouchableOpacity style={{ marginLeft: 5}} onPress={handleRepeatCancel}>
+                                    <Feather name="x" size={20} color={colors.primary} />
                                 </TouchableOpacity>}
                             </View>
                         </View>
@@ -331,18 +351,20 @@ const ScheduleMenu = (props) => {
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat Ends</Text>
                             <View style={styles.cancelContainer}>
-                                <Text style={styles.menuText}>{!isDateRepeatEnds ? 'Never' : dateToString(tempDateRepeatEnds)}</Text>
-                                {isDateRepeatEnds && <TouchableOpacity onPress={handleRepeatEndsCancel}>
-                                    <Text> X</Text>
+                                <Text style={styles.menuInputs}>{!isDateRepeatEnds ? 'Never' : dateToString(tempDateRepeatEnds)}</Text>
+                                {isDateRepeatEnds && <TouchableOpacity style={{ marginLeft: 5}} onPress={handleRepeatEndsCancel}>
+                                    <Feather name="x" size={20} color={colors.primary} />
                                 </TouchableOpacity>}
                             </View>
                         </View>
                     </TouchableHighlight>}
                 </View>
             </View>
-            <TouchableOpacity style={{height: 20, ...styles.smallContainer}} onPress={clearData}>
-                <Text style={styles.clearText}>Clear</Text>
-            </TouchableOpacity>
+            <View style={styles.clearContainer}>
+                <TouchableOpacity style={{height: 20, ...styles.smallContainer}} onPress={clearData}>
+                    <Text style={styles.clearText}>Clear</Text>
+                </TouchableOpacity>
+            </View>
             <TimePopupMenu isVisible={isTimeMenuVisible} onClose={toggleTimeMenu} time={tempTime} handleTimeChange={handleTimeChange} buttonHeight={timeButtonHeight} />
             <ReminderModal isVisible={isReminderMenuVisible} onClose={toggleReminderMenu} menuOptions={isTempTime ? reminderWithTime : reminderNoTime} selectedOptions={tempSelectedReminders} setSelectedOptions={setTempSelectedReminders} buttonHeight={reminderButtonHeight} />
             <RepeatModal isVisible={isRepeatMenuVisible} onClose={toggleRepeatMenu} menuOptions={repeat} selectedOption={tempSelectedRepeat} setSelectedOption={setTempSelectedRepeat} buttonHeight={repeatButtonHeight} />
@@ -366,14 +388,6 @@ const styles = StyleSheet.create({
     bigContainer: {
         
     },
-    smallContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    clearText: {
-        fontSize: 16,
-        color: 'red',
-    },
     saveChanges: {
         flex: 1,
         flexDirection: 'row',
@@ -382,26 +396,21 @@ const styles = StyleSheet.create({
 
     },
     saveButton: {
-        color: 'blue',
-        fontWeight: 'bold',
+        color: colors.link,
+        fontFamily: fonts.bold,
         fontSize: 18
     },
     menuTopButton: {
-        borderTopLeftRadius: 5,
-        borderTopRightRadius: 5,
-        borderTopWidth: 1,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
     },
     menuBottomButton: {
-        borderBottomLeftRadius: 5,
-        borderBottomRightRadius: 5,
-        borderBottomWidth: 1,
+        borderBottomLeftRadius: 15,
+        borderBottomRightRadius: 15,
     },
     menuButton: {
         padding: 15,
-        backgroundColor: "lightgray",
-        borderColor: 'gray',
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
+        backgroundColor: colors.surface,
         height: 50
     },
     buttonReminder: {
@@ -414,7 +423,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     menuText: {
-        fontSize: 16
+        fontFamily: fonts.bold,
+        fontSize: 16,
+        color: colors.primary,
+    },
+    menuInputs: {
+        fontFamily: fonts.regular,
+        fontSize: 16,
+        color: colors.primary,
     },
     cancelContainer: {
         flexDirection: 'row',
@@ -426,6 +442,21 @@ const styles = StyleSheet.create({
     listsMenu: {
         backgroundColor: 'transparent',
         zIndex: 1000,
+    },
+    clearContainer: {
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    smallContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    clearText: {
+        fontSize: 16,
+        fontFamily: fonts.regular,
+        color: colors.red,
+        paddingHorizontal: 10,
     },
 });
 

@@ -86,7 +86,6 @@ const styles = StyleSheet.create({
     },
     checkedbox: {
         marginRight: 10,
-        padding: 1,
     },
     itemText: {
         maxWidth: '80%',

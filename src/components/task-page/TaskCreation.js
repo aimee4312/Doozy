@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Platform, TextInput, Text, View, TouchableOpacity, Button, TouchableHighlight, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated, SafeAreaView } from 'react-native';
+import { StyleSheet, Platform, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
 import ListModal from './PopUpMenus/ListModal';
 import ScheduleMenu from './ScheduleMenu';
 import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
@@ -41,7 +41,7 @@ const TaskCreation = (props) => {
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
-    const modalHeight = 700;
+    const modalHeight = 730;
     const taskCreationHeight = 135;
 
     const animatedHeight = useRef(new Animated.Value(taskCreationHeight)).current;
@@ -109,7 +109,6 @@ const TaskCreation = (props) => {
             batch.update(userProfileRef, { tasks: increment(1) });
             if (!blockNotifications && selectedReminders.length !== 0) {
                 if (await configureNotifications()) {
-                    console.log("notifications not blocked");
                     const tempNotifIds = await scheduleNotifications(selectedReminders, selectedDate, isTime, newTask);
                     batch.update(taskRef, { notificationIds: tempNotifIds });
                 }
@@ -249,7 +248,7 @@ const TaskCreation = (props) => {
         isCompleted ? setCompleted(false) : setCompleted(true);
     }
 
-    const flagColor = [colors.primary, 'blue', 'orange', 'red'];
+    const flagColor = [colors.primary, colors.secondary, colors.accent, colors.red];
 
     return (
         <SafeAreaView style={styles.container}>
@@ -346,7 +345,7 @@ const TaskCreation = (props) => {
                             />
                         </View>
                         <View style={styles.detailsWrapper}>
-                            <TouchableHighlight
+                            <TouchableOpacity
                                 style={styles.submitButton}
                                 onPress={toggleCalendarModal}
                             >
@@ -357,16 +356,16 @@ const TaskCreation = (props) => {
                                         color={colors.primary}
                                     />
                                 </View>
-                            </TouchableHighlight>
-                            <TouchableHighlight
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 style={styles.submitButton}
                                 onPress={toggleListModal}
                             >
                                 <View style={styles.iconContainer}>
                                     <Ionicons name="list-outline" size={28} color={colors.primary} />
                                 </View>
-                            </TouchableHighlight>
-                            <TouchableHighlight
+                            </TouchableOpacity>
+                            <TouchableOpacity
                                 style={styles.submitButton}
                                 onPress={() => { setShowPriority(!showPriority) }}
                             >
@@ -378,41 +377,41 @@ const TaskCreation = (props) => {
                                     />)
                                         : (<Feather name="x-circle" size={28} color={colors.primary} />)}
                                 </View>
-                            </TouchableHighlight>
+                            </TouchableOpacity>
                             {showPriority && (<View style={styles.priorityContainer}>
-                                <TouchableHighlight onPress={() => { selectedPriority == 1 ? setSelectedPriority(0) : setSelectedPriority(1) }} style={[selectedPriority == 1 ? { width: 75, ...styles.selectedPriorityButton } : { width: 60 }, styles.priorityButtonLow]}>
+                                <TouchableOpacity onPress={() => { selectedPriority == 1 ? setSelectedPriority(0) : setSelectedPriority(1) }} style={[selectedPriority == 1 ? { width: 75, ...styles.selectedPriorityButton } : { width: 60 }, styles.priorityButtonLow]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
                                             size={16}
-                                            color={'blue'}
+                                            color={flagColor[1]}
                                         />
                                         <Text style={styles.priorityText}>Low</Text>
                                         {selectedPriority == 1 && <Feather name="x" size={16} color={colors.primary} />}
                                     </View>
-                                </TouchableHighlight>
-                                <TouchableHighlight onPress={() => { selectedPriority == 2 ? setSelectedPriority(0) : setSelectedPriority(2) }} style={[selectedPriority == 2 ? { width: 80, ...styles.selectedPriorityButton } : { width: 65 }, styles.priorityButtonMed]}>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => { selectedPriority == 2 ? setSelectedPriority(0) : setSelectedPriority(2) }} style={[selectedPriority == 2 ? { width: 80, ...styles.selectedPriorityButton } : { width: 65 }, styles.priorityButtonMed]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
                                             size={16}
-                                            color={'orange'}
+                                            color={flagColor[2]}
                                         />
                                         <Text style={styles.priorityText}>Med</Text>
-                                        {selectedPriority == 2 && <Feather name="x" size={16} color={'black'} />}
+                                        {selectedPriority == 2 && <Feather name="x" size={16} color={colors.primary} />}
                                     </View>
-                                </TouchableHighlight>
-                                <TouchableHighlight onPress={() => { selectedPriority == 3 ? setSelectedPriority(0) : setSelectedPriority(3) }} style={[selectedPriority == 3 ? { width: 85, ...styles.selectedPriorityButton } : { width: 70 }, styles.priorityButtonHigh]}>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => { selectedPriority == 3 ? setSelectedPriority(0) : setSelectedPriority(3) }} style={[selectedPriority == 3 ? { width: 85, ...styles.selectedPriorityButton } : { width: 70 }, styles.priorityButtonHigh]}>
                                     <View style={styles.priorityButtonContainer}>
                                         <Icon
                                             name="flag"
                                             size={16}
-                                            color={'red'}
+                                            color={flagColor[3]}
                                         />
                                         <Text style={styles.priorityText}>High</Text>
                                         {selectedPriority == 3 && <Feather name="x" size={16} color={colors.primary} />}
                                     </View>
-                                </TouchableHighlight>
+                                </TouchableOpacity>
                             </View>)}
                         </View>
                     </View>
@@ -420,8 +419,8 @@ const TaskCreation = (props) => {
             </Modal>
             <View style={styles.bottomBar}>
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={openTaskCreationModal}>
-                        <Ionicons name="add-circle-outline" size={72} color='black' />
+                    <TouchableOpacity onPress={openTaskCreationModal} style={styles.addTaskButton}>
+                        <AntDesign name="pluscircle" size={64} color={colors.accent} />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.navBar}>
@@ -513,7 +512,6 @@ const styles = StyleSheet.create({
     },
     checkedbox: {
         marginLeft: 10,
-        padding: 1,
     },
     inputDescription: {
         fontSize: 13,
@@ -585,27 +583,30 @@ const styles = StyleSheet.create({
         rowGap: 10,
     },
     selectedPriorityButton: {
-        backgroundColor: "yellow",
+        backgroundColor: colors.tint,
     },
     priorityButtonLow: {
         height: 30,
         marginRight: 5,
         borderWidth: 1,
         borderRadius: 15,
-        justifyContent: 'center'
+        justifyContent: 'center',
+        borderColor: colors.primary,
     },
     priorityButtonMed: {
         height: 30,
         marginRight: 5,
         borderWidth: 1,
         borderRadius: 15,
-        justifyContent: 'center'
+        justifyContent: 'center',
+        borderColor: colors.primary,
     },
     priorityButtonHigh: {
         height: 30,
         borderWidth: 1,
         borderRadius: 15,
-        justifyContent: 'center'
+        justifyContent: 'center',
+        borderColor: colors.primary,
     },
     priorityButtonContainer: {
         flexDirection: 'row',
@@ -615,6 +616,9 @@ const styles = StyleSheet.create({
     priorityText: {
         marginLeft: 5,
         marginRight: 2,
+        fontFamily: fonts.regular,
+        fontSize: 14,
+        color: colors.primary
     },
     customItem: {
         margin: 0,
@@ -631,6 +635,18 @@ const styles = StyleSheet.create({
     },
     chipText: {
         fontSize: 14,
+    },
+    addTaskButton: {
+        height: 64,
+        width: 64,
+        backgroundColor: colors.surface,
+        borderRadius: 50,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4
     },
     titleText: {
         fontSize: 18,

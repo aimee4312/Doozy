@@ -10,7 +10,7 @@ import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseCon
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from 'react-native-drawer-layout';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Notifications from "expo-notifications";
 import { addImage, takePhoto } from '../utils/photoFunctions';
@@ -675,21 +675,41 @@ const TaskListScreen = (props) => {
                                             <View style={styles.sortBy}>
                                                 <Text style={styles.sortByText}>Sort by:</Text>
                                             </View>
-                                            <TouchableOpacity onPress={() => {setOrder("default")}} style={[order == "default" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <MaterialCommunityIcons name="sort" size={16} color={colors.primary} />
-                                                <Text style={styles.sortText}>Default</Text>
+                                            <TouchableOpacity onPress={() => {setOrder("default")}} style={styles.sortButtons}>
+                                                <View style={styles.sortNames}>
+                                                    <MaterialCommunityIcons name="sort" size={16} color={order == "default" ? (colors.accent) : (colors.primary)} />
+                                                    <Text style={[order == "default" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Default</Text>
+                                                </View>
+                                                {order == "default" && <View> 
+                                                    <FontAwesome6 name={'check'} size={16} color={colors.accent} />
+                                                </View>}
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => {setOrder("dueDate")}} style={[order == "dueDate" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <MaterialCommunityIcons name="sort-calendar-ascending" size={16} color={colors.primary} />
-                                                <Text style={styles.sortText}>Due Date</Text>
+                                            <TouchableOpacity onPress={() => {setOrder("dueDate")}} style={styles.sortButtons}>
+                                                <View style={styles.sortNames}>
+                                                    <MaterialCommunityIcons name="sort-calendar-ascending" size={16} color={order == "dueDate" ? (colors.accent) : (colors.primary)} />
+                                                    <Text style={[order == "dueDate" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Due Date</Text>
+                                                </View>
+                                                {order == "dueDate" && <View> 
+                                                    <FontAwesome6 name={'check'} size={16} color={colors.accent} />
+                                                </View>}
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => {setOrder("priority")}} style={[order == "priority" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <Icon name="flag" size={16} color={colors.primary} />
-                                                <Text style={styles.sortText}>Priority</Text>
+                                            <TouchableOpacity onPress={() => {setOrder("priority")}} style={styles.sortButtons}>
+                                                <View style={styles.sortNames}>
+                                                    <Icon name="flag" size={16} color={order == "priority" ? (colors.accent) : (colors.primary)} />
+                                                    <Text style={[order == "priority" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Priority</Text>
+                                                </View>
+                                                {order == "priority" && <View> 
+                                                    <FontAwesome6 name={'check'} size={16} color={colors.accent} />
+                                                </View>}
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => {setOrder("name")}} style={[order == "name" ? styles.selectedSortButton : {}, styles.sortButtons]}>
-                                                <MaterialCommunityIcons name="sort-alphabetical-ascending" size={16} color={colors.primary} />
-                                                <Text style={styles.sortText}>Name</Text>
+                                            <TouchableOpacity onPress={() => {setOrder("name")}} style={styles.sortButtons}>
+                                                <View style={styles.sortNames}>
+                                                    <MaterialCommunityIcons name="sort-alphabetical-ascending" size={16} color={order == "name" ? (colors.accent) : (colors.primary)} />
+                                                    <Text style={[order == "name" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Name</Text>
+                                                </View>
+                                                {order == "name" && <View> 
+                                                    <FontAwesome6 name={'check'} size={16} color={colors.accent} />
+                                                </View>}
                                             </TouchableOpacity>
                                         </View>
                                     </TouchableWithoutFeedback>
@@ -799,7 +819,6 @@ const styles = StyleSheet.create({
     },
     title: { 
         fontSize: 32, 
-        fontWeight: 'bold',
         color: colors.primary,
         fontFamily: fonts.bold, 
     },
@@ -831,23 +850,24 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
     sortByText: {
-        fontFamily: fonts.regular,
+        fontFamily: fonts.bold,
         fontSize: 16,
         color: colors.primary,
     },
-    selectedSortButton: {
-        backgroundColor: 'yellow',
+    sortNames: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
     },
     sortButtons: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         height: 40,
         alignItems: 'center',
         paddingHorizontal: 10,
     },
     sortText: {
         marginLeft: 10,
-        color: colors.primary,
         fontFamily: fonts.regular,
     },
     scrollView: {

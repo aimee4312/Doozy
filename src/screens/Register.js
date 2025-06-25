@@ -116,7 +116,7 @@ const Register = () => {
                                     style={styles.textBox}
                                     secureTextEntry
                                     returnKeyType="go" // or "done"
-                                    onSubmitEditing={onSignIn}
+                                    onSubmitEditing={onSignUp}
                                 />
                                 <View style={styles.buttonContainer}>
                                     <TouchableOpacity

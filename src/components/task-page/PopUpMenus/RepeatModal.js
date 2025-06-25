@@ -1,5 +1,8 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import colors from '../../../theme/colors';
+import fonts from '../../../theme/fonts';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const RepeatModal = ({ isVisible, onClose, menuOptions, selectedOption, setSelectedOption, buttonHeight }) => {
 
@@ -27,8 +30,11 @@ const RepeatModal = ({ isVisible, onClose, menuOptions, selectedOption, setSelec
                     <View style={[styles.menu, { bottom: totalButtonHeight, right: 25}]}>
                         {menuOptions.map((option, index) => (
                         <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
-                            <View style={[styles.priorityWrapper, selectedOption === index && styles.selectedOptions]}>
-                                <Text style={styles.menuOption}>{option.label}</Text>
+                            <View style={styles.priorityWrapper}>
+                                <Text style={[selectedOption === index ? {color: colors.accent} : {color: colors.primary}, styles.menuOption]}>{option.label}</Text>
+                                {selectedOption === index && <View> 
+                                  <FontAwesome6 name={'check'} size={16} color={colors.accent} />
+                                </View>}
                             </View>
                         </TouchableOpacity>))}
                     </View>
@@ -47,31 +53,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menu: {
-    backgroundColor: 'grey',
-    paddingHorizontal: 20,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
     borderRadius: 10,
     elevation: 5,
     position: 'absolute',
     width: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
   },
   menuOption: {
-    fontSize: 16,
+    fontSize: 14,
     paddingVertical: 10,
-    color: 'white',
-  },
-  closeButton: {
-    fontSize: 16,
-    paddingVertical: 10,
-    textAlign: 'center',
-    color: 'blue',
-    marginTop: 10,
+    fontFamily: fonts.regular,
   },
   selectedOptions: {
-    backgroundColor: "black",
 },
 priorityWrapper: {
     flexDirection: "row",
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 2,
 },
 });

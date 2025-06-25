@@ -1,5 +1,8 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import colors from '../../../theme/colors';
+import fonts from '../../../theme/fonts';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 const ReminderModal = ({ isVisible, onClose, menuOptions, selectedOptions, setSelectedOptions, buttonHeight }) => {
 
@@ -27,8 +30,11 @@ const ReminderModal = ({ isVisible, onClose, menuOptions, selectedOptions, setSe
                     <View style={[styles.menu, { bottom: totalButtonHeight, right: 25}]}>
                         {menuOptions.map((option, index) => (
                         <TouchableOpacity key={index} onPress={() => handleOptionSelect(index)}>
-                            <View style={[styles.priorityWrapper, selectedOptions.includes(index) && styles.selectedOptions]}>
-                                <Text style={styles.menuOption}>{option.label}</Text>
+                            <View style={styles.priorityWrapper}>
+                                <Text style={[selectedOptions.includes(index) ? {color: colors.accent} : {color: colors.primary}, styles.menuOption]}>{option.label}</Text>
+                                {selectedOptions.includes(index) && <View> 
+                                  <FontAwesome6 name={'check'} size={16} color={colors.accent} />
+                                </View>}
                             </View>
                         </TouchableOpacity>))}
                     </View>
@@ -42,37 +48,33 @@ const ReminderModal = ({ isVisible, onClose, menuOptions, selectedOptions, setSe
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   menu: {
-    backgroundColor: 'grey',
-    paddingHorizontal: 20,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
     borderRadius: 10,
     elevation: 5,
     position: 'absolute',
     width: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
   },
   menuOption: {
-    fontSize: 16,
+    fontSize: 14,
     paddingVertical: 10,
-    color: 'white',
+    fontFamily: fonts.regular,
   },
-  closeButton: {
-    fontSize: 16,
-    paddingVertical: 10,
-    textAlign: 'center',
-    color: 'blue',
-    marginTop: 10,
-  },
-  selectedOptions: {
-    backgroundColor: "black",
-},
 priorityWrapper: {
     flexDirection: "row",
     alignItems: 'center',
     paddingVertical: 2,
+    justifyContent: 'space-between'
 },
 });
 

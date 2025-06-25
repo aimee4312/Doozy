@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import colors from '../../../theme/colors';
 
 const RepeatEndsModal = ({ isVisible, setIsRepeatEndsModalVisible, dateRepeatEnds, setDateRepeatEnds, minimumDate, buttonHeight }) => {
 
@@ -22,8 +23,10 @@ const RepeatEndsModal = ({ isVisible, setIsRepeatEndsModalVisible, dateRepeatEnd
         <TouchableWithoutFeedback onPress={() => setIsRepeatEndsModalVisible(false)}>
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
-                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 25, overflow: 'hidden'}]}>
+                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 25 }]}>
+                      <View style={styles.innerMenu}>
                         <DateTimePicker mode="date" value={dateRepeatEnds} onChange={onChange} display='spinner' minimumDate={minimumDate} style={{flex: 1}}/>
+                      </View>
                     </View>
                 </TouchableWithoutFeedback>
             </View>
@@ -35,12 +38,11 @@ const RepeatEndsModal = ({ isVisible, setIsRepeatEndsModalVisible, dateRepeatEnd
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   menu: {
-    backgroundColor: 'grey',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     elevation: 5,
     position: 'absolute',
@@ -48,27 +50,21 @@ const styles = StyleSheet.create({
     width: 300,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
   },
-  menuOption: {
-    fontSize: 16,
-    paddingVertical: 10,
-    color: 'white',
-  },
-  closeButton: {
-    fontSize: 16,
-    paddingVertical: 10,
-    textAlign: 'center',
-    color: 'blue',
-    marginTop: 10,
-  },
-  selectedReminders: {
-    backgroundColor: "yellow",
-},
-priorityWrapper: {
-    flexDirection: "row",
+  innerMenu:{
+    overflow: 'hidden',
+    borderRadius: 15,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
-    paddingVertical: 2,
-},
+    justifyContent: 'center',
+  },
 });
 
 export default RepeatEndsModal;

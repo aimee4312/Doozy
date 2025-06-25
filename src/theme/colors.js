@@ -8,4 +8,6 @@ export default {
     surface: '#fff',
     button_text: '#ffffff',
     red: '#d32f2f',
+    link: '#2979ff',
+    tint: '#fff9c4'
 }

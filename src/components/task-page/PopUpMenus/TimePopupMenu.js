@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import colors from '../../../theme/colors';
 
 const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeight }) => {
 
@@ -22,8 +23,10 @@ const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeigh
         <TouchableWithoutFeedback onPress={onClose}>
             <View style={styles.overlay}>
                 <TouchableWithoutFeedback>
-                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 25, overflow: 'hidden'}]}>
-                        <DateTimePicker mode="time" value={time} onChange={onChange} display='spinner' style={{flex: 1}}/>
+                    <View style={[styles.menu, { bottom: totalButtonHeight, right: 25,}]}>
+                      <View style={styles.innerMenu}>
+                        <DateTimePicker themeVariant="light" mode="time" value={time} onChange={onChange} display='spinner' style={{flex: 1}}/>
+                      </View>
                     </View>
                 </TouchableWithoutFeedback>
             </View>
@@ -35,17 +38,25 @@ const TimePopupMenu = ({ isVisible, onClose, time, handleTimeChange, buttonHeigh
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   menu: {
-    backgroundColor: 'grey',
-    borderRadius: 10,
-    elevation: 5,
+    backgroundColor: colors.surface,
+    borderRadius: 15,
     position: 'absolute',
     height: 150,
     width: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
+  },
+  innerMenu:{
+    overflow: 'hidden',
+    borderRadius: 15,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
