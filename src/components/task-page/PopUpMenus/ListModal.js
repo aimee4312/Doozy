@@ -87,8 +87,8 @@ const ListModal = (props) => {
     setListModalVisible(false);
   }
 
-  const renderList = ({ item }) => (
-    <TouchableOpacity onPress={() => { handleListPress(item.id) }} style={{ ...(tempSelectedLists.includes(item.id) ? styles.listContainerSelected : {}), ...styles.listContainer }}>
+  const renderList = ( item, isLast ) => (
+    <TouchableOpacity onPress={() => { handleListPress(item.id) }} style={{ ...(isLast ? {marginBottom: 20} : {}) , ...(tempSelectedLists.includes(item.id) ? styles.listContainerSelected : {}), ...styles.listContainer }}>
       <View style={styles.nameContainer}>
         <Ionicons name="list-outline" size={18} color={tempSelectedLists.includes(item.id) ? (colors.accent) : (colors.primary)} />
         <Text style={[tempSelectedLists.includes(item.id) ? {color: colors.accent} : {color: colors.primary}, styles.listName]}>{item.name}</Text>
@@ -113,10 +113,14 @@ const ListModal = (props) => {
           <View style={{ height: flatListHeight, ...styles.flatList }}>
             <FlatList
               data={listItems}
-              renderItem={renderList}
+              renderItem={({ item, index }) => {
+                const isLast = index === listItems.length - 1;
+                return (renderList(item, isLast));
+              }}
               keyExtractor={item => item.id}
               showsVerticalScrollIndicator={true}
             />
+            
             <LinearGradient //FIX FADE AT BOTTOM
               colors={[
                 'rgba(255,255,255,0)',   // Fully transparent
@@ -143,7 +147,7 @@ const ListModal = (props) => {
             autoFocus={true}
           />
           <TouchableOpacity onPress={addList} style={styles.saveListButton}>
-            <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
+            <Ionicons name="add-circle-outline" size={32} color={colors.primary} />
           </TouchableOpacity>
         </View>)}
       </View>
@@ -211,9 +215,10 @@ const styles = {
     paddingHorizontal: 15,
     fontFamily: fonts.regular,
     color: colors.primary,
+    width: '85%',
   },
   saveListButton: {
-    marginRight: 15,
+    marginRight: 10,
   },
   addListButton: {
     alignSelf: 'center',

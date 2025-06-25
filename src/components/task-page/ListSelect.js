@@ -3,6 +3,8 @@ import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View, TouchableWit
 import { Ionicons } from "@expo/vector-icons";
 import { arrayRemove, collection, doc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../firebaseConfig";
+import colors from '../../theme/colors';
+import fonts from '../../theme/fonts';
 
 
 const ListSelect = (props) => {
@@ -129,14 +131,14 @@ const ListSelect = (props) => {
             style={{...(item.id == listId ? styles.listContainerSelected : {}), ...styles.listContainer}}
         >
             <View style={styles.nameContainer}>
-                <Ionicons name="list-outline" size={18} color="black" />
+                <Ionicons name="list-outline" size={18} color={colors.primary} />
                 <Text style={styles.listName}>{item.name}</Text>
             </View>
             {item.id == '0' ? 
                 (<Text style={styles.taskNumber}>{item.taskNumber}</Text>) 
             : (
-                <TouchableOpacity onPress={() => toggleListMenu(item)} style={{ width: 40, height: 50, flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 15, alignItems: 'center' }}>
-                    <Ionicons name="ellipsis-vertical-outline" size={18} color="black" />
+                <TouchableOpacity onPress={() => toggleListMenu(item)} style={{ height: 50, flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 10, alignItems: 'center' }}>
+                    <Ionicons name="ellipsis-vertical-outline" size={18} color={colors.primary} />
                 </TouchableOpacity>
             )}
         </TouchableOpacity>
@@ -156,7 +158,7 @@ const ListSelect = (props) => {
                     <View style={styles.inputContainer}>
                         <TextInput ref={addListRef} placeholder="Enter list name..." style={styles.addListInput} value={listName} onChangeText={setListName} />
                         <TouchableOpacity onPress={edit ? editList : addList} style={styles.saveListButton}>
-                            <Ionicons name="add-circle-outline" size={28} color='black'/>
+                            <Ionicons name="add-circle-outline" size={32} color={colors.primary}/>
                         </TouchableOpacity>
                     </View>
                 </Animated.View>
@@ -172,12 +174,11 @@ const ListSelect = (props) => {
                             <View style={{top: currYPosition + 50, left: listMenuXPosition, ...styles.listMenu}}>
                                 <TouchableOpacity onPress={() => {setEdit(true); setListName(currList.name); setListMenuModalVisible(false); openModal();}}style={styles.listMenuButtons}>
                                     <Text style={styles.listMenuText}>Rename</Text>
-                                    <Ionicons name="create-outline" size={18} color="black" />
+                                    <Ionicons name="create-outline" size={18} color={colors.primary} />
                                 </TouchableOpacity>
-                                <View style={styles.divider} />
                                 <TouchableOpacity onPress={() => deleteList(currList)} style={styles.listMenuButtons}>
                                     <Text style={styles.listMenuText}>Delete</Text>
-                                    <Ionicons name="trash-outline" size={18} color="red" />
+                                    <Ionicons name="trash-outline" size={18} color={colors.red} />
                                 </TouchableOpacity>
                             </View>
                         </TouchableWithoutFeedback>
@@ -191,7 +192,7 @@ const ListSelect = (props) => {
                         <Text style={styles.profileText}>{userProfile ? userProfile.username : ""}</Text>
                     </View>
                 </View>
-                <Ionicons name="settings-sharp" size={28} color="black" />
+                <Ionicons name="settings-sharp" size={28} color={colors.primary} />
             </View>
             <FlatList 
                 data={allListItems}
@@ -199,7 +200,7 @@ const ListSelect = (props) => {
                 keyExtractor={item => item.id}
             />
             <TouchableOpacity onPress={openModal} style={styles.addListButton}>
-                <Ionicons name="add-circle-outline" size={28} color='black' />
+                <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
                 <Text style={styles.addListText}>Add List</Text>
             </TouchableOpacity>
         </View>
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     },
     profileText: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: fonts.bold,
         height: 20,
     },
     addListButton: {
@@ -238,16 +239,21 @@ const styles = StyleSheet.create({
     addListText: {
         fontSize: 18,
         marginLeft: 5,
-        fontWeight: 'bold'
+        fontFamily: fonts.bold,
+        color: colors.primary,
     },
     addListContainer: {
-        borderTopRightRadius: 10,
-        borderTopLeftRadius: 10,
-        backgroundColor: 'white',
-        borderWidth: 1,
-        borderColor: 'C0C0C0',
+        borderTopRightRadius: 15,
+        borderTopLeftRadius: 15,
+        backgroundColor: colors.surface,
         flexDirection: 'column',
-        justifyContent: 'flex-start'
+        justifyContent: 'flex-start',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
     inputContainer: {
         flexDirection: 'row',
@@ -258,21 +264,29 @@ const styles = StyleSheet.create({
         fontSize: 18,
         height: 50,
         paddingHorizontal: 15,
+        fontFamily: fonts.regular,
+        color: colors.primary,
+        width: '85%',
     },
     saveListButton: {
-        marginRight: 15,
+        marginRight: 10,
     },
     listMenuBackground: {
         flex: 1,
     },
     listMenu: {
         height: 80,
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         width: 150,
-        borderWidth: 1,
         borderRadius: 15,
         flexDirection: 'column',
-        justifyContent: 'space-around'
+        justifyContent: 'space-around',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
     },
     listMenuButtons: {
         flexDirection: 'row',
@@ -282,12 +296,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
     },
     listMenuText: {
-        fontSize: 16
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#e0e0e0',
-        width: '100%',
+        fontSize: 16,
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     listContainer: {
         flexDirection: 'row',
@@ -295,9 +306,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingLeft: 10,
         height: 50,
+        width: '100%'
     },
     listContainerSelected: {
-        backgroundColor: '#ffe066',
+        backgroundColor: colors.tint,
     },
     nameContainer: {
         flexDirection: 'row',
@@ -308,11 +320,15 @@ const styles = StyleSheet.create({
     listName: {
         paddingLeft: 10,
         fontSize: 16,
-        height: 20,
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     taskNumber: {
-        width: 10,
-        marginRight: 10
+        width: 40,
+        marginRight: 10,
+        color: colors.primary,
+        fontFamily: fonts.regular,
+        textAlign: 'right'
     },
 })
 
