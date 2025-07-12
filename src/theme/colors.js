@@ -9,5 +9,6 @@ export default {
     button_text: '#ffffff',
     red: '#d32f2f',
     link: '#2979ff',
-    tint: '#fff9c4'
+    tint: '#fff9c4',
+    fade: '#888'
 }

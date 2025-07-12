@@ -4,6 +4,11 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, where, query, orderBy } from "firebase/firestore";
 import NavBar from '../components/NavigationBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import fonts from '../theme/fonts';
+import colors from '../theme/colors';
+import CheckedPostReceived from "../assets/checked-post-received.svg";
+import CheckedPost from '../assets/checked-post-sent.svg';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const TimelineScreen = (props) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -20,7 +25,6 @@ const TimelineScreen = (props) => {
 
     try {
       const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
-      console.log("reading friends")
       const snapshot = await getDocs(AllFriendsRef);
       const friendsMap = {};
       snapshot.forEach((doc) => {
@@ -42,13 +46,10 @@ const TimelineScreen = (props) => {
 
 
   const refreshPosts = async () => {
-    let isMounted = true; // Add a flag to track if the component is mounted
 
     if (!currentUser) return;
 
     try {
-
-      if (!isMounted) return;
 
       const friendMap = await fetchFriends();
 
@@ -67,21 +68,15 @@ const TimelineScreen = (props) => {
       for (const batch of batches) {
         const q = query(postsRef, where("userId", "in", batch), orderBy("timePosted", "desc"));
         const snapshot = await getDocs(q);
-        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({id: doc.id, ...doc.data(), ...friendMap[doc.data().userId]})))
+        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), ...friendMap[doc.data().userId] })))
       }
       setPosts(tempPosts);
 
     } catch (error) {
       console.error("Error fetching posts: ", error);
     } finally {
-      if (isMounted) {
-        setRefreshing(false);
-      }
+      setRefreshing(false);
     }
-
-    return () => {
-      isMounted = false; // Set flag to false when unmounting
-    };
   };
 
   const handleRefresh = () => {
@@ -107,71 +102,169 @@ const TimelineScreen = (props) => {
     });
   }
 
+  const getTimePassedString = (timestamp) => {
+    const timestampMs = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
+    const now = new Date();
+    const nowMs = now.getTime();
+    const timePassedMs = nowMs - timestampMs;
+    const timePassedS = Math.floor(timePassedMs / (1000));
+    if (timePassedS < 60) {
+      if (timePassedS === 1) {
+        return `1 second ago`;
+      }
+      return `${timePassedS} seconds ago`;
+    }
+    const timePassedM = Math.round(timePassedMs / (1000 * 60));
+    if (timePassedM < 60) {
+      if (timePassedM === 1) {
+        return `1 minute ago`;
+      }
+      return `${timePassedM} minutes ago`;
+    }
+    const timePassedH = Math.round(timePassedMs / (1000 * 60 * 60));
+    if (timePassedH < 24) {
+      if (timePassedH === 1) {
+        return `1 hour ago`;
+      }
+      return `${timePassedH} hours ago`;
+    }
+    const timePassedD = Math.round(timePassedMs / (1000 * 60 * 60 * 24));
+    if (timePassedD < 7) {
+      if (timePassedD === 1) {
+        return `1 day ago`;
+      }
+      return `${timePassedD} days ago`;
+    }
+    const date = new Date(timestampMs);
+    return date.toLocaleDateString();
+  }
+
   const renderTask = ({ item }) => ( // conflicting names!! change name to users-name and name to postname or something
     <View style={styles.postContainer}>
-      <Image source={{ uri: item.image }} style={styles.postImage} />
+      <View style={styles.profileInfo}>
+        <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
+        <Text style={styles.username}>{item.username}</Text>
+      </View>
+      {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>
-          <Text style={styles.taskName}>{item.name}</Text>
-          <Text style={styles.taskDate}>{getDateString(item.timePosted)}</Text>
-          <Text style={styles.taskDate}>{getTimeString(item.timePosted)}</Text>
+          <View style={styles.postNameContainer}>
+            <CheckedPostReceived width={32} height={32} />
+            <Text style={styles.taskName}>{item.postName}</Text>
+          </View>
+          {item.description !== "" &&<View style={styles.descriptionContainer}>
+            <MaterialCommunityIcons name={"text"} size={16} color={colors.primary}/>
+            <Text style={styles.taskDescription}>{item.description}</Text>
+          </View>}
+          <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
         </View>
-        <Text style={styles.taskDescription}>{item.description}</Text>
-        <Image source={{ uri: item.profilePic }} style={styles.postImage}/>
+        
+
       </View>
     </View>
   );
 
   return (
-      <SafeAreaView style={styles.container}>
-        <FlatList
-          data={posts}
-          renderItem={renderTask}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ flexGrow: 1 }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-        />
-        <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
-      </SafeAreaView>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topBorder}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 1, paddingRight: 5, }}>
+          <CheckedPost width={42} height={42} />
+          <Text style={styles.title}>Doozy</Text>
+        </View>
+      </View>
+      <FlatList
+        data={posts}
+        renderItem={renderTask}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      />
+      <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: colors.background,
+  },
+  topBorder: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 10
+  },
+  title: {
+    fontSize: 32,
+    color: colors.primary,
+    fontFamily: fonts.bold,
   },
   postContainer: {
-    marginLeft: 20,
-    marginRight: 20,
-    marginTop: 40,
-    backgroundColor: 'rgba(249, 249, 249, 0.7)',
+    marginBottom: 20,
     borderRadius: 10,
-    overflow: 'hidden',
-    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4
+  },
+  profileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+  },
+  profilePic: {
+    width: 40,
+    height: 40,
+    borderRadius: 40,
+    marginRight: 10,
+  },
+  username: {
+    fontFamily: fonts.bold,
+    color: colors.primary,
   },
   postImage: {
     width: '100%',
-    height: 200,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    height: 300,
   },
   taskInfo: {
-    padding: 10,
+    paddingTop: 10,
+  },
+  postNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 5,
+    paddingRight: 10,
+    paddingBottom: 10
   },
   taskName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    marginLeft: 5,
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.primary,
+  },
+  descriptionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginHorizontal: 10,
+
   },
   taskDescription: {
-    fontSize: 16,
-    marginTop: 5,
+    fontSize: 14,
+    fontFamily: fonts.regular,
+    color: colors.primary,
+    paddingLeft: 10,
   },
   taskDate: {
+    paddingLeft: 10,
     fontSize: 14,
-    color: '#888',
+    color: colors.fade,
   },
   backgroundImage: {
     flex: 1,

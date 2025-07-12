@@ -89,7 +89,7 @@ const TaskCreation = (props) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         try {
             batch.set(taskRef, {
-                name: newTask,
+                taskName: newTask,
                 description: newDescription,
                 completeByDate: selectedDate,
                 isCompletionTime: isTime,
@@ -127,7 +127,7 @@ const TaskCreation = (props) => {
         try {
             batch.set(postRef, {
                 userId: currentUser.uid,
-                name: newTask,
+                postName: newTask,
                 description: newDescription,
                 timePosted: new Date(),
                 timeTaskCreated: new Date(),

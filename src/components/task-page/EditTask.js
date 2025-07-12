@@ -18,7 +18,7 @@ const EditTask = (props) => {
 
     const priorityRef = useRef(null);
 
-    const [editedTaskName, setEditedTaskName] = useState(task ? task.name : null);
+    const [editedTaskName, setEditedTaskName] = useState(task ? task.taskName : null);
     const [editedDescription, setEditedDescription] = useState(task ? task.description : null);
     const [isComplete, setComplete] = useState(false);
 
@@ -81,7 +81,7 @@ const EditTask = (props) => {
         try {
             if (!isComplete) {
                 batch.update(taskRef, {
-                    name: editedTaskName,
+                    taskName: editedTaskName,
                     description: editedDescription,
                     completeByDate: selectedDate,
                     isCompletionTime: isTime,
@@ -117,7 +117,7 @@ const EditTask = (props) => {
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
-                    name: editedTaskName,
+                    taskName: editedTaskName,
                     description: editedDescription,
                     timePosted: new Date(),
                     timeTaskCreated: task.timeTaskCreated,

@@ -241,7 +241,7 @@ const TaskListScreen = (props) => {
                 const postRef = doc(postsRef);
                 batch.set(postRef, { // store post
                     userId: currentUser.uid,
-                    name: task.name,
+                    postName: task.taskName,
                     description: task.description,
                     timePosted: new Date(),
                     priority: task.priority,
@@ -330,7 +330,7 @@ const TaskListScreen = (props) => {
                 const postRef = doc(postsRef, docId);
                 const taskRef = doc(tasksRef);
                 batch.set(taskRef, {
-                    name: post.name,
+                    taskName: post.postName,
                     description: post.description,
                     priority: post.priority,
                     reminders: post.reminders,
@@ -732,7 +732,7 @@ const TaskListScreen = (props) => {
                             <TouchableOpacity onPress={() => {closeSwipeCard(); setOpenDrawer(true)}}>
                                 <Ionicons name="menu" size={32} color={colors.primary} />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={testFunction} style={{flexDirection: 'row', alignItems:'center', padding: 1}}>
+                            <TouchableOpacity onPress={testFunction} style={{flexDirection: 'row', alignItems:'center', padding: 1, paddingRight: 5,}}>
                                 <CheckedPost width={42} height={42}/>
                                 <Text style={styles.title}>Doozy</Text>
                             </TouchableOpacity>
@@ -750,7 +750,7 @@ const TaskListScreen = (props) => {
                                         return (
                                             <TouchableOpacity onPress={() => handleTaskPress(index)} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
-                                                    text={task.name}
+                                                    text={task.taskName}
                                                     tick={completeTask}
                                                     i={index}
                                                     complete={false}
@@ -774,7 +774,7 @@ const TaskListScreen = (props) => {
                                         return (
                                             <View key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
-                                                    text={task.name}
+                                                    text={task.postName}
                                                     tick={completeTask}
                                                     i={index}
                                                     complete={true}
