@@ -5,7 +5,11 @@ import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView
 import { CommonActions, useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import NavBar from '../components/NavigationBar';
-import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions'
+import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions';
+import CheckedPost from '../assets/checked-post-sent.svg';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
+import { getTimePassedString } from '../utils/timeFunctions'
 
 const ProfileScreen = ({ route, navigation }) => {
   const { userID, status } = route.params;
@@ -13,12 +17,13 @@ const ProfileScreen = ({ route, navigation }) => {
   const currentUser = FIREBASE_AUTH.currentUser;
   const [userProfile, setUserProfile] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [friendStatus, setFriendStatus] = useState(null)
+  const [friendStatus, setFriendStatus] = useState(null);
+  const windowWidth = Dimensions.get('window').width;
 
   function fetchData() {
     let tempUserID;
     let tempFriendStatus;
-    let unsubscribeProfile = () => {};
+    let unsubscribeProfile = () => { };
 
     if (!userID) {
       tempUserID = currentUser.uid;
@@ -53,9 +58,9 @@ const ProfileScreen = ({ route, navigation }) => {
           });
           setPosts(postsArray);
         })
-        .catch((error) => {
-          console.error("Error fetching posts: ", error);
-        })
+          .catch((error) => {
+            console.error("Error fetching posts: ", error);
+          })
       }
       return unsubscribeProfile;
     } catch (error) {
@@ -65,7 +70,7 @@ const ProfileScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     const unsubscribeProfile = fetchData();
-    
+
     return () => unsubscribeProfile();
   }, []);
 
@@ -97,7 +102,7 @@ const ProfileScreen = ({ route, navigation }) => {
 
   const handleStatusChange = () => {
     if (friendStatus == "currentUser") {
-      navigation.navigate("EditProfile", {user: userProfile});
+      navigation.navigate("EditProfile", { user: userProfile });
     }
     else if (friendStatus == "friend") {
       deleteFriend(userProfile);
@@ -113,93 +118,106 @@ const ProfileScreen = ({ route, navigation }) => {
     }
   }
 
+  const handlePostPress = (index) => {
+    
+  }
+
   return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.topContainer}>
-          <View style={styles.usernameContainer}>
-            {routes.length > 1  && (
-              <TouchableOpacity onPress={navigation.goBack} style={{paddingRight: 10}}>
-                <Ionicons name='chevron-back' size={24} color='black'/>
-              </TouchableOpacity>)}
-            <Text style={styles.usernameText}>{userProfile ? userProfile.username : ""}</Text>
-          </View>
-          {friendStatus == "currentUser" && (<View style={styles.topContainerButtons}>
-            <TouchableOpacity onPress={goToAddFriendsScreen} style={styles.friendsButton}>
-              <Ionicons name="people-outline" size={32} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={goToSettingsScreen} style={styles.settingsButton}>
-              <Ionicons name="settings-sharp" size={32} color="black" />
-            </TouchableOpacity>
-          </View>)}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topContainer}>
+        <View style={styles.usernameContainer}>
+          {routes.length > 1 && (
+            <TouchableOpacity onPress={navigation.goBack} style={{ paddingRight: 10 }}>
+              <Ionicons name='chevron-back' size={24} color={colors.primary} />
+            </TouchableOpacity>)}
+          <Text style={styles.usernameText}>{userProfile ? userProfile.username : ""}</Text>
         </View>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {userProfile && (
-            <View style={styles.profileContainer}>
-              <View style={styles.upperProfileContainer}>
-                <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100, borderRadius: 50 }} />
-                <View style={styles.detailsContainer}>
-                  <View style={styles.dataContainer}>
-                    <TouchableOpacity onPress={goToFriendsScreen} style={styles.data}>
-                      <Text style={styles.dataText}>Friends</Text>
-                      <Text style={styles.dataStat}>{userProfile.friends}</Text>
-                    </TouchableOpacity>
-                    <View style={styles.data}>
-                      <Text style={styles.dataText}>Posts</Text>
-                      <Text style={styles.dataStat}>{userProfile.posts}</Text>
-                    </View>
+        {friendStatus == "currentUser" && (<View style={styles.topContainerButtons}>
+          <TouchableOpacity onPress={goToAddFriendsScreen} style={styles.friendsButton}>
+            <Ionicons name="people-outline" size={32} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={goToSettingsScreen} style={styles.settingsButton}>
+            <Ionicons name="settings-sharp" size={32} color={colors.primary} />
+          </TouchableOpacity>
+        </View>)}
+      </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {userProfile && (
+          <View style={styles.profileContainer}>
+            {friendStatus == "userReceivedRequest" && (<View style={styles.friendRequest}>
+                <Text style={styles.detailText}>{userProfile.username} wants to be friends</Text>
+                <View style={{flexDirection: 'row', width: '60%'}}>
+                  <TouchableOpacity style={styles.deleteButton} onPress={() => { deleteRequest(userProfile); setFriendStatus("stranger") }}>
+                    <Text style={styles.buttonText}>Delete</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.confirmButton} onPress={() => { addFriend(userProfile); setFriendStatus("friend") }}>
+                    <Text style={styles.buttonText}>Confirm</Text>
+                  </TouchableOpacity>
+                  </View>
+              </View>)}
+            <View style={styles.upperProfileContainer}>
+              <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100, borderRadius: 50 }} />
+              <View style={[styles.dataButtonContainer, {width: windowWidth - 100 - 30}]}>
+                <View style={styles.dataContainer}>
+                  <TouchableOpacity onPress={goToFriendsScreen} style={styles.data}>
+                    <Text style={styles.dataStat}>{userProfile.friends}</Text>
+                    <Text style={styles.dataText}>Friends</Text>
+                  </TouchableOpacity>
+                  <View style={styles.divider}/>
+                  <View style={styles.data}>
+                    <Text style={styles.dataStat}>{userProfile.posts}</Text>
+                    <Text style={styles.dataText}>Posts</Text>
                   </View>
                 </View>
-              </View>
-              <View style={styles.lowerProfileContainer}>
-                <Text style={styles.name}>{userProfile.name}</Text>
-                {status == "userReceivedRequest" ? (<View>
-                  <Text>{userProfile.username} wants to be friends with you</Text>
-                  <TouchableOpacity onPress={() => {deleteRequest(userProfile); setFriendStatus("stranger")}}>
-                    <Text>Delete</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => {addFriend(userProfile); setFriendStatus("friend")}}>
-                    <Text>Confirm</Text>
-                  </TouchableOpacity>
-                </View>) :
-                (<TouchableOpacity onPress={handleStatusChange}>
-                  <Text>{friendStatus == "currentUser" ? "Edit Profile" : 
+                {friendStatus !== "userReceivedRequest" ?
+                (<TouchableOpacity style={styles.statusButton} onPress={handleStatusChange}>
+                  <Text style={styles.buttonText}>{friendStatus == "currentUser" ? "Edit Profile" :
                     (friendStatus == "friend" ? "Friends" :
                       (friendStatus == "userSentRequest" ? "Cancel Request" :
                         "Add Friend"
                       ))}</Text>
-                </TouchableOpacity>)}
+                </TouchableOpacity>) : 
+                (<View style={{height: 20}}/>)}
               </View>
+              
             </View>
-          )}
-
-          <View style={styles.tasksContainer}>
-            <View style={styles.grid}>
-              {posts.map((task, index) => (
-                <TouchableOpacity key={task.id} onPress={() => handleImagePress(task)}>
-                  <View style={styles.postContainer}>
-                    <Image source={{ uri: task.image }} style={styles.photo} />
-                    <View style={styles.postDescription}>
-                      <Text style={styles.taskTitle}>{task.name}</Text>
-                      <Text>{task.description}</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.lowerProfileContainer}>
+              <Text style={styles.name}>{userProfile.name}</Text>
+              <Text style={styles.bio}>{userProfile.bio}</Text>
             </View>
           </View>
-        </ScrollView>
-        <NavBar navigation={navigation} />
-      </SafeAreaView>
+        )}
+
+        <View style={styles.tasksContainer}>
+          {posts.map((post, index) => (
+            <TouchableOpacity key={post.id} onPress={() => handlePostPress(index)} style={[styles.item, index === 0 && styles.firstTask, index === posts.length - 1 && styles.lastTask]}>
+              <View style={styles.postContainer}>
+                <View style={styles.postInfoContainer}>
+                  <View style={styles.postNameContainer}>
+                    <CheckedPost width={32} height={32} />
+                    <Text style={styles.postName}>{post.postName}</Text>
+                  </View>
+                  {/* {post.description !== "" && <Text style={styles.postDescription}>{post.description}</Text>}
+                  <Text style={styles.postDate}>{getTimePassedString(post.timePosted)}</Text> */}
+                </View>
+                {post.image && <Image source={{ uri: post.image }} style={styles.photo} />}
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+      <NavBar navigation={navigation} />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  // ... (same as your original styles)
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   topContainer: {
     flexDirection: 'row',
@@ -213,8 +231,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   usernameText: {
-    fontSize: 24,
-    fontWeight: 'bold'
+    fontSize: 22,
+    fontFamily: fonts.bold,
+    color: colors.primary,
   },
   topContainerButtons: {
     flexDirection: 'row',
@@ -241,74 +260,182 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: 'column',
     justifyContent: 'flex-start',
-    height: '20%',
     margin: 10
   },
   upperProfileContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    height: 100,
   },
   detailsContainer: {
     flexDirection: 'column',
     alignItems: 'left',
     borderRadius: 10,
     marginLeft: 20
-    
+
+  },
+  dataButtonContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    marginLeft: 10,
   },
   dataContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    backgroundColor: '#70bdb8',
-    width: '80%',
-    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+
   },
   data: {
-    alignItems: 'center',
-    margin: 10,
-  },
-  dataText: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#d9eced',
+    alignItems: 'left',
+    paddingHorizontal: '40',
   },
   dataStat: {
-    color: '#f9fcfd',
+    fontFamily: fonts.bold,
+    color: colors.primary,
+    fontSize: 16,
+  },
+  dataText: {
+    color: colors.primary,
+    fontFamily: fonts.regular,
+    fontSize: 16,
+    width: 60,
+  },
+  divider: {
+    width: 1, 
+    height: '90%', 
+    borderRadius: 2,
+    backgroundColor: colors.primary
+  },
+  friendRequest: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailText: {
+    fontFamily: fonts.regular,
+    color: colors.fade,
+    fontSize: 14,
+    paddingBottom: 3,
+    width: '35%',
+
+  },
+  friendRequestButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  deleteButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    width: '45%',
+  },
+  confirmButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    width: '45%',
+  },
+  buttonText: {
+    padding: 5,
+    color: colors.button_text,
+    fontFamily: fonts.bold,
+    fontSize: 14,
+  },
+  statusButton: {
+    alignSelf: 'center',
+    width: '90%',
+    backgroundColor: colors.accent,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   lowerProfileContainer: {
     flexDirection: 'column',
+    marginTop: 10,
   },
   name: {
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontFamily: fonts.regular,
+    color: colors.primary,
+  },
+  bio: {
+    fontFamily: fonts.regular,
+    color: colors.fade,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 20,
   },
-  postContainer: {
-    width: '100%',
-    backgroundColor: 'rgba(245, 252, 255, 0.8)',
-    marginBottom: 20,
-    padding: 15,
-    borderRadius: 20,
-    borderColor: 'F5FCFF',
-    flexDirection: 'row',
-  },
+  
   postDescription: {
     width: '65%',
     alignItems: 'center',
   },
   photo: {
-    width: (Dimensions.get('window').width - 30) / 3,
-    height: (Dimensions.get('window').width - 30) / 3,
-    marginBottom: 2,
-    borderRadius: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 15,
   },
   tasksContainer: {
     padding: 10,
     borderRadius: 10,
+    shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  firstTask: {
+    borderTopRightRadius: 15,
+    borderTopLeftRadius: 15,
+  },
+  lastTask: {
+    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 15,
+  },
+  postContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  postInfoContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-around'
+  },
+  postNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 32,
+  },
+  unopenedPostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  postName: {
+    paddingLeft: 10,
+    color: colors.primary,
+    fontFamily: fonts.bold,
+  },
+  postDescription: {
+    lineHeight: 32,
+    height: 32,
+  },
+  postDate: {
+    lineHeight: 32,
+    height: 32,
   },
   taskTitle: {
     fontWeight: 'bold',
