@@ -9,7 +9,6 @@ import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUs
 import CheckedPost from '../assets/checked-post-sent.svg';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';
-import { getTimePassedString } from '../utils/timeFunctions'
 
 const ProfileScreen = ({ route, navigation }) => {
   const { userID, status } = route.params;
@@ -119,7 +118,7 @@ const ProfileScreen = ({ route, navigation }) => {
   }
 
   const handlePostPress = (index) => {
-    
+    navigation.navigate("Post", {post: posts[index], user: userProfile})
   }
 
   return (

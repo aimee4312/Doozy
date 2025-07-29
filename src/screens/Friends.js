@@ -1,10 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
 import { fetchFriends } from '../utils/friendFunctions'
 import { Ionicons } from '@expo/vector-icons';
 
 
-const FriendsScreen = ({navigation}) => {
+const FriendsScreen = ({ navigation }) => {
     const [friends, setFriends] = useState([]);
     const [searchText, setSearchText] = useState("");
 
@@ -13,7 +13,7 @@ const FriendsScreen = ({navigation}) => {
         const unsubscribeFriends = fetchFriends(setFriends);
 
         return () => unsubscribeFriends()
-    
+
     }, []);
 
 
@@ -22,27 +22,27 @@ const FriendsScreen = ({navigation}) => {
     });
 
 
-   const ProfileCard = ({ item }) => (
-        <TouchableOpacity onPress={() => {navigation.navigate('Profile', {userID: item.id, status: "friend"})}} style={styles.profileCard}>
+    const ProfileCard = ({ item }) => (
+        <TouchableOpacity onPress={() => { navigation.navigate('Profile', { userID: item.id, status: "friend" }) }} style={styles.profileCard}>
             <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
             <View style={styles.profileCardNames}>
                 <Text style={styles.nameText}> {item.name} </Text>
                 <Text style={styles.usernameText}> {item.username} </Text>
             </View>
         </TouchableOpacity>
-   );
+    );
 
-   return (
-       <SafeAreaView style={styles.container}>
+    return (
+        <SafeAreaView style={styles.container}>
             <View style={styles.topContainer}>
-              <TouchableOpacity onPress={navigation.goBack}>
-                <Ionicons name='chevron-back' size={24} color='black'/>
-              </TouchableOpacity>
-          </View>
-           <View style={styles.searchBrowseContainer}>
+                <TouchableOpacity onPress={navigation.goBack}>
+                    <Ionicons name='chevron-back' size={24} color='black' />
+                </TouchableOpacity>
+            </View>
+            <View style={styles.searchBrowseContainer}>
                 <View style={styles.searchBoxContainer}>
-                    <TextInput 
-                        placeholder='Search Friends...' 
+                    <TextInput
+                        placeholder='Search Friends...'
                         style={styles.searchBox}
                         onChangeText={setSearchText}
                     />
@@ -50,30 +50,30 @@ const FriendsScreen = ({navigation}) => {
                 <View style={styles.profileCardContainer}>
                     <FlatList
                         data={filteredFriends}
-                        renderItem={({item}) => (<ProfileCard item={item} />)}
+                        renderItem={({ item }) => (<ProfileCard item={item} />)}
                         keyExtractor={(item) => item.id} />
                 </View>
-           </View>
-       </SafeAreaView>
-   );
+            </View>
+        </SafeAreaView>
+    );
 };
 
 
-const styles = StyleSheet.create ({
-   container: {
+const styles = StyleSheet.create({
+    container: {
         flex: 1,
         flexDirection: 'column',
         justifyContent: 'flex-start'
-   },
-   topContainer: {
+    },
+    topContainer: {
         marginHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
     },
-   searchBrowseContainer: {
+    searchBrowseContainer: {
         flex: 1,
-   },
-   searchBoxContainer: {
+    },
+    searchBoxContainer: {
         backgroundColor: "white",
         borderRadius: 10,
         margin: 5,
@@ -81,49 +81,49 @@ const styles = StyleSheet.create ({
         flexDirection: "row",
         alignItems: "center",
 
-   },
-   searchBox: {
+    },
+    searchBox: {
         paddingLeft: 10,
         paddingRight: 10,
         fontSize: 18,
         textAlign: 'left',
         textAlignVertical: 'center',
-        includeFontPadding: false,  
+        includeFontPadding: false,
         width: '100%'
-   },
-   profileCardContainer: {
-       flex: 1,
-   },
-   profileCard: {
-       flexDirection: 'row',
-       justifyContent: 'flex-start',
-       alignItems: 'center',
-       marginTop: 5,
-   },
-   profileCardNames: {
-       flexDirection: 'column',
-       justifyContent: 'flex-start',
-   },
-   profilePic: {
-       marginLeft: 10,
-       marginRight: 10,
-       height: 60,
-       width: 60,
-       borderRadius: 50,
-   },
-   nameText: {
-       fontSize: 18,
-       fontWeight: "600",
-   },
-   usernameText: {
-       fontSize: 14,
-       color: "grey",
-   },
-   requestConfirmationButtons: {
+    },
+    profileCardContainer: {
+        flex: 1,
+    },
+    profileCard: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        marginTop: 5,
+    },
+    profileCardNames: {
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+    },
+    profilePic: {
+        marginLeft: 10,
+        marginRight: 10,
+        height: 60,
+        width: 60,
+        borderRadius: 50,
+    },
+    nameText: {
+        fontSize: 18,
+        fontWeight: "600",
+    },
+    usernameText: {
+        fontSize: 14,
+        color: "grey",
+    },
+    requestConfirmationButtons: {
         flexDirection: "row",
         marginLeft: "auto",
-   },
-   confirmButton: {
+    },
+    confirmButton: {
         marginRight: 10,
         marginLeft: 'auto',
         padding: 5,

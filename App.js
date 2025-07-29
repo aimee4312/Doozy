@@ -15,6 +15,7 @@ import FriendsScreen from './src/screens/Friends';
 import AddFriendsScreen from './src/screens/AddFriends';
 import EditProfileScreen from './src/screens/EditProfile';
 import EditFieldScreen from './src/screens/EditField';
+import PostScreen from './src/screens/Post';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Poppins_400Regular, Poppins_700Bold, Poppins_400Regular_Italic } from '@expo-google-fonts/poppins';
@@ -80,6 +81,7 @@ export default function App() {
                 <Stack.Screen name="AddFriends" component={AddFriendsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{headerShown: false}} />
                 <Stack.Screen name="EditField" component={EditFieldScreen} options={{headerShown: false}} />
+                <Stack.Screen name="Post" component={PostScreen} options={{headerShown: false}} />
               </>
             ) : (
               <>

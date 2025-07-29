@@ -87,23 +87,7 @@ const TimelineScreen = (props) => {
     });
   };
 
-  const getDateString = (timestamp) => {
-    const millis = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
-    const date = new Date(millis);
-    return date.toLocaleDateString();
-  }
-
-  const getTimeString = (timestamp) => {
-    const millis = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
-    const date = new Date(millis);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  }
-
-  const renderTask = ({ item }) => ( // conflicting names!! change name to users-name and name to postname or something
+  const renderTask = ({ item }) => (
     <View style={styles.postContainer}>
       <View style={styles.profileInfo}>
         <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
@@ -116,13 +100,13 @@ const TimelineScreen = (props) => {
             <CheckedPostReceived width={32} height={32} />
             <Text style={styles.taskName}>{item.postName}</Text>
           </View>
-          {item.description !== "" &&<View style={styles.descriptionContainer}>
-            <MaterialCommunityIcons name={"text"} size={16} color={colors.primary}/>
+          {item.description !== "" && <View style={styles.descriptionContainer}>
+            <MaterialCommunityIcons name={"text"} size={16} color={colors.primary} />
             <Text style={styles.taskDescription}>{item.description}</Text>
           </View>}
           <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
         </View>
-        
+
 
       </View>
     </View>
