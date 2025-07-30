@@ -4,13 +4,13 @@ import { fetchFriends } from '../utils/friendFunctions'
 import { Ionicons } from '@expo/vector-icons';
 
 
-const FriendsScreen = ({ navigation }) => {
+const FriendsScreen = ({ route, navigation }) => {
     const [friends, setFriends] = useState([]);
     const [searchText, setSearchText] = useState("");
+    const { userID } = route.params;
 
     useEffect(() => {
-
-        const unsubscribeFriends = fetchFriends(setFriends);
+        const unsubscribeFriends = fetchFriends(setFriends, userID);
 
         return () => unsubscribeFriends()
 

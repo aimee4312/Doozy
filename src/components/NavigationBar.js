@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, Button , StyleSheet, SafeAreaView, TextInput, Alert, TouchableOpacity} from 'react-native';
 import { NavigationContainer, CommonActions } from '@react-navigation/native';
+import { FIREBASE_AUTH } from '../../firebaseConfig';
 
 
 const Bar = ({ navigation }) => {
+    const currentUser = FIREBASE_AUTH.currentUser;
     
     const navigateTo = (screen, userID, status) => {
         navigation.dispatch(
@@ -32,7 +34,7 @@ const Bar = ({ navigation }) => {
                 <Text>Task</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                onPress={() => {navigateTo('Profile', null, null)}}
+                onPress={() => {navigateTo('Profile', currentUser.uid, "currentUser")}}
                 style={styles.button}>
                 <Text>Profile</Text>
             </TouchableOpacity>

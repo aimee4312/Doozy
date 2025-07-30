@@ -107,10 +107,11 @@ export const requestUser = async (user) => { // update currentusers requesting, 
     }
 }
 
-export function fetchFriends(setFriends) { //setFriends
-    const currentUser = FIREBASE_AUTH.currentUser;
+export function fetchFriends(setFriends, userID) { //setFriends
     try {
-        const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', currentUser.uid, 'AllFriends');
+        const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', userID, 'AllFriends');
+        console.log(userID);
+
         const unsubscribeFriends = onSnapshot(AllFriendsRef,
             (snapshot) => {
                 const tempFriends = [];

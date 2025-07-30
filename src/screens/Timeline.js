@@ -69,7 +69,7 @@ const TimelineScreen = (props) => {
       for (const batch of batches) {
         const q = query(postsRef, where("userId", "in", batch), orderBy("timePosted", "desc"));
         const snapshot = await getDocs(q);
-        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), ...friendMap[doc.data().userId] })))
+        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({ id: doc.id, userID: doc.data().userId, ...doc.data(), ...friendMap[doc.data().userId] })))
       }
       setPosts(tempPosts);
 
@@ -89,10 +89,10 @@ const TimelineScreen = (props) => {
 
   const renderTask = ({ item }) => (
     <View style={styles.postContainer}>
-      <View style={styles.profileInfo}>
+      <TouchableOpacity onPress={() => {props.navigation.navigate('Profile', {userID: item.userID, status: currentUser.uid === item.userID ? 'currentUser' : 'friend'})}} style={styles.profileInfo}>
         <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
         <Text style={styles.username}>{item.username}</Text>
-      </View>
+      </TouchableOpacity>
       {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
       <View style={styles.taskInfo}>
         <View style={styles.titleContainer}>

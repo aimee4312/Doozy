@@ -24,16 +24,9 @@ const ProfileScreen = ({ route, navigation }) => {
     let tempFriendStatus;
     let unsubscribeProfile = () => { };
 
-    if (!userID) {
-      tempUserID = currentUser.uid;
-      setFriendStatus("currentUser");
-      tempFriendStatus = "currentUser";
-    }
-    else {
-      tempUserID = userID;
-      setFriendStatus(status);
-      tempFriendStatus = status;
-    }
+    tempUserID = userID;
+    setFriendStatus(status);
+    tempFriendStatus = status;
 
     try {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', tempUserID);
@@ -92,7 +85,7 @@ const ProfileScreen = ({ route, navigation }) => {
   };
 
   const goToFriendsScreen = () => {
-    navigation.navigate('Friends');
+    navigation.navigate('Friends', {userID: userID});
   };
 
   const goToAddFriendsScreen = () => {
