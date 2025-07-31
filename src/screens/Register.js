@@ -65,7 +65,7 @@ const Register = () => {
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={{ flex: 1 }}
                     >
-                        <ScrollView contentContainerStyle={{flexGrow: 1}} automaticallyAdjustKeyboardInsets={true}>
+                        <ScrollView contentContainerStyle={{flexGrow: 1}} automaticallyAdjustKeyboardInsets={true} keyboardShouldPersistTaps="handled">
                         <View style={styles.signUpContainer}>
                             <View style={styles.topSpacer} />
                             <View style={styles.titleContainer}>

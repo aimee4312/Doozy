@@ -35,7 +35,7 @@ const Login = ({ navigation }) => {
                         style={{ flex: 1 }}
                         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                     >
-                    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                    <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
                         <View style={styles.loginContainer}>
                             <View style={styles.topSpacer} />
                             <View style={styles.titleContainer}>

@@ -1,5 +1,7 @@
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native"
+import colors from "../../../theme/colors";
+import fonts from "../../../theme/fonts";
 
 
 const CameraOptionMenu = (props) => {
@@ -8,19 +10,19 @@ const CameraOptionMenu = (props) => {
     return (
         <SafeAreaView style={styles.modalContainer}>
             <TouchableOpacity onPress={() => onChoose("camera")} style={styles.option}>
-                <Feather name="camera" size={18} color="black" style={styles.icon}/>
-                <Text style={styles.text}>Take Photo</Text>
+                <Feather name="camera" size={18} color={colors.primary} style={styles.icon}/>
+                <Text style={{color: colors.primary, ...styles.text}}>Take Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onChoose("library")} style={styles.option}>
-                <MaterialIcons name="photo-library" size={18} color="black" style={styles.icon}/>
-                <Text style={styles.text}>Choose Photo</Text>
+                <MaterialIcons name="photo-library" size={18} color={colors.primary} style={styles.icon}/>
+                <Text style={{color: colors.primary, ...styles.text}}>Choose Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onChoose("no photo")} style={styles.option}>
-                <Feather name="camera-off" size={18} color="black" style={styles.icon}/>
-                <Text style={styles.text}>No Photo</Text>
+                <Feather name="camera-off" size={18} color={colors.primary} style={styles.icon}/>
+                <Text style={{color: colors.primary, ...styles.text}}>No Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onChoose("cancel")} style={styles.option}>
-                <Text style={{color: 'red', ...styles.text}}>Cancel</Text>
+                <Text style={{color: colors.red, ...styles.text}}>Cancel</Text>
             </TouchableOpacity>
         </SafeAreaView>
     )
@@ -28,7 +30,7 @@ const CameraOptionMenu = (props) => {
 
 const styles = StyleSheet.create({
     modalContainer: {
-        backgroundColor: 'grey',
+        backgroundColor: colors.surface,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingLeft: 20,
@@ -38,6 +40,12 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         flexDirection: 'column',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4
     },
     option: {
         flexDirection: 'row',
@@ -51,7 +59,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 18,
-        fontWeight: '500'
+        fontFamily: fonts.regular,
     }
 })
 

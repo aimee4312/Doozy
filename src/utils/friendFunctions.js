@@ -72,6 +72,7 @@ export const deleteFriend = async (friend) => { // add this later
     if (!currentUser) return;
 
     const currUserProfileRef = doc(FIRESTORE_DB, "Users", currentUser.uid);
+    const friendProfileRef = doc(FIRESTORE_DB, "Users", friend.id);
     const currUserFriendRef = doc(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends", friend.id);
     const recUserFriendRef = doc(FIRESTORE_DB, "Requests", friend.id, "AllFriends", currentUser.uid);
 
@@ -79,7 +80,8 @@ export const deleteFriend = async (friend) => { // add this later
         const batch = writeBatch(FIRESTORE_DB);
         batch.delete(currUserFriendRef);
         batch.delete(recUserFriendRef);
-        // add decrement friend 
+        // add decrement friend !!!
+        batch.update(friendProfileRef, { friends: increment(-1) });
         batch.update(currUserProfileRef, { friends: increment(-1) });
         await batch.commit();
     } catch (error) {
@@ -110,7 +112,6 @@ export const requestUser = async (user) => { // update currentusers requesting, 
 export function fetchFriends(setFriends, userID) { //setFriends
     try {
         const AllFriendsRef = collection(FIRESTORE_DB, 'Requests', userID, 'AllFriends');
-        console.log(userID);
 
         const unsubscribeFriends = onSnapshot(AllFriendsRef,
             (snapshot) => {

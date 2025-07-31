@@ -13,7 +13,6 @@ import fonts from '../theme/fonts';
 const ProfileScreen = ({ route, navigation }) => {
   const { userID, status } = route.params;
   const routes = useNavigationState(state => state.routes)
-  const currentUser = FIREBASE_AUTH.currentUser;
   const [userProfile, setUserProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [friendStatus, setFriendStatus] = useState(null);
@@ -317,7 +316,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   deleteButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.red,
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
