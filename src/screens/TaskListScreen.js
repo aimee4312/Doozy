@@ -3,6 +3,7 @@ import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity,
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
+import ViewCompletedTask from '../components/task-page/ViewCompletedTask';
 import ListSelect from '../components/task-page/ListSelect';
 import CameraOptionMenu from '../components/task-page/PopUpMenus/CameraOptionMenu';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion, orderBy } from 'firebase/firestore';
@@ -10,7 +11,7 @@ import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseCon
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from 'react-native-drawer-layout';
-import { Ionicons, MaterialCommunityIcons, FontAwesome6 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Notifications from "expo-notifications";
 import { addImage, takePhoto } from '../utils/photoFunctions';
@@ -27,12 +28,15 @@ const TaskListScreen = (props) => {
     const [listItems, setListItems] = useState([]);
     const [isEditTaskVisible, setEditTaskVisible] = useState(false);
     const [editIndex, setEditIndex] = useState();
+    const [isCompletedTaskVisible, setCompletedTaskVisible] = useState(false);
+    const [completedTaskIndex, setCompletedTaskIndex] = useState();
     const [openDrawer, setOpenDrawer] = useState(false);
     const [sortModalVisible, setSortModalVisible] = useState(false);
     const [userProfile, setUserProfile] = useState();
     const [sortYPosition, setSortYPosition] = useState();
     const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
     const [resolver, setResolver] = useState(null);
+    const [currList, setCurrList] = useState("");
     const unsubscribeRef = useRef();
     const sortRef = useRef(null);
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -149,6 +153,12 @@ const TaskListScreen = (props) => {
                         fetchedLists.push({ id: doc.id, ...doc.data() });
                     });
                     setListItems(fetchedLists);
+                    if (listId === "0") {
+                        setCurrList("Master List");
+                    }
+                    else {
+                        setCurrList(fetchedLists.find((fetchedList) => fetchedList.id === listId).name);
+                    }
                 });
             return unsubscribeLists;
         } catch (error) {
@@ -612,6 +622,12 @@ const TaskListScreen = (props) => {
         setEditTaskVisible(true);
     }
 
+    const handleCompletedTaskPress = (index) => {
+        closeSwipeCard();
+        setCompletedTaskIndex(index);
+        setCompletedTaskVisible(true);
+    }
+
     const openSortModal = () => {
         sortRef.current?.measure((x, y, width, height, pageX, pageY) => {
             setSortYPosition(pageY);
@@ -661,6 +677,20 @@ const TaskListScreen = (props) => {
                                 scheduleNotifications={scheduleNotifications} 
                                 cancelNotifications={cancelNotifications}
                                 isRepeatingTask={isRepeatingTask}
+                            />
+                        </ Modal>
+                        <Modal
+                            visible={isCompletedTaskVisible}
+                            transparent={true}
+                            animationType='slide'
+                        >
+                            <ViewCompletedTask 
+                                task={completedTaskItems[completedTaskIndex]} 
+                                listItems={listItems} 
+                                setCompletedTaskVisible={setCompletedTaskVisible}
+                                index={completedTaskIndex}
+                                deleteItem={deleteItem}
+                                completeTask={completeTask}
                             />
                         </ Modal>
                         <Modal
@@ -741,8 +771,13 @@ const TaskListScreen = (props) => {
                             </TouchableOpacity>
                         </View>
                         <ScrollView style={styles.ScrollView}>
-                            {taskItems.length !== 0 && <View style={styles.tasksContainer}>
-                                <Text style={styles.sectionTitle}>Tasks</Text>
+                            <View style={styles.tasksContainer}>
+                                <Text style={styles.sectionTitle}>{currList}</Text>
+                                {taskItems.length === 0 && (<View style={styles.emptyTasks}>
+                                    <FontAwesome name={"pencil-square-o"} color={colors.primary} size={30}/>
+                                    <Text style={styles.emptyTasksText}>No tasks yet</Text>
+                                    <Text style={styles.emptyTasksText}>Tap + to get started!</Text>
+                                </View>)}
                                 <View style={styles.tasks}>
                                     {taskItems.map((task, index) => {
                                         const isFirst = index == 0;
@@ -764,7 +799,7 @@ const TaskListScreen = (props) => {
                                         )
                                     })}
                                 </View>
-                            </View>}
+                            </View>
                             {completedTaskItems.length !== 0 && <View style={styles.tasksContainer}>
                                 <Text style={styles.sectionTitle}>Completed</Text>
                                 <View style={styles.tasks}>
@@ -772,7 +807,7 @@ const TaskListScreen = (props) => {
                                         const isFirst = index == 0;
                                         const isLast = index == completedTaskItems.length - 1;
                                         return (
-                                            <View key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
+                                            <TouchableOpacity onPress={() => handleCompletedTaskPress(index)} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
                                                     text={task.postName}
                                                     tick={completeTask}
@@ -784,7 +819,7 @@ const TaskListScreen = (props) => {
                                                     isFirst={isFirst}
                                                     isLast={isLast}
                                                 />
-                                            </View>
+                                            </TouchableOpacity>
                                         )
                                     })}
                                 </View>
@@ -892,6 +927,17 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontFamily: fonts.bold,
         color: colors.primary,
+    },
+    emptyTasks: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: 10,
+    },
+    emptyTasksText: {
+        fontFamily: fonts.regular,
+        color: colors.fade,
+        fontSize: 16,
     },
     tasks: {
         backgroundColor: colors.surface,

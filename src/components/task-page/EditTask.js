@@ -117,7 +117,7 @@ const EditTask = (props) => {
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
-                    taskName: editedTaskName,
+                    postName: editedTaskName,
                     description: editedDescription,
                     timePosted: new Date(),
                     timeTaskCreated: task.timeTaskCreated,
@@ -207,6 +207,7 @@ const EditTask = (props) => {
     }
 
     const getDateString = (timestamp) => {
+        console.log(timestamp)
         return timestamp.toLocaleDateString();
     }
 

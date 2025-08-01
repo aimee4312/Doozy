@@ -271,17 +271,42 @@ const ScheduleMenu = (props) => {
         const y = date.getFullYear();
         return `${m}/${d}/${y}`;
     }
+    
+    const getDateString = (timestamp) => {
+        const date = new Date(timestamp)
+        const formatted =
+            (date.getMonth() + 1) + '/' +
+            date.getDate() + '/' +
+            date.getFullYear();
+        return formatted;
+    }
 
+    const getTimeString = (timestamp) => {
+        return timestamp.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.bigContainer}>
                 <View style={{height: 50}}>
                     <View style={styles.saveChanges}>
-                        <TouchableOpacity onPress={() => setCalendarModalVisible(false)}>
+                        <TouchableOpacity style={{width: 50}} onPress={() => setCalendarModalVisible(false)}>
                             <Ionicons name="chevron-down-outline" size={32} color="black" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={handleSaveChanges} >
+                        <View style={styles.dueDateContainer}>
+                            <Text style={styles.timePicker}>Due Date:</Text>
+                        {isTempTime ? (
+                            <Text style={styles.timePicker}>{getDateString(tempSelectedDate.timestamp)}, {getTimeString(tempTime)}</Text>
+                        ) : (
+                            <Text style={styles.timePicker}>{getDateString(tempSelectedDate.timestamp)}</Text>
+                        )
+                        }
+                        </View>
+                        <TouchableOpacity style={{width: 50}} onPress={handleSaveChanges} >
                             <Text style={styles.saveButton}>Save</Text>
                         </TouchableOpacity>
                     </View>
@@ -395,10 +420,20 @@ const styles = StyleSheet.create({
         alignItems: 'center'
 
     },
+    dueDateContainer: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    timePicker: {
+        textAlign: 'center',
+        color: colors.primary,
+        fontFamily: fonts.regular,
+    },
     saveButton: {
         color: colors.link,
         fontFamily: fonts.bold,
-        fontSize: 18
+        fontSize: 18,
     },
     menuTopButton: {
         borderTopLeftRadius: 15,

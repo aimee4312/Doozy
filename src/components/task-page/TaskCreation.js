@@ -240,6 +240,7 @@ const TaskCreation = (props) => {
             setIsTime(false);
             setDateRepeatEnds('');
             setSelectedLists([]);
+            setShowPriority(false);
         }
     };
 
