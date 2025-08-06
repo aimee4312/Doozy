@@ -4,6 +4,8 @@ import {Ionicons} from '@expo/vector-icons';
 import { useState } from "react";
 import { updateNameField, updateUsernameField, updateBioField } from '../utils/checkFieldFunctions';
 import { StackActions } from '@react-navigation/native';
+import colors from "../theme/colors";
+import fonts from "../theme/fonts";
 
 
 const EditFieldScreen = ({route, navigation}) => {
@@ -34,27 +36,47 @@ const EditFieldScreen = ({route, navigation}) => {
         }
     }
 
+    const handleChangeText = (text) => {
+        let maxLines = 1;
+        let maxChars = 30
+        if (fieldName == "Bio") {
+            maxLines = 7;
+            maxChars = 150;
+        }
+        const lines = text.split('\n').length;
+        if (lines <= maxLines && text.length <= maxChars) {
+            setField(text);
+        } else {
+            
+        }
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.topContainer}>
-                <TouchableOpacity onPress={navigation.goBack}>
+                <TouchableOpacity style={{width: 50}} onPress={navigation.goBack}>
                     <Ionicons name='chevron-back' size={24} color='black'/>
                 </TouchableOpacity>
+                <View>
+                    <Text style={styles.fieldName}>{fieldName}</Text>
+                </View>
                 <TouchableOpacity>
                     <Text onPress={handleUpdateField} style={styles.saveText}>Save</Text>
                 </TouchableOpacity>
             </View>
-            <View>
-                <Text>{fieldName}</Text>
-                <TextInput
-                    style={styles.textInput}
-                    onChangeText={text => setField(text)}
-                    value={field}
-                    placeholder={placeholder}
-                    autoCorrect={false}
-                    autoFocus={true}
-                />
-                <Text>{description}</Text>
+            <View style={styles.bottomContainer}>
+                <View style={styles.textInputContainer}>
+                    <TextInput
+                        style={styles.textInput}
+                        onChangeText={text => handleChangeText(text)}
+                        value={field}
+                        placeholder={placeholder}
+                        autoCorrect={false}
+                        autoFocus={true}
+                        multiline={fieldName == "Bio"}
+                    />
+                </View>
+                <Text style={styles.description}>{description}</Text>
             </View>
         </SafeAreaView>
     )
@@ -62,18 +84,51 @@ const EditFieldScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     topContainer: {
         marginHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    fieldName: {
+        fontFamily: fonts.bold,
+        color: colors.primary,
+        fontSize: 18,
     },
     saveText: {
         fontSize: 18,
         textAlign: 'center',
-        color: 'blue',
-        fontWeight: 'bold'
+        fontFamily: fonts.bold,
+        color: colors.link,
+        width: 50,
+    },
+    bottomContainer: {
+        margin: 5,
+        flexDirection: 'column',
+    },
+    textInputContainer: {
+        backgroundColor: colors.surface,
+        minHeight: 40,
+        borderRadius: 15,
+        borderWidth: 1,
+        justifyContent: 'center',
+        borderColor: colors.primary,
+        marginBottom: 5,
+    },
+    textInput: {
+        padding: 5,
+        fontFamily: fonts.regular,
+        color: colors.primary,
+        fontSize: 16,
+    },
+    description: {
+        padding: 5,
+        fontFamily: fonts.regular,
+        color: colors.fade,
+        fontSize: 14,
     },
 })
 

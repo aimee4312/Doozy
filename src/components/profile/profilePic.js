@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Image, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase, FIREBASE_STORAGE} from '../../../firebaseConfig';
 import { doc, updateDoc, getDoc, writeBatch, getDocs, collection, deleteDoc } from 'firebase/firestore';
 import { getReferenceFromUrl, ref, getStorage, deleteObject } from 'firebase/storage';
+import colors from '../../theme/colors';
+import fonts from '../../theme/fonts';
 
 
 export default function UploadImage( props ) {
@@ -125,8 +127,8 @@ export default function UploadImage( props ) {
             }
             <View style={imageUploaderStyles.uploadBtnContainer}>
                 <TouchableOpacity onPress={addImage} style={imageUploaderStyles.uploadBtn} >
-                    <Text>{image ? 'Edit' : 'Upload'} Image</Text>
-                    <AntDesign name="camera" size={20} color="black" />
+                    <Text style={imageUploaderStyles.editImage}>{image ? 'Edit' : 'Upload'} Image</Text>
+                    <MaterialIcons name="photo-library" size={18} color={colors.primary}/>
                 </TouchableOpacity>
             </View>
         </View>
@@ -137,7 +139,6 @@ const imageUploaderStyles = StyleSheet.create({
         elevation: 2,
         height: 100,
         width: 100,
-        backgroundColor: '#efefef',
         position: 'relative',
         borderRadius: 999,
         overflow: 'hidden',
@@ -149,9 +150,13 @@ const imageUploaderStyles = StyleSheet.create({
         position: 'absolute',
         right: 0,
         bottom: 0,
-        backgroundColor: 'lightgrey',
+        backgroundColor: colors.tint,
         width: '100%',
         height: '45%',
+    },
+    editImage: {
+        fontFamily: fonts.regular,
+        color: colors.primary,
     },
     uploadBtn: {
         display: 'flex',

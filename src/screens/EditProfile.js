@@ -1,6 +1,8 @@
 import { SafeAreaView, StyleSheet, TextInput, Text, View, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, TouchableOpacity } from 'react-native';
 import UploadImage from '../components/profile/profilePic';
 import {Ionicons} from '@expo/vector-icons';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
 
 const EditProfileScreen = ({route, navigation}) => {
 
@@ -11,7 +13,7 @@ const EditProfileScreen = ({route, navigation}) => {
             user: user,
             fieldName: "Name", 
             fieldInput: user.name, //might have to change this
-            description: "description", 
+            description: "Choose your name to let friends find you.", 
             placeholder: "required", 
         })
     }
@@ -21,7 +23,7 @@ const EditProfileScreen = ({route, navigation}) => {
             user: user,
             fieldName: "Username", 
             fieldInput: user.username,
-            description: "description", 
+            description: "Choose a unique username to help friends tag you.", 
             placeholder: "required", 
         })
     }
@@ -31,7 +33,7 @@ const EditProfileScreen = ({route, navigation}) => {
             user: user,
             fieldName: "Bio", 
             fieldInput: user.bio,
-            description: "description", 
+            description: "Choose your bio and add a personal touch.", 
             placeholder: "optional", 
         })
     }
@@ -41,7 +43,7 @@ const EditProfileScreen = ({route, navigation}) => {
         <SafeAreaView style={styles.container}>
             <View style={styles.topContainer}>
               <TouchableOpacity onPress={navigation.goBack}>
-                <Ionicons name='chevron-back' size={24} color='black'/>
+                <Ionicons name='chevron-back' size={24} color={colors.primary}/>
               </TouchableOpacity>
           </View>
             <TouchableWithoutFeedback style={{flex: 1}} onPress={() => {Keyboard.dismiss()}}>
@@ -68,6 +70,7 @@ const EditProfileScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     topContainer: {
         marginHorizontal: 10,
@@ -83,16 +86,20 @@ const styles = StyleSheet.create({
     },
     textEditContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         paddingVertical: 10
     },
     prompt: {
         fontSize: 18,
-        flex: 3
+        flex: 3,
+        fontFamily: fonts.bold,
+        color: colors.primary,
     },
     textInput: {
         fontSize: '18',
-        flex: 7
+        flex: 7,
+        fontFamily: fonts.regular,
+        color: colors.primary,
     }
 });
 
