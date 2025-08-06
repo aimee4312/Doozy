@@ -21,6 +21,10 @@ const CameraOptionMenu = (props) => {
                 <Feather name="camera-off" size={18} color={colors.primary} style={styles.icon}/>
                 <Text style={{color: colors.primary, ...styles.text}}>No Photo</Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => onChoose("no post")} style={styles.option}>
+                <Feather name="eye-off" size={18} color={colors.primary} style={styles.icon}/>
+                <Text style={{color: colors.primary, ...styles.text}}>Complete (Hidden)</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => onChoose("cancel")} style={styles.option}>
                 <Text style={{color: colors.red, ...styles.text}}>Cancel</Text>
             </TouchableOpacity>

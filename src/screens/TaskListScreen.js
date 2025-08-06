@@ -29,7 +29,7 @@ const TaskListScreen = (props) => {
     const [isEditTaskVisible, setEditTaskVisible] = useState(false);
     const [editIndex, setEditIndex] = useState();
     const [isCompletedTaskVisible, setCompletedTaskVisible] = useState(false);
-    const [completedTaskIndex, setCompletedTaskIndex] = useState();
+    const [completedTaskIndex, setCompletedTaskIndex] = useState(null);
     const [openDrawer, setOpenDrawer] = useState(false);
     const [sortModalVisible, setSortModalVisible] = useState(false);
     const [userProfile, setUserProfile] = useState();
@@ -261,6 +261,7 @@ const TaskListScreen = (props) => {
                     listIds: task.listIds,
                     timeTaskCreated: task.timeTaskCreated,
                     image: null,
+                    hidden: false,
                 })
 
                 let listRef;
@@ -290,16 +291,17 @@ const TaskListScreen = (props) => {
                             break;
                         }
                     }
+                    else if (cameraOption == 'no post') {
+                        imageURI = null;
+                        batch.update(postRef, {hidden: true});
+                        break;
+                    }
                     else {
                         imageURI = null;
                         break;
                     }
                 }
                 setCameraOptionModalVisible(false);
-                // const imageURI = await addImage(); // add image to post
-                // if (!imageURI) {
-                //     return; // make error
-                // }
                 await cancelNotifications(task.notificationIds); // cancel any upcoming notifications
 
                 const taskRef = doc(tasksRef, task.id);
@@ -622,6 +624,16 @@ const TaskListScreen = (props) => {
         setEditTaskVisible(true);
     }
 
+    const toggleEditTaskVisible = () => {
+        setEditTaskVisible(false);
+        setEditIndex(null);
+    }
+    
+    const toggleCompletedTaskVisible = () => {
+        setCompletedTaskVisible(false);
+        setCompletedTaskIndex(null);
+    }
+
     const handleCompletedTaskPress = (index) => {
         closeSwipeCard();
         setCompletedTaskIndex(index);
@@ -672,7 +684,7 @@ const TaskListScreen = (props) => {
                             <EditTask 
                                 task={taskItems[editIndex]} 
                                 listItems={listItems} 
-                                setEditTaskVisible={setEditTaskVisible} 
+                                toggleEditTaskVisible={toggleEditTaskVisible} 
                                 configureNotifications={configureNotifications} 
                                 scheduleNotifications={scheduleNotifications} 
                                 cancelNotifications={cancelNotifications}
@@ -687,7 +699,7 @@ const TaskListScreen = (props) => {
                             <ViewCompletedTask 
                                 task={completedTaskItems[completedTaskIndex]} 
                                 listItems={listItems} 
-                                setCompletedTaskVisible={setCompletedTaskVisible}
+                                toggleCompletedTaskVisible={toggleCompletedTaskVisible}
                                 index={completedTaskIndex}
                                 deleteItem={deleteItem}
                                 completeTask={completeTask}
@@ -794,6 +806,8 @@ const TaskListScreen = (props) => {
                                                     onClose={onClose}
                                                     isFirst={isFirst}
                                                     isLast={isLast}
+                                                    isSelected={index === editIndex}
+                                                    hidden={false}
                                                 />
                                             </TouchableOpacity>
                                         )
@@ -818,6 +832,8 @@ const TaskListScreen = (props) => {
                                                     onClose={onClose}
                                                     isFirst={isFirst}
                                                     isLast={isLast}
+                                                    isSelected={index === completedTaskIndex}
+                                                    hidden={task.hidden}
                                                 />
                                             </TouchableOpacity>
                                         )

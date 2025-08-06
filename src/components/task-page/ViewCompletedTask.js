@@ -1,20 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Keyboard, TextInput, Dimensions, TouchableWithoutFeedback, Animated, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import ScheduleMenu from './ScheduleMenu';
-import ListModal from './PopUpMenus/ListModal';
 import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebaseConfig';
-import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
-import { addImage, takePhoto } from '../../utils/photoFunctions';
-import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
 import colors from '../../theme/colors';
 import fonts from '../../theme/fonts';
-import UncheckedTask from '../../assets/unchecked-task.svg';
 import CheckedTask from '../../assets/checked-task.svg';
 
 const ViewCompletedTask = (props) => {
-    const { task, listItems, setCompletedTaskVisible, index, deleteItem, completeTask } = props;
+    const { task, listItems, toggleCompletedTaskVisible, index, deleteItem, completeTask } = props;
 
     const screenHeight = Dimensions.get('window').height;
     const defaultHeight = screenHeight * 0.5;
@@ -63,26 +56,26 @@ const ViewCompletedTask = (props) => {
 
     return (
         <View style={{ flex: 1 }}>
-            <TouchableWithoutFeedback onPress={() => setCompletedTaskVisible(false)}>
+            <TouchableWithoutFeedback onPress={() => toggleCompletedTaskVisible()}>
                 <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Animated.View style={[styles.modalContainer, { height: animatedHeight }]}>
                     <View style={styles.rowOneView}>
-                        <TouchableOpacity onPress={() => setCompletedTaskVisible(false)} style={{ width: 50 }}>
+                        <TouchableOpacity onPress={() => toggleCompletedTaskVisible()} style={{ width: 50 }}>
                             <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
                         </TouchableOpacity>
-                        <View style={styles.listButton}>
-                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.listPicker}>{task.listIds.length == 0 ? "No Lists Selected" : listItems.find(item => item.id == task.listIds[0]).name + (task.listIds.length == 1 ? "" : ", ...")}</Text>
-                        </View>
+                        {task && <View style={styles.listButton}>
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.listPicker}>{task.listIds.length === 0 ? "No Lists Selected" : listItems.find(item => item.id === task.listIds[0]).name + (task.listIds.length === 1 ? "" : ", ...")}</Text>
+                        </View>}
                         <View style={{ width: 50, alignItems: 'center' }} />
                     </View>
                     <View style={styles.rowTwoView}>
                         {/* // change function */}
-                        <TouchableOpacity onPress={() => {completeTask(index, true); setCompletedTaskVisible(false)}} style={styles.checkedbox}>
+                        <TouchableOpacity onPress={() => {completeTask(index, true); toggleCompletedTaskVisible()}} style={styles.checkedbox}>
                             <CheckedTask width={42} height={42} />
                         </TouchableOpacity>
-                        <View style={styles.dateContainer}>
+                        {task && <View style={styles.dateContainer}>
                             <Text style={styles.timePicker}>Due Date:</Text>
                             {task.isCompletionTime ? (
                                 <Text style={styles.timePicker}>{getDateString(task.completeByDate.timestamp)}, {getTimeString(task.completeByDate.timestamp)}</Text>
@@ -92,22 +85,22 @@ const ViewCompletedTask = (props) => {
                                 <Text style={styles.timePicker}>No time set</Text>
                             )
                             }
-                        </View>
-                        <View style={{ marginLeft: 10, width: 24 }}>
+                        </View>}
+                        {task && <View style={{ marginLeft: 10, width: 24 }}>
                             <Icon
                                 name="flag"
                                 size={24}
                                 color={flagColor[task.priority]}
                             />
-                        </View>
+                        </View>}
                     </View>
                     <ScrollView style={{paddingHorizontal: 20}}>
-                        <View style={styles.taskNameContainer}>
+                        {task && <View style={styles.taskNameContainer}>
                             <Text style={styles.taskNameInput}>{task.postName}</Text>
-                        </View>
-                        <View style={styles.descriptionContainer}>
+                        </View>}
+                        {task && <View style={styles.descriptionContainer}>
                             <Text style={styles.descriptionInput}>{task.description}</Text>
-                        </View>
+                        </View>}
                     </ScrollView>
                     <View style={styles.trashContainer}>
                         <TouchableOpacity onPress={() => {deleteItem(index, true); setCompletedTaskVisible(false);}} style={styles.trashButton}>

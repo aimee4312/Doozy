@@ -106,6 +106,10 @@ const ListModal = (props) => {
           <TouchableOpacity onPress={() => setListModalVisible(false)} style={{ width: 45 }}>
             <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
           </TouchableOpacity>
+          {tempSelectedLists.length !== 0 && <View style={styles.listSelectedContainer}>
+            <Text numberOfLines={1} style={styles.listText}>{listItems.filter(listItem => tempSelectedLists.includes(listItem.id))[0].name}</Text>
+            <Text numberOfLines={1} style={styles.listText}>{tempSelectedLists.length > 1 && ` + ${tempSelectedLists.length - 1} more`}</Text>
+          </View>}
           <TouchableOpacity style={{width: 50}} onPress={() => saveChanges()}>
             <Text style={styles.save}>Save</Text>
           </TouchableOpacity>
@@ -181,6 +185,17 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15
+  },
+  listSelectedContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    maxWidth: '40%',
+  },
+  listText: {
+    fontFamily: fonts.regular,
+    color: colors.primary,
+    fontSize: 14,
   },
   save: {
     fontSize: 18,

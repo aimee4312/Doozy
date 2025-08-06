@@ -14,7 +14,7 @@ import UncheckedTask from '../../assets/unchecked-task.svg';
 import CheckedTask from '../../assets/checked-task.svg';
 
 const EditTask = (props) => {
-    const { task, listItems, setEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask } = props;
+    const { task, listItems, toggleEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask } = props;
 
     const priorityRef = useRef(null);
 
@@ -126,6 +126,7 @@ const EditTask = (props) => {
                     priority: selectedPriority,
                     reminders: selectedReminders,
                     listIds: selectedLists,
+                    hidden: false,
                 })
                 // remove task id from every list in original array
                 // add post id to every list in new array
@@ -154,6 +155,11 @@ const EditTask = (props) => {
                         if (imageURI) {
                             break;
                         }
+                    }
+                    else if (cameraOption == 'no post') {
+                        imageURI = null;
+                        batch.update(postRef, {hidden: true});
+                        break;
                     }
                     else {
                         imageURI = null;
@@ -188,7 +194,7 @@ const EditTask = (props) => {
                 batch.update(userProfileRef, { posts: increment(1) });
             }
             await batch.commit();
-            setEditTaskVisible(false);
+            toggleEditTaskVisible();
         } catch (error) {
             console.error("Error posting post:", error);
         }
@@ -207,7 +213,6 @@ const EditTask = (props) => {
     }
 
     const getDateString = (timestamp) => {
-        console.log(timestamp)
         return timestamp.toLocaleDateString();
     }
 
@@ -313,13 +318,13 @@ const EditTask = (props) => {
                     onChoose={handleCameraOptionSelect}
                 />
             </Modal>
-            <TouchableWithoutFeedback onPress={() => setEditTaskVisible(false)}>
+            <TouchableWithoutFeedback onPress={() => toggleEditTaskVisible()}>
                 <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Animated.View style={[styles.modalContainer, { height: animatedHeight }]}>
                     <View style={styles.rowOneView}>
-                        <TouchableOpacity onPress={() => setEditTaskVisible(false)} style={{ width: 50 }}>
+                        <TouchableOpacity onPress={() => toggleEditTaskVisible()} style={{ width: 50 }}>
                             <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setListModalVisible(true)} style={styles.listButton}>

@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import CheckedPost from '../../assets/checked-post-sent.svg';
+import CheckedTask from '../../assets/checked-task.svg'
 import UncheckedTask from '../../assets/unchecked-task.svg';
 import colors from '../../theme/colors';
 import fonts from '../../theme/fonts';
@@ -9,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const Task = (props) => {
 
-    const { text, tick, i, complete, deleteItem, onOpen, onClose, isFirst, isLast } = props;
+    const { text, tick, i, complete, deleteItem, onOpen, onClose, isFirst, isLast, isSelected, hidden} = props;
 
     const [isOpened, setIsOpened] = useState(false);
     const rowRef = useRef(null);
@@ -54,10 +55,14 @@ const Task = (props) => {
             onSwipeableWillClose={() => onSwipeClose(rowRef)}
             simultaneousHandlers={rowRef}
         >
-            <View style={[styles.item, isFirst && styles.firstTask, isLast && styles.lastTask]}>
+            <View style={[styles.item, isFirst && styles.firstTask, isLast && styles.lastTask, isSelected ? styles.selectedItem : styles.nonselectedItem]}>
                 <TouchableOpacity style={styles.checkedbox} key={i} onPress={checkoff}>
                     {complete ? (
+                        hidden ? (
+                        <CheckedTask width={32} height={32} />
+                        ) : (
                         <CheckedPost width={32} height={32} />
+                        )
                     ):(
                         <UncheckedTask width={32} height={32} />
                     )}
@@ -73,7 +78,6 @@ const styles = StyleSheet.create({
         padding: 15,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
         height: 50,
     },
     firstTask: {
@@ -83,6 +87,12 @@ const styles = StyleSheet.create({
     lastTask: {
         borderBottomRightRadius: 15,
         borderBottomLeftRadius: 15,
+    },
+    selectedItem: {
+        backgroundColor: colors.tint,
+    },
+    nonselectedItem: {
+        backgroundColor: colors.surface,
     },
     checkedbox: {
         marginRight: 10,

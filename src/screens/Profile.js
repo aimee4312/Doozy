@@ -41,7 +41,7 @@ const ProfileScreen = ({ route, navigation }) => {
       })
 
       if (tempFriendStatus == "currentUser" || tempFriendStatus == "friend") {
-        const q = query(postsRef, where("userId", "==", tempUserID));
+        const q = query(postsRef, where("userId", "==", tempUserID), where("hidden", "==", false));
         getDocs(q).then((querySnapshot) => {
           const postsArray = [];
           querySnapshot.forEach((doc) => {

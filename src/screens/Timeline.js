@@ -67,7 +67,7 @@ const TimelineScreen = (props) => {
 
       let tempPosts = [];
       for (const batch of batches) {
-        const q = query(postsRef, where("userId", "in", batch), orderBy("timePosted", "desc"));
+        const q = query(postsRef, where("userId", "in", batch), where("hidden", "==", false), orderBy("timePosted", "desc"));
         const snapshot = await getDocs(q);
         tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({ id: doc.id, userID: doc.data().userId, ...doc.data(), ...friendMap[doc.data().userId] })))
       }

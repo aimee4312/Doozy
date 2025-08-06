@@ -31,6 +31,7 @@ const TaskCreation = (props) => {
     const [isCompleted, setCompleted] = useState(false);
     const [isTime, setIsTime] = useState(false);
     const [dateRepeatEnds, setDateRepeatEnds] = useState(null);
+    const [hidden, setHidden] = useState(false);
 
     const [showPriority, setShowPriority] = useState(false);
     const [isTaskCreationModalVisible, setTaskCreationModalVisible] = useState(false);
@@ -69,7 +70,7 @@ const TaskCreation = (props) => {
         };
     }, []);
 
-    const storeTask = async (imageURI) => {
+    const storeTask = async (imageURI, hidden) => {
         if (!currentUser) {
             console.error("Current user not found.");
             return;
@@ -80,7 +81,7 @@ const TaskCreation = (props) => {
 
         const batch = writeBatch(FIRESTORE_DB);
         let cookedBatch;
-        isCompleted ? cookedBatch = await storeCompletedTask(taskRef, batch, imageURI) : cookedBatch = await storeIncompletedTask(false, taskRef, batch);
+        isCompleted ? cookedBatch = await storeCompletedTask(taskRef, batch, imageURI, hidden) : cookedBatch = await storeIncompletedTask(false, taskRef, batch);
         await cookedBatch.commit();
         setTaskCreationModalVisible(false);
     }
@@ -119,7 +120,7 @@ const TaskCreation = (props) => {
         }
     }
 
-    const storeCompletedTask = async (taskRef, batch, imageURI) => {
+    const storeCompletedTask = async (taskRef, batch, imageURI, hidden) => {
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const postsRef = collection(FIRESTORE_DB, 'Posts');
         const postRef = doc(postsRef);
@@ -137,6 +138,7 @@ const TaskCreation = (props) => {
                 priority: selectedPriority,
                 reminders: selectedReminders,
                 listIds: selectedLists,
+                hidden: hidden,
             })
             let listRef;
             selectedLists.forEach((listId) => {
@@ -200,6 +202,7 @@ const TaskCreation = (props) => {
         if (newTask.length !== 0) {
             if (isCompleted) {
                 let imageURI;
+                let hidden = false;
                 while (true) {
                     const cameraOption = await openCameraOptionMenu();
                     if (cameraOption == 'cancel') {
@@ -218,22 +221,27 @@ const TaskCreation = (props) => {
                             break;
                         }
                     }
+                    else if (cameraOption == 'no post') {
+                        imageURI = null;
+                        hidden = true;
+                        break;
+                    }
                     else {
                         imageURI = null;
                         break;
                     }
                 }
                 setCameraOptionModalVisible(false); //add loading screen here
-                storeTask(imageURI);
+                storeTask(imageURI, hidden);
             }
             else {
-                storeTask(null);
+                storeTask(null, false);
             }
             setNewTask('');
             setNewDescription('');
             setCompleted(false);
             setSelectedLists([]);
-            setSelectedDate('');
+            setSelectedDate(null);
             setSelectedPriority(0);
             setSelectedReminders([]);
             setSelectedRepeat([]);
@@ -241,6 +249,7 @@ const TaskCreation = (props) => {
             setDateRepeatEnds('');
             setSelectedLists([]);
             setShowPriority(false);
+            setHidden(false);
         }
     };
 
