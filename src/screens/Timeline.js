@@ -153,13 +153,9 @@ const styles = StyleSheet.create({
   },
   postContainer: {
     marginBottom: 20,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    // Android shadow
-    elevation: 4
+    paddingBottom: 20,
+    borderBottomWidth: 1, 
+    borderBottomColor: '#ccc',
   },
   profileInfo: {
     flexDirection: 'row',

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
+import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, SafeAreaView, TouchableOpacity } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail, signOut } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import colors from '../theme/colors';
+import fonts from '../theme/fonts';
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
@@ -76,112 +79,52 @@ export default function Settings() {
         }
     };
 
-    const dismissKeyboard = () => {
-        Keyboard.dismiss();
-    };
-
     const onLogout = () => {
         signOut(FIREBASE_AUTH)
-        .then(() => {
-            console.log("User signed out");
-        })
-        .catch(error => {
-            console.error("Error signing out: ", error);
-        });
+            .then(() => {
+                console.log("User signed out");
+            })
+            .catch(error => {
+                console.error("Error signing out: ", error);
+            });
     };
 
     return (
-            <TouchableWithoutFeedback onPress={dismissKeyboard}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.container}
-                >
-                    <View style={styles.formContainer}>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>New Name</Text>
-                            <TextInput
-                                placeholder="New Name"
-                                onChangeText={setName}
-                                style={[styles.input, styles.inputBackground]}
-                            />
-                        </View>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>New Email</Text>
-                            <TextInput
-                                placeholder="New Email"
-                                onChangeText={setEmail}
-                                style={[styles.input, styles.inputBackground]}
-                            />
-                        </View>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Old Password</Text>
-                            <TextInput
-                                placeholder="Old Password"
-                                secureTextEntry={true}
-                                onChangeText={setOldPassword}
-                                style={[styles.input, styles.inputBackground]}
-                            />
-                        </View>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>New Password</Text>
-                            <TextInput
-                                placeholder="New Password"
-                                secureTextEntry={true}
-                                onChangeText={setPassword}
-                                style={[styles.input, styles.inputBackground]}
-                            />
-                        </View>
-                        <Button
-                            onPress={updateUserProfile}
-                            title="Save"
-                            color="#007AFF"
-                        />
-                        <Button
-                            onPress={onLogout}
-                            title="Logout"
-                            color="#007AFF"
-                        />
-                    </View>
-                </KeyboardAvoidingView>
-            </TouchableWithoutFeedback>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.topContainer}>
+                <TouchableOpacity onPress={navigation.goBack} style={{ width: 50 }}>
+                    <Ionicons name='chevron-back' size={24} color={colors.primary} />
+                </TouchableOpacity>
+                <View>
+                    <Text style={styles.title}>Settings</Text>
+                </View>
+                <View style={{ width: 50 }} />
+            </View>
+            <Button
+                onPress={onLogout}
+                title="Logout"
+                color="#007AFF"
+            />
+        </SafeAreaView>
+
     )
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
     },
-    formContainer: {
-        width: '80%',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: 20,
-        borderRadius: 10,
+    topContainer: {
+        marginHorizontal: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
     },
-    inputContainer: {
-        marginBottom: 20,
+    title: {
+        fontFamily: fonts.bold,
+        color: colors.primary,
+        fontSize: 18,
     },
-    label: {
-        fontSize: 16,
-        marginBottom: 5,
-        color: '#333',
-    },
-    input: {
-        fontSize: 16,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        width: '100%',
-        height: 40,
-        paddingHorizontal: 10,
-    },
-    inputBackground: {
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    },
-    backgroundImage: {
-        flex: 1,
-        width: '100%',
-        justifyContent: 'center',
-    },
+
 });

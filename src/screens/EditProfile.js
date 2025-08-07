@@ -42,9 +42,13 @@ const EditProfileScreen = ({route, navigation}) => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.topContainer}>
-              <TouchableOpacity onPress={navigation.goBack}>
+              <TouchableOpacity onPress={navigation.goBack} style={{width: 50}}>
                 <Ionicons name='chevron-back' size={24} color={colors.primary}/>
               </TouchableOpacity>
+              <View>
+                <Text style={styles.title}>Edit Profile</Text>
+              </View>
+              <View style={{width: 50}}/>
           </View>
             <TouchableWithoutFeedback style={{flex: 1}} onPress={() => {Keyboard.dismiss()}}>
                 <KeyboardAvoidingView style={styles.editContainer}>
@@ -76,6 +80,13 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    title: {
+        fontFamily: fonts.bold,
+        color: colors.primary,
+        fontSize: 18,
     },
     editContainer: {
         flexDirection: 'column',
