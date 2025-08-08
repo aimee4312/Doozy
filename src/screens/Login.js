@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         color: colors.primary,
         textAlign: 'left',
+        fontFamily: fonts.bold
     },
     textBox: {
         fontSize: 16,

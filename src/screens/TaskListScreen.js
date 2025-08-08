@@ -293,7 +293,7 @@ const TaskListScreen = (props) => {
                     }
                     else if (cameraOption == 'no post') {
                         imageURI = null;
-                        batch.update(postRef, {hidden: true});
+                        batch.update(postRef, { hidden: true });
                         break;
                     }
                     else {
@@ -307,11 +307,11 @@ const TaskListScreen = (props) => {
                 const taskRef = doc(tasksRef, task.id);
                 let newCompleteByDate;
                 if (task.completeByDate && (newCompleteByDate = isRepeatingTask(task.completeByDate.timestamp, task.repeatEnds, task.repeat))) {// check if task repeats and return next possible date
-                    batch.update(taskRef, {completeByDate: newCompleteByDate}); // set new completebydate, add one to post child counter, should be on its youngest child meaning no child has been uncompleted
+                    batch.update(taskRef, { completeByDate: newCompleteByDate }); // set new completebydate, add one to post child counter, should be on its youngest child meaning no child has been uncompleted
                     if (task.reminders.length !== 0) { // schedule notifications
-                        if (await configureNotifications()) { 
+                        if (await configureNotifications()) {
                             const tempNotifIds = await scheduleNotifications(task.reminders, newCompleteByDate, task.isCompletionTime, task.name);
-                            batch.update(taskRef, {notificationIds: tempNotifIds});
+                            batch.update(taskRef, { notificationIds: tempNotifIds });
                         }
                     }
                 }
@@ -361,11 +361,11 @@ const TaskListScreen = (props) => {
                     batch.update(listRef, { taskIds: arrayUnion(taskRef.id) })
                 })
                 batch.delete(postRef);
-                batch.update(userProfileRef, { posts: increment(-1)});
+                batch.update(userProfileRef, { posts: increment(-1) });
                 if (post.reminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.name);
-                        batch.update(taskRef, {notificationIds: tempNotifIds});
+                        batch.update(taskRef, { notificationIds: tempNotifIds });
                     }
                 }
                 const image = post.image;
@@ -402,7 +402,7 @@ const TaskListScreen = (props) => {
             if (selectedRepeat == 0) {
                 currDueDate.setDate(currDueDate.getDate() + 1);
             }
-            else if (selectedRepeat == 1) { 
+            else if (selectedRepeat == 1) {
                 currDueDate.setDate(currDueDate.getDate() + 7);
             }
             else if (selectedRepeat == 2) {
@@ -538,7 +538,7 @@ const TaskListScreen = (props) => {
                     body = "In 1 week"
                 }
                 if (date > new Date()) {
-                    notificationArray.push({date: date, title: newTask, body: body});
+                    notificationArray.push({ date: date, title: newTask, body: body });
                 }
             })
         }
@@ -567,7 +567,7 @@ const TaskListScreen = (props) => {
                     body = "Tomorrow, " + timeString;
                 }
                 if (date > new Date()) {
-                    notificationArray.push({date: date, title: newTask, body: body});
+                    notificationArray.push({ date: date, title: newTask, body: body });
                 }
             })
         }
@@ -597,10 +597,10 @@ const TaskListScreen = (props) => {
     }
 
     const cancelNotifications = async (notificationIds) => {
-        await notificationIds.forEach(async (notification) => {
-            await Notifications.cancelScheduledNotificationAsync(notification)
-        })
-    }
+        for (const notification of notificationIds) {
+            await Notifications.cancelScheduledNotificationAsync(notification);
+        }
+    };
 
     let swipedCardRef = null;
     const onOpen = ref => {
@@ -615,7 +615,7 @@ const TaskListScreen = (props) => {
     };
 
     const closeSwipeCard = () => {
-       if (swipedCardRef) swipedCardRef.current?.close();
+        if (swipedCardRef) swipedCardRef.current?.close();
     }
 
     const handleTaskPress = (index) => {
@@ -628,7 +628,7 @@ const TaskListScreen = (props) => {
         setEditTaskVisible(false);
         setEditIndex(null);
     }
-    
+
     const toggleCompletedTaskVisible = () => {
         setCompletedTaskVisible(false);
         setCompletedTaskIndex(null);
@@ -668,7 +668,7 @@ const TaskListScreen = (props) => {
             <View style={styles.container}>
                 <Drawer
                     open={openDrawer}
-                    onOpen={() => {closeSwipeCard(); setOpenDrawer(true);}}
+                    onOpen={() => { closeSwipeCard(); setOpenDrawer(true); }}
                     onClose={() => setOpenDrawer(false)}
                     renderDrawerContent={() => {
                         return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
@@ -681,12 +681,12 @@ const TaskListScreen = (props) => {
                             transparent={true}
                             animationType='slide'
                         >
-                            <EditTask 
-                                task={taskItems[editIndex]} 
-                                listItems={listItems} 
-                                toggleEditTaskVisible={toggleEditTaskVisible} 
-                                configureNotifications={configureNotifications} 
-                                scheduleNotifications={scheduleNotifications} 
+                            <EditTask
+                                task={taskItems[editIndex]}
+                                listItems={listItems}
+                                toggleEditTaskVisible={toggleEditTaskVisible}
+                                configureNotifications={configureNotifications}
+                                scheduleNotifications={scheduleNotifications}
                                 cancelNotifications={cancelNotifications}
                                 isRepeatingTask={isRepeatingTask}
                             />
@@ -696,9 +696,9 @@ const TaskListScreen = (props) => {
                             transparent={true}
                             animationType='slide'
                         >
-                            <ViewCompletedTask 
-                                task={completedTaskItems[completedTaskIndex]} 
-                                listItems={listItems} 
+                            <ViewCompletedTask
+                                task={completedTaskItems[completedTaskIndex]}
+                                listItems={listItems}
                                 toggleCompletedTaskVisible={toggleCompletedTaskVisible}
                                 index={completedTaskIndex}
                                 deleteItem={deleteItem}
@@ -713,43 +713,43 @@ const TaskListScreen = (props) => {
                             <TouchableWithoutFeedback onPress={() => setSortModalVisible(false)}>
                                 <View style={styles.sortContainer}>
                                     <TouchableWithoutFeedback>
-                                        <View style={{top: sortYPosition + 40, ...styles.sortButtonContainer}}>
+                                        <View style={{ top: sortYPosition + 40, ...styles.sortButtonContainer }}>
                                             <View style={styles.sortBy}>
                                                 <Text style={styles.sortByText}>Sort by:</Text>
                                             </View>
-                                            <TouchableOpacity onPress={() => {setOrder("default")}} style={styles.sortButtons}>
+                                            <TouchableOpacity onPress={() => { setOrder("default") }} style={styles.sortButtons}>
                                                 <View style={styles.sortNames}>
                                                     <MaterialCommunityIcons name="sort" size={16} color={order == "default" ? (colors.accent) : (colors.primary)} />
-                                                    <Text style={[order == "default" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Default</Text>
+                                                    <Text style={[order == "default" ? { color: colors.accent } : { color: colors.primary }, styles.sortText]}>Default</Text>
                                                 </View>
-                                                {order == "default" && <View> 
+                                                {order == "default" && <View>
                                                     <FontAwesome6 name={'check'} size={16} color={colors.accent} />
                                                 </View>}
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => {setOrder("dueDate")}} style={styles.sortButtons}>
+                                            <TouchableOpacity onPress={() => { setOrder("dueDate") }} style={styles.sortButtons}>
                                                 <View style={styles.sortNames}>
                                                     <MaterialCommunityIcons name="sort-calendar-ascending" size={16} color={order == "dueDate" ? (colors.accent) : (colors.primary)} />
-                                                    <Text style={[order == "dueDate" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Due Date</Text>
+                                                    <Text style={[order == "dueDate" ? { color: colors.accent } : { color: colors.primary }, styles.sortText]}>Due Date</Text>
                                                 </View>
-                                                {order == "dueDate" && <View> 
+                                                {order == "dueDate" && <View>
                                                     <FontAwesome6 name={'check'} size={16} color={colors.accent} />
                                                 </View>}
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => {setOrder("priority")}} style={styles.sortButtons}>
+                                            <TouchableOpacity onPress={() => { setOrder("priority") }} style={styles.sortButtons}>
                                                 <View style={styles.sortNames}>
                                                     <Icon name="flag" size={16} color={order == "priority" ? (colors.accent) : (colors.primary)} />
-                                                    <Text style={[order == "priority" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Priority</Text>
+                                                    <Text style={[order == "priority" ? { color: colors.accent } : { color: colors.primary }, styles.sortText]}>Priority</Text>
                                                 </View>
-                                                {order == "priority" && <View> 
+                                                {order == "priority" && <View>
                                                     <FontAwesome6 name={'check'} size={16} color={colors.accent} />
                                                 </View>}
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => {setOrder("name")}} style={styles.sortButtons}>
+                                            <TouchableOpacity onPress={() => { setOrder("name") }} style={styles.sortButtons}>
                                                 <View style={styles.sortNames}>
                                                     <MaterialCommunityIcons name="sort-alphabetical-ascending" size={16} color={order == "name" ? (colors.accent) : (colors.primary)} />
-                                                    <Text style={[order == "name" ? {color: colors.accent} : {color: colors.primary}, styles.sortText]}>Name</Text>
+                                                    <Text style={[order == "name" ? { color: colors.accent } : { color: colors.primary }, styles.sortText]}>Name</Text>
                                                 </View>
-                                                {order == "name" && <View> 
+                                                {order == "name" && <View>
                                                     <FontAwesome6 name={'check'} size={16} color={colors.accent} />
                                                 </View>}
                                             </TouchableOpacity>
@@ -763,7 +763,7 @@ const TaskListScreen = (props) => {
                             transparent={true}
                             animationType='slide'
                         >
-                            <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false)}}>
+                            <TouchableWithoutFeedback onPress={() => { handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false) }}>
                                 <View style={{ flex: 1 }} />
                             </TouchableWithoutFeedback>
                             <CameraOptionMenu
@@ -771,14 +771,14 @@ const TaskListScreen = (props) => {
                             />
                         </Modal>
                         <View style={styles.topBorder}>
-                            <TouchableOpacity onPress={() => {closeSwipeCard(); setOpenDrawer(true)}}>
+                            <TouchableOpacity onPress={() => { closeSwipeCard(); setOpenDrawer(true) }}>
                                 <Ionicons name="menu" size={32} color={colors.primary} />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={testFunction} style={{flexDirection: 'row', alignItems:'center', padding: 1, paddingRight: 5,}}>
-                                <CheckedPost width={42} height={42}/>
+                            <TouchableOpacity onPress={testFunction} style={{ flexDirection: 'row', alignItems: 'center', padding: 1, paddingRight: 5, }}>
+                                <CheckedPost width={42} height={42} />
                                 <Text style={styles.title}>Doozy</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity ref={sortRef} onPress={() => {closeSwipeCard(); openSortModal();}}>
+                            <TouchableOpacity ref={sortRef} onPress={() => { closeSwipeCard(); openSortModal(); }}>
                                 <MaterialCommunityIcons name="sort" size={32} color={colors.primary} />
                             </TouchableOpacity>
                         </View>
@@ -786,7 +786,7 @@ const TaskListScreen = (props) => {
                             <View style={styles.tasksContainer}>
                                 <Text style={styles.sectionTitle}>{currList}</Text>
                                 {taskItems.length === 0 && (<View style={styles.emptyTasks}>
-                                    <FontAwesome name={"pencil-square-o"} color={colors.primary} size={30}/>
+                                    <FontAwesome name={"pencil-square-o"} color={colors.primary} size={30} />
                                     <Text style={styles.emptyTasksText}>No tasks yet</Text>
                                     <Text style={styles.emptyTasksText}>Tap + to get started!</Text>
                                 </View>)}
@@ -841,12 +841,12 @@ const TaskListScreen = (props) => {
                                 </View>
                             </View>}
                         </ScrollView>
-                        <TaskCreation 
-                            closeSwipeCard={closeSwipeCard} 
-                            listItems={listItems} 
-                            nav={props.navigation} 
-                            configureNotifications={configureNotifications} 
-                            scheduleNotifications={scheduleNotifications} 
+                        <TaskCreation
+                            closeSwipeCard={closeSwipeCard}
+                            listItems={listItems}
+                            nav={props.navigation}
+                            configureNotifications={configureNotifications}
+                            scheduleNotifications={scheduleNotifications}
                             isRepeatingTask={isRepeatingTask}
                         />
                     </SafeAreaView>
@@ -868,10 +868,10 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginBottom: 10
     },
-    title: { 
-        fontSize: 32, 
+    title: {
+        fontSize: 32,
         color: colors.primary,
-        fontFamily: fonts.bold, 
+        fontFamily: fonts.bold,
     },
     sortContainer: {
         flex: 1,

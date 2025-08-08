@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail, signOut } from 'firebase/auth';
+import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';
+import { deleteUserProfile } from '../utils/deleteUserFunctions';
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
@@ -14,6 +15,8 @@ export default function Settings() {
     const [email, setEmail] = useState('');
     const [oldPassword, setOldPassword] = useState('');
     const [password, setPassword] = useState('');
+    const [isReauthVisible, setReauthVisible] = useState(false);
+    const [isError, setError] = useState(false);
     const currentUser = FIREBASE_AUTH.currentUser;
     const navigation = useNavigation();
 
@@ -79,6 +82,17 @@ export default function Settings() {
         }
     };
 
+    const updateUserPassword = async () => {
+        try {
+            await sendPasswordResetEmail(FIREBASE_AUTH, userProfile.email);
+            console.log("email sent");
+        } catch (error) {
+            console.error("Error sending password reset email:", error);
+        }
+
+
+    }
+
     const onLogout = () => {
         signOut(FIREBASE_AUTH)
             .then(() => {
@@ -89,8 +103,74 @@ export default function Settings() {
             });
     };
 
+    const deleteUser = async () => {
+        try {
+            await deleteUserProfile(email, password);
+        } catch (error) {
+            setError(true);
+        }
+    }
+
+    const cancelConfirmation = async () => {
+        setEmail("");
+        setPassword("");
+        setError(false);
+        setReauthVisible(false);
+    }
+
     return (
         <SafeAreaView style={styles.container}>
+            <Modal
+                visible={isReauthVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <TouchableWithoutFeedback onPress={cancelConfirmation}>
+                    <View style={styles.overlay}>
+                        <TouchableWithoutFeedback>
+                            <View style={styles.reauthContainer}>
+                                <Text style={styles.reauthTitle}>You must reauthenticate to delete your account</Text>
+                                {isError && <Text style={styles.error}>Incorrect email or password</Text>}
+                                <Text style={styles.label}>Email</Text>
+                                <TextInput
+                                    placeholder="hello@example.com"
+                                    onChangeText={setEmail}
+                                    style={styles.textBox}
+                                    autoCapitalize="none"
+                                    keyboardType="email-address"
+                                    textContentType="emailAddress"
+                                    autoFocus={true}
+                                />
+                                <Text style={styles.label}>Password</Text>
+                                <TextInput
+                                    placeholder="Password"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    style={styles.textBox}
+                                    secureTextEntry
+                                    textContentType="password"
+                                    returnKeyType="go"
+                                    onSubmitEditing={deleteUser}
+                                />
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        style={styles.confirmDeleteButton}
+                                        onPress={deleteUser}
+                                    >
+                                        <Text style={styles.confirmDeleteButtonText}>Delete Account</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.cancelButton}
+                                        onPress={cancelConfirmation}
+                                    >
+                                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
             <View style={styles.topContainer}>
                 <TouchableOpacity onPress={navigation.goBack} style={{ width: 50 }}>
                     <Ionicons name='chevron-back' size={24} color={colors.primary} />
@@ -105,6 +185,16 @@ export default function Settings() {
                 title="Logout"
                 color="#007AFF"
             />
+            <Button
+                onPress={updateUserPassword}
+                title="update password"
+                color="#007AFF"
+            />
+            <Button
+                onPress={() => setReauthVisible(true)}
+                title="delete account"
+                color="#007AFF"
+            />
         </SafeAreaView>
 
     )
@@ -113,6 +203,108 @@ export default function Settings() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
+    },
+    overlay: {
+        flex: 1,
+        paddingTop: 100,
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.2)'
+    },
+    reauthContainer: {
+        padding: 10,
+        backgroundColor: colors.background,
+        borderRadius: 10,
+        width: '80%',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+    },
+    reauthTitle: {
+        fontSize: 20,
+        fontFamily: fonts.bold,
+        color: colors.primary,
+        paddingBottom: 10,
+        textAlign: 'center',
+    },
+    error: {
+        fontSize: 18,
+        color: colors.red,
+        fontFamily: fonts.regular,
+    },
+    label: {
+        fontSize: 18,
+        marginBottom: 5,
+        color: colors.primary,
+        textAlign: 'left',
+        fontFamily: fonts.bold,
+    },
+    textBox: {
+        fontSize: 16,
+        borderRadius: 15,
+        width: '100%',
+        height: 40,
+        paddingHorizontal: 10,
+        marginBottom: 20,
+        backgroundColor: colors.surface,
+        fontFamily: fonts.regular,
+        color: colors.primary,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+    },
+    buttonContainer: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    confirmDeleteButton: {
+        width: '100%',
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.red,
+        borderRadius: 30,
+        marginTop: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+    },
+    confirmDeleteButtonText: {
+        fontSize: 20,
+        color: colors.button_text,
+        fontFamily: fonts.bold,
+    },
+    cancelButton: {
+        width: '80%',
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.fade,
+        borderRadius: 30,
+        marginTop: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        // Android shadow
+        elevation: 4,
+    },
+    cancelButtonText: {
+        fontSize: 20,
+        color: colors.button_text,
+        fontFamily: fonts.bold,
     },
     topContainer: {
         marginHorizontal: 10,

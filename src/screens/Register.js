@@ -174,6 +174,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 30,
     },
     label: {
+        fontFamily: fonts.bold,
         fontSize: 18,
         marginBottom: 5,
         color: colors.primary,
@@ -181,6 +182,7 @@ const styles = StyleSheet.create({
     },
     textBox: {
         fontSize: 16,
+        fontFamily: fonts.regular,
         borderRadius: 15,
         width: '100%',
         height: 50,
