@@ -128,8 +128,9 @@ const deleteUserDoc = async (currentUser) => {
     const batch = writeBatch(FIRESTORE_DB);
 
     const snapshot = await getDoc(userRef);
-    if (snapshot.data().profilePic !== "https://firebasestorage.googleapis.com/v0/b/doozy-3d54c.appspot.com/o/profilePics%2Fdefault.jpg?alt=media&token=c4b20aae-830c-4d47-aa90-2a3ebd6e16fb") {
-        const imageRef = ref(getStorage(), snapshot.data().profilePic);
+    const storagePath = getStoragePathFromUrl(snapshot.data().profilePic);
+    if (storagePath !== "profilePics/default.jpg") {
+        const imageRef = ref(getStorage(), storagePath);
         await deleteObject(imageRef);
     }
 
