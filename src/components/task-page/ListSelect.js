@@ -14,10 +14,11 @@ const ListSelect = (props) => {
     const [listName, setListName] = useState("");
     const [listMenuModalVisible, setListMenuModalVisible] = useState(false);
     const [currYPosition, setCurrYPosition] = useState(0);
-    const [currList, setCurrList] = useState({});
+    const [currList, setCurrList] = useState(null);
     const [edit, setEdit] = useState(false);
 
     const screenWidth = Dimensions.get('window').width;
+    const screenHeight = Dimensions.get('window').height;
     const listMenuXPosition = screenWidth * .7 - 150;
 
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -104,6 +105,7 @@ const ListSelect = (props) => {
             batch.delete(listRef);
             await batch.commit();
             setListMenuModalVisible(false);
+            setCurrList(null)
             if (listId == list.id) {
                 setListId("0");
             }
@@ -138,7 +140,16 @@ const ListSelect = (props) => {
                 (<Text style={styles.taskNumber}>{item.taskNumber}</Text>) 
             : (
                 <TouchableOpacity onPress={() => toggleListMenu(item)} style={{ height: 50, flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 10, alignItems: 'center' }}>
-                    <Ionicons name="ellipsis-vertical-outline" size={18} color={colors.primary} />
+                    {currList && currList.id === item.id ?
+                        (currYPosition * 2 > screenHeight ? 
+                            (<Ionicons name="chevron-up-outline" size={18} color={colors.primary} />)
+                        :
+                            (<Ionicons name="chevron-down-outline" size={18} color={colors.primary} />))
+                        : 
+                        (<Ionicons name="ellipsis-vertical-outline" size={18} color={colors.primary} />)
+
+                    }
+                    
                 </TouchableOpacity>
             )}
         </TouchableOpacity>
@@ -168,11 +179,11 @@ const ListSelect = (props) => {
                 transparent={true}
                 animationType='fade'
             >
-                <TouchableWithoutFeedback onPress={() => setListMenuModalVisible(false)}>
+                <TouchableWithoutFeedback onPress={() => {setCurrList(null); setListMenuModalVisible(false);}}>
                     <View style={styles.listMenuBackground}>
                         <TouchableWithoutFeedback>
-                            <View style={{top: currYPosition + 50, left: listMenuXPosition, ...styles.listMenu}}>
-                                <TouchableOpacity onPress={() => {setEdit(true); setListName(currList.name); setListMenuModalVisible(false); openModal();}}style={styles.listMenuButtons}>
+                            <View style={[currYPosition * 2 > screenHeight ? {top: currYPosition - 70} : {top: currYPosition + 40}, {left: listMenuXPosition}, styles.listMenu]}>
+                                <TouchableOpacity onPress={() => {setEdit(true); setListName(currList.name); setListMenuModalVisible(false); openModal(); setCurrList(null);}}style={styles.listMenuButtons}>
                                     <Text style={styles.listMenuText}>Rename</Text>
                                     <Ionicons name="create-outline" size={18} color={colors.primary} />
                                 </TouchableOpacity>
@@ -192,7 +203,6 @@ const ListSelect = (props) => {
                         <Text style={styles.profileText}>{userProfile ? userProfile.username : ""}</Text>
                     </View>
                 </View>
-                <Ionicons name="settings-sharp" size={28} color={colors.primary} />
             </View>
             <FlatList 
                 data={allListItems}

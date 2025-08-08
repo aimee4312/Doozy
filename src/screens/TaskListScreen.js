@@ -153,11 +153,15 @@ const TaskListScreen = (props) => {
                         fetchedLists.push({ id: doc.id, ...doc.data() });
                     });
                     setListItems(fetchedLists);
+                    const foundList = fetchedLists.find((fetchedList) => fetchedList.id === listId);
                     if (listId === "0") {
                         setCurrList("Master List");
                     }
+                    else if (foundList){
+                        setCurrList(foundList.name);
+                    }
                     else {
-                        setCurrList(fetchedLists.find((fetchedList) => fetchedList.id === listId).name);
+                        setCurrList("Master List");
                     }
                 });
             return unsubscribeLists;
