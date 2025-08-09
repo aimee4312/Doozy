@@ -1,4 +1,5 @@
-import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import CheckedPostReceived from "../assets/checked-post-received.svg";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import fonts from "../theme/fonts";

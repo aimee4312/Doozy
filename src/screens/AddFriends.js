@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser, fetchFriends, fetchRequests, fetchRequesting, fetchProfiles } from '../utils/friendFunctions'
 import { Ionicons } from '@expo/vector-icons';
 import { FIREBASE_AUTH } from '../../firebaseConfig';

@@ -4,6 +4,7 @@ import { FIREBASE_AUTH } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LandingScreen from './src/screens/Landing';
 import RegisterScreen from './src/screens/Register';
 import LoginScreen from './src/screens/Login';
@@ -16,18 +17,26 @@ import AddFriendsScreen from './src/screens/AddFriends';
 import EditProfileScreen from './src/screens/EditProfile';
 import EditFieldScreen from './src/screens/EditField';
 import PostScreen from './src/screens/Post';
+import { Entypo, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Poppins_400Regular, Poppins_700Bold, Poppins_400Regular_Italic } from '@expo-google-fonts/poppins';
-// import { MenuProvider } from 'react-native-popup-menu';
+import * as Notifications from 'expo-notifications';
+import colors from './src/theme/colors';
+import CheckedPostReceived from './src/assets/checked-post-received.svg'
 
-const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+const LandingStack = createStackNavigator();
+const TimelineStack = createStackNavigator();
+const TaskListStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [listId, setListId] = useState("0");
   const [order, setOrder] = useState("default");
+  const [currentUserID, setCurrentUserID] = useState(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -64,33 +73,87 @@ export default function App() {
     );
   }
 
+  function TimelineStackScreen() {
+    return (
+      <TimelineStack.Navigator initialRouteName="Timeline" screenOptions={{ headerShown: false }}>
+        <TimelineStack.Screen name="Timeline" component={TimelineScreen} />
+        <TimelineStack.Screen name="Profile" component={ProfileScreen} />
+        <TimelineStack.Screen name="Friends" component={FriendsScreen} />
+        <TimelineStack.Screen name="AddFriends" component={AddFriendsScreen} />
+        <TimelineStack.Screen name="Settings" component={SettingsScreen} />
+        <TimelineStack.Screen name="EditProfile" component={EditProfileScreen} />
+        <TimelineStack.Screen name="EditField" component={EditFieldScreen} />
+        <TimelineStack.Screen name="Post" component={PostScreen} />
+      </TimelineStack.Navigator>
+    )
+  }
+
+  function ProfileStackScreen() {
+    return (
+      <ProfileStack.Navigator initialRouteName='Profile' screenOptions={{ headerShown: false }}>
+        <ProfileStack.Screen name="Profile" component={ProfileScreen} initialParams={{ userID: FIREBASE_AUTH.currentUser?.uid, status: 'currentUser' }} />
+        <ProfileStack.Screen name="Friends" component={FriendsScreen} />
+        <ProfileStack.Screen name="AddFriends" component={AddFriendsScreen} />
+        <ProfileStack.Screen name="Settings" component={SettingsScreen} />
+        <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+        <ProfileStack.Screen name="EditField" component={EditFieldScreen} />
+        <ProfileStack.Screen name="Post" component={PostScreen} />
+      </ProfileStack.Navigator>
+    )
+  }
+
+  function TaskListStackScreen() {
+    return (
+      <TaskListStack.Navigator initialRouteName='TaskList' screenOptions={{ headerShown: false }}>
+        <TaskListStack.Screen name="TaskList">
+          {(props) => <TaskListScreen {...props} listId={listId} setListId={setListId} order={order} setOrder={setOrder} />}
+        </TaskListStack.Screen>
+      </TaskListStack.Navigator>
+    )
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <NavigationContainer>
-          <Stack.Navigator screenOptions={{ animation: 'none' }}>
             {loggedIn ? (
-              <>
-                <Stack.Screen name="TaskList" options={{ headerShown: false }}>
-                  {(props) => <TaskListScreen {...props} listId={listId} setListId={setListId} order={order} setOrder={setOrder} />}
-                </Stack.Screen>
-                <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Timeline" component={TimelineScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Friends" component={FriendsScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="AddFriends" component={AddFriendsScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{headerShown: false}} />
-                <Stack.Screen name="EditField" component={EditFieldScreen} options={{headerShown: false}} />
-                <Stack.Screen name="Post" component={PostScreen} options={{headerShown: false}} />
-              </>
+              <Tab.Navigator 
+              initialRouteName='TaskListTab' 
+              screenOptions={({ route }) => ({ headerShown: false, 
+                tabBarStyle: {
+                  paddingTop: 10,
+                  backgroundColor: colors.surface,
+                  height: 80,
+                  position: 'absolute',
+                  zIndex: 0,
+                  elevation: 5,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.1,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+                tabBarActiveTintColor: colors.accent, 
+                tabBarInactiveTintColor: colors.primary,
+                tabBarShowLabel: false,
+                tabBarIcon: ({ focused, color, size }) => {
+                  if (route.name === 'TimelineTab') return <Entypo name='home' size={30} color={color} />;
+                  else if (route.name === 'TaskListTab') return <FontAwesome6 name="list-check" size={30} color={color} />;
+                  else if (route.name === 'ProfileTab') return <Ionicons name="person" size={30} color={color} />;
+                },
+              })
+            }
+              >
+                <Tab.Screen name="TimelineTab" component={TimelineStackScreen} />
+                <Tab.Screen name="TaskListTab" component={TaskListStackScreen} />
+                <Tab.Screen name="ProfileTab" component={ProfileStackScreen} />
+              </Tab.Navigator>
             ) : (
-              <>
-                <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
-              </>
+              <LandingStack.Navigator screenOptions={{ headerShown: false }}>
+                <LandingStack.Screen name="Landing" component={LandingScreen} />
+                <LandingStack.Screen name="Login" component={LoginScreen} />
+                <LandingStack.Screen name="Register" component={RegisterScreen} />
+              </LandingStack.Navigator>
             )}
-          </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>

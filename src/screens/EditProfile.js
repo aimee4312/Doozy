@@ -1,5 +1,6 @@
-import { SafeAreaView, StyleSheet, TextInput, Text, View, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, TouchableOpacity } from 'react-native';
+import { StyleSheet, TextInput, Text, View, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, TouchableOpacity } from 'react-native';
 import UploadImage from '../components/profile/profilePic';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';

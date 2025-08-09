@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, TextInput, Modal, TouchableWithoutFeedback } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchFriends } from '../utils/friendFunctions'
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../theme/colors';

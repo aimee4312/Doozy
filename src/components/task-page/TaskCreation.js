@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Platform, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated, SafeAreaView } from 'react-native';
+import { StyleSheet, Platform, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ListModal from './PopUpMenus/ListModal';
 import ScheduleMenu from './ScheduleMenu';
 import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
 import { doc, collection, addDoc, runTransaction, writeBatch, increment, arrayUnion } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebaseConfig';
-import NavBar from "../NavigationBar";
 import { addImage, takePhoto } from '../../utils/photoFunctions';
 import colors from '../../theme/colors';
 import fonts from '../../theme/fonts';
@@ -433,9 +433,6 @@ const TaskCreation = (props) => {
                         <AntDesign name="pluscircle" size={64} color={colors.accent} />
                     </TouchableOpacity>
                 </View>
-                <View style={styles.navBar}>
-                    <NavBar navigation={nav} style={styles.navBarContainer}></NavBar>
-                </View>
             </View>
         </SafeAreaView>
     );
@@ -472,7 +469,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         alignItems: 'flex-end',
         right: 16,
-        bottom: 32,
+        bottom: 60,
     },
     taskCreationContainer: {
         backgroundColor: colors.surface,
@@ -661,11 +658,6 @@ const styles = StyleSheet.create({
     titleText: {
         fontSize: 18,
     },
-    navBar: {
-        position: 'absolute',
-        width: '100%',
-        bottom: 0,
-    }
 })
 
 export default TaskCreation;

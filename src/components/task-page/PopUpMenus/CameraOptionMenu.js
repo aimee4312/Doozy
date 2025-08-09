@@ -1,5 +1,6 @@
 import { Feather, MaterialIcons } from "@expo/vector-icons";
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native"
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native"
 import colors from "../../../theme/colors";
 import fonts from "../../../theme/fonts";
 

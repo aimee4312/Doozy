@@ -2,7 +2,6 @@ import React, { Component, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, where, query, orderBy } from "firebase/firestore";
-import NavBar from '../components/NavigationBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import fonts from '../theme/fonts';
 import colors from '../theme/colors';
@@ -129,7 +128,6 @@ const TimelineScreen = (props) => {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       />
-      <NavBar navigation={props.navigation} style={styles.navBarContainer}></NavBar>
     </SafeAreaView>
   );
 }

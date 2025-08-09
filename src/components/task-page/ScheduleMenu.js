@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ReminderModal from './PopUpMenus/ReminderModal';
 import RepeatModal from './PopUpMenus/RepeatModal';
 import TimePopupMenu from './PopUpMenus/TimePopupMenu';

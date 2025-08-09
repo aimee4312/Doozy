@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, SafeAreaView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions, useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import NavBar from '../components/NavigationBar';
 import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions';
 import CheckedPost from '../assets/checked-post-sent.svg';
 import colors from '../theme/colors';
@@ -200,7 +200,6 @@ const ProfileScreen = ({ route, navigation }) => {
           ))}
         </View>
       </ScrollView>
-      <NavBar navigation={navigation} />
     </SafeAreaView>
   );
 };

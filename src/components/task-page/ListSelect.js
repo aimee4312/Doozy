@@ -8,7 +8,7 @@ import fonts from '../../theme/fonts';
 
 
 const ListSelect = (props) => {
-    const {setOpenDrawer, listItems, listId, setListId, userProfile} = props;
+    const {setOpenDrawer, listItems, listId, setListId, userProfile, navigation} = props;
     const allListItems = [{id: "0", name: 'Master List', taskNumber: userProfile ? userProfile.tasks : 0}, ...listItems]
     const [addListModalVisible, setAddListModalVisible] = useState(false);
     const [listName, setListName] = useState("");
@@ -16,6 +16,7 @@ const ListSelect = (props) => {
     const [currYPosition, setCurrYPosition] = useState(0);
     const [currList, setCurrList] = useState(null);
     const [edit, setEdit] = useState(false);
+    const [shouldNavigate, setShouldNavigate] = useState(false);
 
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
@@ -50,6 +51,15 @@ const ListSelect = (props) => {
             willHideSub.remove();
         };
     }, []);
+
+    useEffect(() => {
+        if (shouldNavigate) {
+            navigation.replace('Profile', {userID: currentUser.uid, status: "currentUser"});
+        }
+        return () => {
+            setShouldNavigate(false);
+        }
+    }, [shouldNavigate])
 
     const openModal = () => {
         setAddListModalVisible(true);
@@ -197,12 +207,12 @@ const ListSelect = (props) => {
                 </TouchableWithoutFeedback>
             </Modal>
             <View style={styles.profileBar}>
-                <View style={styles.profileInfo}>
+                <TouchableOpacity style={styles.profileInfo} onPress={() => setShouldNavigate(true)}>
                     <Image source={{ uri: userProfile ? userProfile.profilePic : null }} style={{ width: 50, height: 50, borderRadius: 50 }} />
                     <View style={{ justifyContent: 'center', marginLeft: 10, width: '65%' }}>
                         <Text style={styles.profileText}>{userProfile ? userProfile.username : ""}</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
             </View>
             <FlatList 
                 data={allListItems}

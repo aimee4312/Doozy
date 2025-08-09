@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
+import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, TouchableOpacity, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { EmailAuthProvider, updateEmail, updatePassword, reauthenticateWithCredential, verifyBeforeUpdateEmail, signOut, sendPasswordResetEmail } from 'firebase/auth';

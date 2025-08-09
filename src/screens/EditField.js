@@ -1,5 +1,6 @@
 import { Text } from "react-native";
-import { SafeAreaView, StyleSheet, View, TouchableOpacity, TextInput } from "react-native";
+import { StyleSheet, View, TouchableOpacity, TextInput } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import { useState } from "react";
 import { updateNameField, updateUsernameField, updateBioField } from '../utils/checkFieldFunctions';

@@ -21,7 +21,7 @@ import fonts from '../theme/fonts';
 
 const TaskListScreen = (props) => {
 
-    const { listId, setListId, order, setOrder } = props;
+    const { navigation, listId, setListId, order, setOrder } = props;
 
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
@@ -675,9 +675,14 @@ const TaskListScreen = (props) => {
                     onOpen={() => { closeSwipeCard(); setOpenDrawer(true); }}
                     onClose={() => setOpenDrawer(false)}
                     renderDrawerContent={() => {
-                        return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} />;
+                        return <ListSelect setOpenDrawer={setOpenDrawer} listItems={listItems} listId={listId} setListId={setListId} userProfile={userProfile} navigation={navigation} />;
                     }}
-                    drawerStyle={{ width: '70%' }}
+                    drawerStyle={{
+                        width: '70%',
+                        position: 'absolute',
+                        zIndex: 1000,
+                        elevation: 1000,
+                    }}
                 >
                     <SafeAreaView style={styles.container}>
                         <Modal
@@ -864,6 +869,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+        position: 'relative',
     },
     topBorder: {
         flexDirection: 'row',
