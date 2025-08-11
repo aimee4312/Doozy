@@ -139,6 +139,8 @@ const TaskCreation = (props) => {
                 reminders: selectedReminders,
                 listIds: selectedLists,
                 hidden: hidden,
+                likeCount: 0,
+                commentCount: 0,
             })
             let listRef;
             selectedLists.forEach((listId) => {

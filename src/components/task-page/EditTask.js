@@ -127,6 +127,8 @@ const EditTask = (props) => {
                     reminders: selectedReminders,
                     listIds: selectedLists,
                     hidden: false,
+                    likeCount: 0,
+                    commentCount: 0,
                 })
                 // remove task id from every list in original array
                 // add post id to every list in new array

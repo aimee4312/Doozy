@@ -7,8 +7,9 @@ import fonts from '../theme/fonts';
 import colors from '../theme/colors';
 import CheckedPostReceived from "../assets/checked-post-received.svg";
 import CheckedPost from '../assets/checked-post-sent.svg';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { getTimePassedString } from '../utils/timeFunctions'
+import { sendLike } from '../utils/userReactionFunctions';
 
 const TimelineScreen = (props) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -56,8 +57,13 @@ const TimelineScreen = (props) => {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
       const userSnapshot = await getDoc(userProfileRef);
       const userProfileData = userSnapshot.data();
+      const likedPostsRef = collection(userProfileRef, 'LikedPosts');
 
       friendMap[currentUser.uid] = { name: userProfileData.name, profilePic: userProfileData.profilePic, username: userProfileData.username };
+
+      const likedSnapshot = await getDocs(likedPostsRef);
+
+      const likedPostIDs = likedSnapshot.docs.map(doc => doc.id);
 
       const friendIds = Object.keys(friendMap);
       const batches = splitArray(friendIds, 10);
@@ -68,7 +74,7 @@ const TimelineScreen = (props) => {
       for (const batch of batches) {
         const q = query(postsRef, where("userId", "in", batch), where("hidden", "==", false), orderBy("timePosted", "desc"));
         const snapshot = await getDocs(q);
-        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({ id: doc.id, userID: doc.data().userId, ...doc.data(), ...friendMap[doc.data().userId] })))
+        tempPosts = tempPosts.concat(snapshot.docs.map(doc => ({ id: doc.id, userID: doc.data().userId, liked: likedPostIDs.includes(doc.id), ...doc.data(), ...friendMap[doc.data().userId] })))
       }
       setPosts(tempPosts);
 
@@ -78,6 +84,23 @@ const TimelineScreen = (props) => {
       setRefreshing(false);
     }
   };
+
+  const toggleLike = async(postID, didLike) => {
+    try {
+      await sendLike(postID, didLike);
+      setPosts(prevPosts =>
+        prevPosts.map(post => 
+          post.id === postID
+            ? {...post, liked: !didLike, likeCount: didLike ? post.likeCount - 1 : post.likeCount + 1}
+              : post
+        )
+      )
+    } catch(error) {
+      console.error("Error liking post:", error);
+    }
+    
+
+  }
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -94,7 +117,22 @@ const TimelineScreen = (props) => {
       </TouchableOpacity>
       {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
       <View style={styles.taskInfo}>
-        <View style={styles.titleContainer}>
+          <View style={styles.reactionContainer}>
+            <View style={styles.reaction}>
+              <TouchableOpacity onPress={() => toggleLike(item.id, item.liked)}>
+                {item.liked ? (<FontAwesome name='heart' size={24} color={colors.red} />)
+                :
+                (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
+              </TouchableOpacity>
+              <Text style={styles.count}>{item.likeCount}</Text>
+            </View>
+            <View style={styles.reaction}>
+              <TouchableOpacity onPress={() => {}}>
+                <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
+              </TouchableOpacity>
+              <Text style={styles.count}>{item.commentCount}</Text>
+            </View>
+          </View>
           <View style={styles.postNameContainer}>
             <CheckedPostReceived width={32} height={32} />
             <Text style={styles.taskName}>{item.postName}</Text>
@@ -104,9 +142,6 @@ const TimelineScreen = (props) => {
             <Text style={styles.taskDescription}>{item.description}</Text>
           </View>}
           <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
-        </View>
-
-
       </View>
     </View>
   );
@@ -180,9 +215,27 @@ const styles = StyleSheet.create({
   postNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 5,
     paddingRight: 10,
-    paddingBottom: 10
+    paddingLeft: 5,
+    paddingBottom: 5,
+  },
+  reactionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingBottom: 5,
+    paddingLeft: 10,
+  },
+  reaction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  count: {
+    fontFamily: fonts.regular,
+    color: colors.primary,
+    fontSize: 14,
+    marginLeft: 5,
+    minWidth: 20,
   },
   taskName: {
     marginLeft: 5,

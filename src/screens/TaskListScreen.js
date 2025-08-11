@@ -266,6 +266,8 @@ const TaskListScreen = (props) => {
                     timeTaskCreated: task.timeTaskCreated,
                     image: null,
                     hidden: false,
+                    likeCount: 0,
+                    commentCount: 0,
                 })
 
                 let listRef;
@@ -869,7 +871,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
-        position: 'relative',
     },
     topBorder: {
         flexDirection: 'row',
