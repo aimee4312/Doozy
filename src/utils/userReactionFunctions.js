@@ -1,4 +1,4 @@
-import { arrayUnion, writeBatch, increment, arrayRemove } from "firebase/firestore";
+import { arrayUnion, writeBatch, increment, arrayRemove, getDocs, getDoc } from "firebase/firestore";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig"
 import { doc, collection,  } from "firebase/firestore";
 
@@ -7,8 +7,11 @@ export const fetchLikes = async () => {
     // fetch all users with query of userID in likes array
 }
 
-export const fetchComments = async () => {
-
+export const fetchComments = async (postID) => {
+    const commentsRef = collection(FIRESTORE_DB, 'Posts', postID, 'Comments');
+    const snapshot = await getDocs(commentsRef);
+    const commentList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data()}));
+    return commentList;
 }
 
 export const sendLike = async (postID, didLike) => {
@@ -30,6 +33,18 @@ export const sendLike = async (postID, didLike) => {
     await batch.commit();
 }
 
-export const sendComment = async (postID) => {
+export const sendComment = async (postID, comment) => {
+    const currentUser = FIREBASE_AUTH.currentUser;
+    const postRef = doc(FIRESTORE_DB, 'Posts', postID);
+    const commentRef = doc(collection(FIRESTORE_DB, 'Posts', postID, 'Comments'));
+    const currUserRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
 
+    const userSnap = await getDoc(currUserRef);
+    const userData = userSnap.data();
+
+    const batch = writeBatch(FIRESTORE_DB);
+    batch.set(commentRef, {userID: currentUser.uid, profilePic: userData.profilePic, username: userData.username, comment: comment, timePosted: new Date()});
+    batch.update(postRef, { commentCount: increment(1) });
+    
+    await batch.commit();
 }

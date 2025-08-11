@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Keyboard, Dimensions, FlatList, Animated, TextInput, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TouchableOpacity, Keyboard, Dimensions, FlatList, Animated, TextInput, KeyboardAvoidingView, StyleSheet } from 'react-native';
 import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../../firebaseConfig';
@@ -100,7 +100,7 @@ const ListModal = (props) => {
   );
 
   return (
-    <Animated.View style={{ height: animatedHeight, backgroundColor: 'white', ...styles.container }}>
+    <Animated.View style={{ height: animatedHeight, backgroundColor: colors.surface, ...styles.container }}>
       <View style={styles.topContainer}>
         <View style={styles.rowOneView}>
           <TouchableOpacity onPress={() => setListModalVisible(false)} style={{ width: 45 }}>
@@ -166,7 +166,7 @@ const ListModal = (props) => {
 
 export default ListModal;
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -271,4 +271,4 @@ const styles = {
   taskNumber: {
 
   },
-};
+});

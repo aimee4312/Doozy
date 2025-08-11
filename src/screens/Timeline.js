@@ -1,5 +1,5 @@
 import React, { Component, useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, TouchableWithoutFeedback, ImageBackground, RefreshControl, Modal } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, where, query, orderBy } from "firebase/firestore";
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,10 +10,13 @@ import CheckedPost from '../assets/checked-post-sent.svg';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { getTimePassedString } from '../utils/timeFunctions'
 import { sendLike } from '../utils/userReactionFunctions';
+import CommentModal from '../components/timeline/CommentModal';
 
 const TimelineScreen = (props) => {
   const [refreshing, setRefreshing] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [currPostID, setCurrPostID] = useState(null);
+  const [isCommentModalVisible, setCommentModalVisible] = useState(false);
 
   const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -85,21 +88,24 @@ const TimelineScreen = (props) => {
     }
   };
 
-  const toggleLike = async(postID, didLike) => {
+  const toggleLike = async (postID, didLike) => {
     try {
       await sendLike(postID, didLike);
       setPosts(prevPosts =>
-        prevPosts.map(post => 
+        prevPosts.map(post =>
           post.id === postID
-            ? {...post, liked: !didLike, likeCount: didLike ? post.likeCount - 1 : post.likeCount + 1}
-              : post
+            ? { ...post, liked: !didLike, likeCount: didLike ? post.likeCount - 1 : post.likeCount + 1 }
+            : post
         )
       )
-    } catch(error) {
+    } catch (error) {
       console.error("Error liking post:", error);
     }
-    
+  }
 
+  const toggleCommentModal = (postID) => {
+    setCurrPostID(postID);
+    setCommentModalVisible(!isCommentModalVisible);
   }
 
   const handleRefresh = () => {
@@ -111,43 +117,57 @@ const TimelineScreen = (props) => {
 
   const renderTask = ({ item }) => (
     <View style={styles.postContainer}>
-      <TouchableOpacity onPress={() => {props.navigation.navigate('Profile', {userID: item.userID, status: currentUser.uid === item.userID ? 'currentUser' : 'friend'})}} style={styles.profileInfo}>
+      <TouchableOpacity onPress={() => { props.navigation.navigate('Profile', { userID: item.userID, status: currentUser.uid === item.userID ? 'currentUser' : 'friend' }) }} style={styles.profileInfo}>
         <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
         <Text style={styles.username}>{item.username}</Text>
       </TouchableOpacity>
       {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
       <View style={styles.taskInfo}>
-          <View style={styles.reactionContainer}>
-            <View style={styles.reaction}>
-              <TouchableOpacity onPress={() => toggleLike(item.id, item.liked)}>
-                {item.liked ? (<FontAwesome name='heart' size={24} color={colors.red} />)
+        <View style={styles.reactionContainer}>
+          <View style={styles.reaction}>
+            <TouchableOpacity onPress={() => toggleLike(item.id, item.liked)}>
+              {item.liked ? (<FontAwesome name='heart' size={24} color={colors.red} />)
                 :
                 (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
-              </TouchableOpacity>
-              <Text style={styles.count}>{item.likeCount}</Text>
-            </View>
-            <View style={styles.reaction}>
-              <TouchableOpacity onPress={() => {}}>
-                <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
-              </TouchableOpacity>
-              <Text style={styles.count}>{item.commentCount}</Text>
-            </View>
+            </TouchableOpacity>
+            <Text style={styles.count}>{item.likeCount}</Text>
           </View>
-          <View style={styles.postNameContainer}>
-            <CheckedPostReceived width={32} height={32} />
-            <Text style={styles.taskName}>{item.postName}</Text>
+          <View style={styles.reaction}>
+            <TouchableOpacity onPress={() => {toggleCommentModal(item.id)}}>
+              <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
+            </TouchableOpacity>
+            <Text style={styles.count}>{item.commentCount}</Text>
           </View>
-          {item.description !== "" && <View style={styles.descriptionContainer}>
-            <MaterialCommunityIcons name={"text"} size={16} color={colors.primary} />
-            <Text style={styles.taskDescription}>{item.description}</Text>
-          </View>}
-          <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
+        </View>
+        <View style={styles.postNameContainer}>
+          <CheckedPostReceived width={32} height={32} />
+          <Text style={styles.taskName}>{item.postName}</Text>
+        </View>
+        {item.description !== "" && <View style={styles.descriptionContainer}>
+          <MaterialCommunityIcons name={"text"} size={16} color={colors.primary} />
+          <Text style={styles.taskDescription}>{item.description}</Text>
+        </View>}
+        <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
       </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <Modal
+        visible={isCommentModalVisible}
+        transparent={true}
+        animationType='slide'
+      >
+        <TouchableWithoutFeedback onPress={() => toggleCommentModal(null)}>
+          <View style={{ flex: 1 }}>
+          </View>
+        </TouchableWithoutFeedback>
+        <CommentModal
+          postID={currPostID}
+          toggleCommentModal={toggleCommentModal}
+        />
+      </Modal>
       <View style={styles.topBorder}>
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 1, paddingRight: 5, }}>
           <CheckedPost width={42} height={42} />
@@ -187,7 +207,7 @@ const styles = StyleSheet.create({
   postContainer: {
     marginBottom: 20,
     paddingBottom: 20,
-    borderBottomWidth: 1, 
+    borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
   profileInfo: {
