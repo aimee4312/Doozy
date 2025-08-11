@@ -384,7 +384,7 @@ const EditTask = (props) => {
                     </ScrollView>
                     <View style={styles.trashContainer}>
                         <TouchableOpacity style={styles.trashButton}>
-                            <Ionicons name="trash-outline" size={32} color="red" />
+                            <Ionicons name="trash-outline" size={32} color={colors.red} />
                         </TouchableOpacity>
                     </View>
                 </Animated.View>

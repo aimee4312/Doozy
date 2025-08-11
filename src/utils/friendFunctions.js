@@ -1,5 +1,5 @@
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { writeBatch, doc, getDoc, increment, onSnapshot, collection } from "firebase/firestore";
+import { writeBatch, doc, getDoc, increment, onSnapshot, collection, getDocs } from "firebase/firestore";
 
 export const addFriend = async (friend) => { // add person to AllFriends, remove person from FriendRequests, add current user to AllFriends, remove currentUser from SentRequests
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -181,4 +181,29 @@ export function fetchProfiles(friends, setProfiles) { //friends, setProfiles
     } catch (error) {
         console.error("Error fetching profiles:", error);
     }
+}
+
+export const findStatus = async (userID) => {
+    const currentUser = FIREBASE_AUTH.currentUser;
+    if (userID === currentUser.uid) {
+        return "currentUser";
+    }
+    const [friendsSnap, requestSnap, sentRequestSnap] = await Promise.all([
+        getDocs(collection(FIRESTORE_DB, "Requests", currentUser.uid, "AllFriends")),
+        getDocs(collection(FIRESTORE_DB, "Requests", currentUser.uid, "FriendRequests")),
+        getDocs(collection(FIRESTORE_DB, "Requests", currentUser.uid, "SentRequests")),
+    ]);
+    const isFriend = friendsSnap.docs.some(doc => doc.id === userID);
+    if (isFriend) {
+        return "friend";
+    }
+    const isRequest = requestSnap.docs.some(doc => doc.id === userID);
+    if (isRequest) {
+        return "userReceivedRequest";
+    }
+    const isSentRequest = sentRequestSnap.docs.some(doc => doc.id === userID);
+    if (isSentRequest) {
+        return "userSentRequest";
+    }           
+    return "stranger";
 }

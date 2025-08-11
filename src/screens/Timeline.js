@@ -11,6 +11,7 @@ import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icon
 import { getTimePassedString } from '../utils/timeFunctions'
 import { sendLike } from '../utils/userReactionFunctions';
 import CommentModal from '../components/timeline/CommentModal';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 const TimelineScreen = (props) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -103,6 +104,21 @@ const TimelineScreen = (props) => {
     }
   }
 
+  const likeOnly = async (postID, didLike) => {
+      if (!didLike) {
+        toggleLike(postID, didLike);
+      }
+  }
+
+  function doubleTapGesture(postID) {
+    return Gesture.Tap().numberOfTaps(2).maxDuration(250).onEnd(() => {
+      const post = posts.find(p => p.id === postID);
+      if (post) {
+        likeOnly(postID, post.liked);
+      }
+    }).runOnJS(true);
+  }
+
   const toggleCommentModal = (postID) => {
     setCurrPostID(postID);
     setCommentModalVisible(!isCommentModalVisible);
@@ -121,9 +137,12 @@ const TimelineScreen = (props) => {
         <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
         <Text style={styles.username}>{item.username}</Text>
       </TouchableOpacity>
-      {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
+      {item.image && 
+      <GestureDetector gesture={doubleTapGesture(item.id)}>
+        <Image source={{ uri: item.image }} style={styles.postImage} />
+      </GestureDetector>}
       <View style={styles.taskInfo}>
-        <View style={styles.reactionContainer}>
+        {item.image && <View style={styles.reactionContainer}>
           <View style={styles.reaction}>
             <TouchableOpacity onPress={() => toggleLike(item.id, item.liked)}>
               {item.liked ? (<FontAwesome name='heart' size={24} color={colors.red} />)
@@ -138,7 +157,7 @@ const TimelineScreen = (props) => {
             </TouchableOpacity>
             <Text style={styles.count}>{item.commentCount}</Text>
           </View>
-        </View>
+        </View>}
         <View style={styles.postNameContainer}>
           <CheckedPostReceived width={32} height={32} />
           <Text style={styles.taskName}>{item.postName}</Text>
@@ -146,6 +165,22 @@ const TimelineScreen = (props) => {
         {item.description !== "" && <View style={styles.descriptionContainer}>
           <MaterialCommunityIcons name={"text"} size={16} color={colors.primary} />
           <Text style={styles.taskDescription}>{item.description}</Text>
+        </View>}
+        {!item.image && <View style={styles.reactionContainer}>
+          <View style={styles.reaction}>
+            <TouchableOpacity onPress={() => toggleLike(item.id, item.liked)}>
+              {item.liked ? (<FontAwesome name='heart' size={24} color={colors.red} />)
+                :
+                (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
+            </TouchableOpacity>
+            <Text style={styles.count}>{item.likeCount}</Text>
+          </View>
+          <View style={styles.reaction}>
+            <TouchableOpacity onPress={() => {toggleCommentModal(item.id)}}>
+              <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
+            </TouchableOpacity>
+            <Text style={styles.count}>{item.commentCount}</Text>
+          </View>
         </View>}
         <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
       </View>
@@ -164,8 +199,10 @@ const TimelineScreen = (props) => {
           </View>
         </TouchableWithoutFeedback>
         <CommentModal
+          navigation={props.navigation}
           postID={currPostID}
           toggleCommentModal={toggleCommentModal}
+          setPosts={setPosts}
         />
       </Modal>
       <View style={styles.topBorder}>
@@ -206,14 +243,14 @@ const styles = StyleSheet.create({
   },
   postContainer: {
     marginBottom: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderTopWidth: 1,
+    borderColor: '#ccc'
   },
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
   },
   profilePic: {
     width: 40,
@@ -228,9 +265,11 @@ const styles = StyleSheet.create({
   postImage: {
     width: '100%',
     height: 300,
+    marginBottom: 10,
   },
   taskInfo: {
-    paddingTop: 10,
+    paddingTop: 0,
+    marginHorizontal: 5,
   },
   postNameContainer: {
     flexDirection: 'row',

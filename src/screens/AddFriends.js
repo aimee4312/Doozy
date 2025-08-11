@@ -184,7 +184,6 @@ const styles = StyleSheet.create({
     profileCardNames: {
         flexDirection: 'column',
         justifyContent: 'flex-start',
-
     },
     profilePic: {
         marginLeft: 10,

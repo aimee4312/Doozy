@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions, useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser } from '../utils/friendFunctions';
+import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser, findStatus } from '../utils/friendFunctions';
 import CheckedPost from '../assets/checked-post-sent.svg';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';
@@ -18,14 +18,20 @@ const ProfileScreen = ({ route, navigation }) => {
   const [friendStatus, setFriendStatus] = useState(null);
   const windowWidth = Dimensions.get('window').width;
 
-  function fetchData() {
+  async function fetchData() {
     let tempUserID;
     let tempFriendStatus;
     let unsubscribeProfile = () => { };
 
     tempUserID = userID;
-    setFriendStatus(status);
-    tempFriendStatus = status;
+    if (status == "unknown") {
+      tempFriendStatus = await findStatus(userID);
+      setFriendStatus(tempFriendStatus);
+    }
+    else {
+      setFriendStatus(status);
+      tempFriendStatus = status;
+    }
 
     try {
       const userProfileRef = doc(FIRESTORE_DB, 'Users', tempUserID);
@@ -60,7 +66,9 @@ const ProfileScreen = ({ route, navigation }) => {
   }
 
   useEffect(() => {
-    const unsubscribeProfile = fetchData();
+    (async () => {
+      unsubscribeProfile = await fetchData();
+    })();
 
     return () => unsubscribeProfile();
   }, []);

@@ -45,6 +45,13 @@ export const sendComment = async (postID, comment) => {
     const batch = writeBatch(FIRESTORE_DB);
     batch.set(commentRef, {userID: currentUser.uid, profilePic: userData.profilePic, username: userData.username, comment: comment, timePosted: new Date()});
     batch.update(postRef, { commentCount: increment(1) });
-    
+
+    await batch.commit();
+}
+
+export const deleteComment = async (postID, commentID) => {
+    const batch = writeBatch(FIRESTORE_DB);
+    batch.delete(doc(FIRESTORE_DB, 'Posts', postID, 'Comments', commentID));
+    batch.update(doc(FIRESTORE_DB, 'Posts', postID), {commentCount: increment(-1)});
     await batch.commit();
 }
