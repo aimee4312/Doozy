@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
@@ -17,25 +17,13 @@ const ProfileScreen = ({ route, navigation }) => {
   const [posts, setPosts] = useState([]);
   const [friendStatus, setFriendStatus] = useState(null);
   const windowWidth = Dimensions.get('window').width;
+  const unsubscribeRef = useRef();
 
-  async function fetchData() {
-    let tempUserID;
-    let tempFriendStatus;
+  function fetchProfile() {
     let unsubscribeProfile = () => { };
 
-    tempUserID = userID;
-    if (status == "unknown") {
-      tempFriendStatus = await findStatus(userID);
-      setFriendStatus(tempFriendStatus);
-    }
-    else {
-      setFriendStatus(status);
-      tempFriendStatus = status;
-    }
-
     try {
-      const userProfileRef = doc(FIRESTORE_DB, 'Users', tempUserID);
-      const postsRef = collection(FIRESTORE_DB, 'Posts');
+      const userProfileRef = doc(FIRESTORE_DB, 'Users', userID);
 
       unsubscribeProfile = onSnapshot(userProfileRef, (userSnap) => {
         if (userSnap.exists()) {
@@ -45,47 +33,58 @@ const ProfileScreen = ({ route, navigation }) => {
           console.log("No such document!");
         }
       })
-
-      if (tempFriendStatus == "currentUser" || tempFriendStatus == "friend") {
-        const q = query(postsRef, where("userId", "==", tempUserID), where("hidden", "==", false));
-        getDocs(q).then((querySnapshot) => {
-          const postsArray = [];
-          querySnapshot.forEach((doc) => {
-            postsArray.push({ id: doc.id, ...doc.data() });
-          });
-          setPosts(postsArray);
-        })
-          .catch((error) => {
-            console.error("Error fetching posts: ", error);
-          })
-      }
       return unsubscribeProfile;
+
     } catch (error) {
       console.error("Error fetching posts: ", error);
     }
   }
 
-  useEffect(() => {
-    (async () => {
-      unsubscribeProfile = await fetchData();
-    })();
+  function fetchPosts() {
+    let unsubscribePosts = () => { };
 
-    return () => unsubscribeProfile();
-  }, []);
-
-  const onLogOut = async () => {
     try {
-      await FIREBASE_AUTH.signOut();
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Landing' }],
-        })
-      );
+      const postsRef = collection(FIRESTORE_DB, 'Posts');
+
+      const q = query(postsRef, where("userId", "==", userID), where("hidden", "==", false));
+      unsubscribePosts = onSnapshot(q, (querySnapshot) => {
+        const postsArray = [];
+        querySnapshot.forEach((doc) => {
+          postsArray.push({ id: doc.id, ...doc.data() });
+        });
+        setPosts(postsArray);
+      })
+      return unsubscribePosts;
+      
     } catch (error) {
-      console.error("Error logging out: ", error);
+      console.error("Error fetching posts:", error);
     }
-  };
+  }
+
+  useEffect(() => {
+    let unsubscribeProfile;
+    let unsubscribePosts;
+    (async () => {
+      let tempFriendStatus;
+      if (status === "unknown") {
+        tempFriendStatus = await findStatus();
+      }
+      else {
+        setFriendStatus(status);
+        tempFriendStatus = status;
+      }
+      unsubscribeProfile = fetchProfile();
+      
+      if (tempFriendStatus == "currentUser" || tempFriendStatus == "friend") {
+        unsubscribePosts = fetchPosts();
+      }
+      
+    })();
+    unsubscribeRef.current = [unsubscribeProfile, unsubscribePosts].filter(Boolean);
+        return () => {
+            unsubscribeRef.current.forEach(unsub => unsub());
+        };
+  }, []);
 
   const goToSettingsScreen = () => {
     navigation.navigate('Settings');

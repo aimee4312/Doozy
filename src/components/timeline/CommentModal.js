@@ -66,13 +66,15 @@ const CommentModal = (props) => {
         if (commentText.length > 0) {
             await sendComment(postID, commentText);
             setRefresh(!refresh);
-            setPosts(prevPosts =>
-                prevPosts.map(post =>
-                post.id === postID
-                    ? { ...post, commentCount: post.commentCount + 1 }
-                    : post
+            if (setPosts) {
+                setPosts(prevPosts =>
+                    prevPosts.map(post =>
+                    post.id === postID
+                        ? { ...post, commentCount: post.commentCount + 1 }
+                        : post
+                    )
                 )
-            )
+            }
             setCommentText("");
             Keyboard.dismiss();
         }
@@ -289,7 +291,7 @@ const styles = StyleSheet.create({
         height: 50,
         borderWidth: 1,
         borderRadius: 20,
-        borderColor: colors.primary,
+        borderColor: '#ccc',
         width: '95%',
         alignSelf: 'center',
         marginVertical: 5,

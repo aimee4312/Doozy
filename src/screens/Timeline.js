@@ -18,6 +18,8 @@ const TimelineScreen = (props) => {
   const [posts, setPosts] = useState([]);
   const [currPostID, setCurrPostID] = useState(null);
   const [isCommentModalVisible, setCommentModalVisible] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+
 
   const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -90,7 +92,9 @@ const TimelineScreen = (props) => {
   };
 
   const toggleLike = async (postID, didLike) => {
+    if (isLiking) return;
     try {
+      setIsLiking(true);
       await sendLike(postID, didLike);
       setPosts(prevPosts =>
         prevPosts.map(post =>
@@ -101,6 +105,8 @@ const TimelineScreen = (props) => {
       )
     } catch (error) {
       console.error("Error liking post:", error);
+    } finally {
+      setIsLiking(false);
     }
   }
 
