@@ -53,7 +53,6 @@ export default function UploadImage(props) {
                 const uploadResp = await uploadToFirebase(uri, `profilePics/${fileName}`, (progress) =>
                     console.log(progress)
                 );
-                console.log("here")
                 await updateProfilePicture(uploadResp.downloadUrl);
             }
         } catch (e) {

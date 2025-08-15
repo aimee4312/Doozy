@@ -255,6 +255,7 @@ const styles = StyleSheet.create({
         margin: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        bottom: 80,
     },
     addListText: {
         fontSize: 18,

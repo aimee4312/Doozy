@@ -29,7 +29,7 @@ const FriendsScreen = ({ route, navigation }) => {
 
 
     const ProfileCard = ({ item }) => (
-        <TouchableOpacity onPress={() => { navigation.navigate('Profile', { userID: item.id, status: "friend" }) }} style={styles.profileCard}>
+        <TouchableOpacity onPress={() => { navigation.navigate('Profile', { userID: item.id, status: "unknown" }) }} style={styles.profileCard}>
             <View style={styles.userInfo}>
                 <Image source={{ uri: item.profilePic }} style={styles.profilePic} />
                 <View style={styles.profileCardNames}>
@@ -57,7 +57,7 @@ const FriendsScreen = ({ route, navigation }) => {
                     <TouchableOpacity onPress={() => {deleteFriend(selectedFriend); setFriendMenuVisible(false);}} style={styles.option}>
                         <Text style={{ color: colors.primary, ...styles.text }}>Remove Friend</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => {navigation.navigate('Profile', { userID: selectedFriend.id, status: "friend" }); setFriendMenuVisible(false);}} style={styles.option}>
+                    <TouchableOpacity onPress={() => {navigation.navigate('Profile', { userID: selectedFriend.id, status: "unknown" }); setFriendMenuVisible(false);}} style={styles.option}>
                         <Text style={{ color: colors.primary, ...styles.text }}>View Profile</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setFriendMenuVisible(false)} style={styles.option}>

@@ -33,8 +33,11 @@ const Task = (props) => {
     };
 
     const deleteItemHelper = () => {
+    rowRef.current?.close();
+    setTimeout(() => {
         deleteItem(i, complete);
-    }
+    }, 300);
+    };
 
     const RightActions = ({ onPress }) => {
 

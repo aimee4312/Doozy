@@ -235,7 +235,7 @@ const TaskListScreen = (props) => {
         }
         else {
             sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
-                return a.name.localeCompare(b.name);
+                return a.taskName.localeCompare(b.taskName);
             })
         }
         setTaskItems(sortedFetchedTasks);
@@ -461,17 +461,28 @@ const TaskListScreen = (props) => {
             image = completedTaskItems[index].image;
         }
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
-        const tasksRef = collection(userProfileRef, 'Tasks');
-        const taskRef = doc(tasksRef, docId);
-        const postRef = doc(FIRESTORE_DB, 'Posts', docId);
         const listsRef = collection(userProfileRef, 'Lists');
         try {
             const batch = writeBatch(FIRESTORE_DB);
             if (complete) {
                 let listRef;
+                const postRef = doc(FIRESTORE_DB, 'Posts', docId);
+                const likesRef = collection(postRef, 'Likes');
+                const commentsRef = collection(postRef, 'Comments');
                 completedTaskItems[index].listIds.forEach((listId) => {
                     listRef = doc(listsRef, listId);
                     batch.update(listRef, { postIds: arrayRemove(docId) })
+                });
+                const likesSnap = await getDocs(likesRef);
+                likesSnap.forEach(likeDoc => {
+                    const userLikeRef = doc(FIRESTORE_DB, 'Users', likeDoc.id, 'LikedPosts', docId);
+                    batch.delete(userLikeRef);
+                    batch.delete(likeDoc.ref);
+                });
+
+                const commentsSnap = await getDocs(commentsRef);
+                commentsSnap.forEach(commentDoc => {
+                    batch.delete(commentDoc.ref);
                 });
                 batch.delete(postRef);
                 if (image) {
@@ -482,6 +493,8 @@ const TaskListScreen = (props) => {
             }
             else {
                 let listRef;
+                const tasksRef = collection(userProfileRef, 'Tasks');
+                const taskRef = doc(tasksRef, docId);
                 taskItems[index].listIds.forEach((listId) => {
                     listRef = doc(listsRef, listId);
                     batch.update(listRef, { taskIds: arrayRemove(docId) })
@@ -491,7 +504,6 @@ const TaskListScreen = (props) => {
                 await cancelNotifications(taskItems[index].notificationIds);
             }
             await batch.commit();
-            closeSwipeCard();
         } catch (error) {
             console.error('Error deleting document: ', error);
         };
@@ -682,8 +694,8 @@ const TaskListScreen = (props) => {
                     drawerStyle={{
                         width: '70%',
                         position: 'absolute',
-                        zIndex: 1000,
-                        elevation: 1000,
+                        zIndex: 9999,
+                        elevation: 9999,
                     }}
                 >
                     <SafeAreaView style={styles.container}>
@@ -694,12 +706,14 @@ const TaskListScreen = (props) => {
                         >
                             <EditTask
                                 task={taskItems[editIndex]}
+                                index={editIndex}
                                 listItems={listItems}
                                 toggleEditTaskVisible={toggleEditTaskVisible}
                                 configureNotifications={configureNotifications}
                                 scheduleNotifications={scheduleNotifications}
                                 cancelNotifications={cancelNotifications}
                                 isRepeatingTask={isRepeatingTask}
+                                deleteItem={deleteItem}
                             />
                         </ Modal>
                         <Modal

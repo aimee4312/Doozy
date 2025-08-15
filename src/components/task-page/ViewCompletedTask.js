@@ -103,7 +103,7 @@ const ViewCompletedTask = (props) => {
                         </View>}
                     </ScrollView>
                     <View style={styles.trashContainer}>
-                        <TouchableOpacity onPress={() => {deleteItem(index, true); setCompletedTaskVisible(false);}} style={styles.trashButton}>
+                        <TouchableOpacity onPress={() => {deleteItem(index, true); toggleCompletedTaskVisible();}} style={styles.trashButton}>
                             <Ionicons name="trash-outline" size={32} color="red" />
                         </TouchableOpacity>
                     </View>

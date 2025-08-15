@@ -14,7 +14,7 @@ import UncheckedTask from '../../assets/unchecked-task.svg';
 import CheckedTask from '../../assets/checked-task.svg';
 
 const EditTask = (props) => {
-    const { task, listItems, toggleEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask } = props;
+    const { task, index, listItems, toggleEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask, deleteItem } = props;
 
     const priorityRef = useRef(null);
 
@@ -383,7 +383,7 @@ const EditTask = (props) => {
                         </View>
                     </ScrollView>
                     <View style={styles.trashContainer}>
-                        <TouchableOpacity style={styles.trashButton}>
+                        <TouchableOpacity onPress={() => {deleteItem(index, false); toggleEditTaskVisible()}} style={styles.trashButton}>
                             <Ionicons name="trash-outline" size={32} color={colors.red} />
                         </TouchableOpacity>
                     </View>

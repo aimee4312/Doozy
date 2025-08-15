@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
-import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions, useNavigationState } from '@react-navigation/native';
@@ -46,7 +46,7 @@ const ProfileScreen = ({ route, navigation }) => {
     try {
       const postsRef = collection(FIRESTORE_DB, 'Posts');
 
-      const q = query(postsRef, where("userId", "==", userID), where("hidden", "==", false));
+      const q = query(postsRef, where("userId", "==", userID), where("hidden", "==", false), orderBy("timePosted", "desc"));
       unsubscribePosts = onSnapshot(q, (querySnapshot) => {
         const postsArray = [];
         querySnapshot.forEach((doc) => {
@@ -67,7 +67,8 @@ const ProfileScreen = ({ route, navigation }) => {
     (async () => {
       let tempFriendStatus;
       if (status === "unknown") {
-        tempFriendStatus = await findStatus();
+        tempFriendStatus = await findStatus(userID);
+        setFriendStatus(tempFriendStatus);
       }
       else {
         setFriendStatus(status);
