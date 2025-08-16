@@ -23,6 +23,7 @@ export const deleteUserProfile = async (email, password) => {
         if (error.code === 'auth/requires-recent-login') {
             console.error("Re-authentication required but failed.");
         } else {
+            console.log(error);
             throw error;
         }
     }
@@ -120,6 +121,14 @@ const deleteAllTasks = async (currentUser) => {
     }
 
     await batch.commit();
+}
+
+function getStoragePathFromUrl(url) {
+    // Extract the part after '/o/' and before '?'
+    const match = url.match(/\/o\/([^?]+)/);
+    if (!match) return null;
+    // URL-decode the path
+    return decodeURIComponent(match[1]);
 }
 
 const deleteUserDoc = async (currentUser) => {

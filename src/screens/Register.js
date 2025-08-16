@@ -9,9 +9,11 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';
+import { checkNameField, checkPasswordField, checkUsernameField } from '../utils/checkFieldFunctions';
 
 const Register = () => {
     const navigation = useNavigation();
+    const [errorCode, setErrorCode] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -27,6 +29,9 @@ const Register = () => {
     const onSignUp = async () => {
         const { name, email, username, password, confirmPassword } = formData;
         try {
+            await checkNameField(name);
+            await checkUsernameField(username);
+            await checkPasswordField(password, confirmPassword);
             const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = userCredential.user;
 
@@ -35,6 +40,7 @@ const Register = () => {
                 name,
                 email,
                 username,
+                usernameLower: username.toLowerCase(),
                 posts: 0,
                 tasks: 0,
                 friends: 0,
@@ -46,10 +52,40 @@ const Register = () => {
             const forestRef = ref(FIREBASE_STORAGE, 'profilePics/default.jpg');
             await updateMetadata(forestRef, { cacheControl: 'public,max-age=31536000' });
 
-        } catch (error) { // if error.code == 
-            console.error("Registration failed: ", error);
+        } catch (error) {
+            switch(error.code) {
+                case "name-required":
+                    setErrorCode(['name', error.message]);
+                    break;
+                case "username-required":
+                    setErrorCode(['username', error.message]);
+                    break;
+                case "username-taken":
+                    setErrorCode(['username', error.message]);
+                    break;
+                case "password-required":
+                    setErrorCode(['password', error.message]);
+                    break;
+                case "password-mismatch":
+                    setErrorCode(['password', error.message]);
+                    break;
+                case "auth/password-does-not-meet-requirements":
+                    setErrorCode(['password', "Password must be at least 6 characters."]);
+                    break;
+                case "auth/invalid-email":
+                    setErrorCode(['email', "Email must be in the format: user@example.com."]);
+                    break;
+                case "auth/missing-email":
+                    setErrorCode(['email', "Email required."]);
+                    break;
+                case "auth/email-already-in-use":
+                    setErrorCode(['email', "Email is already registered. Log in or use a different email."])
+                    break;
+                default:
+                    console.error("Registration failed: ", error);
+            }
         }
-    };
+    }
 
     const dismissKeyboard = () => Keyboard.dismiss();
 
@@ -75,6 +111,7 @@ const Register = () => {
                             <View style={styles.midSpacer} />
                             <View style={styles.formContainer}>
                                 <Text style={styles.label}>Name</Text>
+                                {errorCode && errorCode[0] == "name" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="John Doe"
                                     value={formData.name}
@@ -83,6 +120,7 @@ const Register = () => {
                                 />
 
                                 <Text style={styles.label}>Email</Text>
+                                {errorCode && errorCode[0] == "email" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="johndoe@email.com"
                                     value={formData.email}
@@ -93,6 +131,7 @@ const Register = () => {
                                 />
 
                                 <Text style={styles.label}>Username</Text>
+                                {errorCode && errorCode[0] == "username" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="johndoe123"
                                     value={formData.username}
@@ -102,6 +141,7 @@ const Register = () => {
                                 />
 
                                 <Text style={styles.label}>Password</Text>
+                                {errorCode && errorCode[0] == "password" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="8+ characters, 1 number"
                                     value={formData.password}
@@ -179,6 +219,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginBottom: 5,
         color: colors.primary,
+        textAlign: 'left',
+    },
+    errorMessage: {
+        fontFamily: fonts.regular,
+        fontSize: 14,
+        marginBottom: 5,
+        color: colors.red,
         textAlign: 'left',
     },
     textBox: {

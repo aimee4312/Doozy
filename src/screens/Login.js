@@ -10,11 +10,17 @@ import fonts from '../theme/fonts';
 const Login = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errorCode, setErrorCode] = useState(null);
 
     const onSignIn = () => {
         signInWithEmailAndPassword(FIREBASE_AUTH, email, password)
             .catch((error) => {
-                console.log(error);
+                if (error.code === "auth/invalid-email" || error.code === "auth/invalid-credential" || error.code === "auth/missing-password") {
+                    setErrorCode("Invalid email and/or password.");
+                }
+                else {
+                    console.error("Error logging in:", error);
+                }
             });
     };
 
@@ -46,6 +52,7 @@ const Login = ({ navigation }) => {
                             <View style={styles.midSpacer} />
                             <View style={styles.formContainer}>
                                 <Text style={styles.label}>Email</Text>
+                                {errorCode && <Text style={styles.errorMessage}>{errorCode}</Text>}
                                 <TextInput
                                     placeholder="hello@example.com"
                                     onChangeText={setEmail}
@@ -139,6 +146,13 @@ const styles = StyleSheet.create({
         color: colors.primary,
         textAlign: 'left',
         fontFamily: fonts.bold
+    },
+    errorMessage: {
+        fontFamily: fonts.regular,
+        fontSize: 14,
+        marginBottom: 5,
+        color: colors.red,
+        textAlign: 'left',
     },
     textBox: {
         fontSize: 16,

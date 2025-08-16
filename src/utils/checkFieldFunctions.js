@@ -2,11 +2,17 @@ import { query, getDocs, collection, where, doc, writeBatch, updateDoc } from "f
 import { FIRESTORE_DB, FIREBASE_AUTH } from '../../firebaseConfig';
 
 
-export const isUsernameUnique = async (username) => {
-    const currentUserID = FIREBASE_AUTH.currentUser.uid;
+export const isUsernameUnique = async (username, loggedIn) => {
     const usernameLower = username.toLowerCase();
     const usersRef = collection(FIRESTORE_DB, "Users");
-    const q = query(usersRef, where('usernameLower', '==', usernameLower), where('__name__', '!=', currentUserID));
+    let q;
+    if (loggedIn) {
+        const currentUserID = FIREBASE_AUTH.currentUser.uid;
+        q = query(usersRef, where('usernameLower', '==', usernameLower), where('__name__', '!=', currentUserID));
+    }
+    else {
+        q = query(usersRef, where('usernameLower', '==', usernameLower));
+    }
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.empty;
@@ -66,7 +72,7 @@ export const updateUsernameField = async (username) => {
     if (username.length === 0) {
         throw new Error("Username is required");
     }
-    if (!await isUsernameUnique(username)) {
+    if (!await isUsernameUnique(username, true)) {
         throw new Error("Username is taken")
     }
     batch.update(userProfileRef, {
@@ -109,4 +115,38 @@ export const updateBioField = async (bio) => {
     await updateDoc(userProfileRef, {
         bio: bio,
     })
+}
+
+export const checkNameField = async (name) => {
+    if (name.length === 0) {
+        const error = new Error("Name is required.");
+        error.code = 'name-required';
+        throw error;
+    }
+}
+
+export const checkUsernameField = async (username) => {
+    if (username.length === 0) {
+        const error = new Error("Username is required.");
+        error.code = 'username-required';
+        throw error;
+    }
+    if (!await isUsernameUnique(username, false)) {
+        const error = new Error("Username taken.");
+        error.code = 'username-taken';
+        throw error;
+    }
+}
+
+export const checkPasswordField = async (password, confirmPassword) => {
+    if (password.length === 0) {
+        const error = new Error("Password is required.");
+        error.code = 'password-required';
+        throw error;
+    }
+    if (password !== confirmPassword) {
+        const error = new Error("Passwords don't match.");
+        error.code = 'password-mismatch';
+        throw error;
+    }
 }

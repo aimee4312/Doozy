@@ -75,6 +75,7 @@ const EditFieldScreen = ({route, navigation}) => {
                         autoCorrect={false}
                         autoFocus={true}
                         multiline={fieldName == "Bio"}
+                        autoCapitalize="none"
                     />
                 </View>
                 <Text style={styles.description}>{description}</Text>
