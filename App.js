@@ -34,8 +34,6 @@ const ProfileStack = createStackNavigator();
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [listId, setListId] = useState("0");
-  const [order, setOrder] = useState("default");
   const [currentUserID, setCurrentUserID] = useState(null);
 
   const [fontsLoaded] = useFonts({
@@ -106,7 +104,7 @@ export default function App() {
     return (
       <TaskListStack.Navigator initialRouteName='TaskList' screenOptions={{ headerShown: false }}>
         <TaskListStack.Screen name="TaskList">
-          {(props) => <TaskListScreen {...props} listId={listId} setListId={setListId} order={order} setOrder={setOrder} />}
+          {(props) => <TaskListScreen {...props} />}
         </TaskListStack.Screen>
       </TaskListStack.Navigator>
     )

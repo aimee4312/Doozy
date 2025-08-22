@@ -21,8 +21,10 @@ import fonts from '../theme/fonts';
 
 const TaskListScreen = (props) => {
 
-    const { navigation, listId, setListId, order, setOrder } = props;
+    const { navigation } = props;
 
+    const [order, setOrder] = useState("default");
+    const [listId, setListId] = useState("0");
     const [taskItems, setTaskItems] = useState([]);
     const [completedTaskItems, setCompletedTaskItems] = useState([]);
     const [listItems, setListItems] = useState([]);

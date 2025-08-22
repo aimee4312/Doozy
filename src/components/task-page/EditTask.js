@@ -37,6 +37,9 @@ const EditTask = (props) => {
 
     const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
     const [resolver, setResolver] = useState(null);
+    const [emptyTaskName, setEmptyTaskName] = useState(false);
+
+    const textTaskInputRef = useRef(null);
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -73,6 +76,11 @@ const EditTask = (props) => {
     }, []);
 
     const saveChanges = async () => {
+        if (editedTaskName.length === 0) {
+            setEmptyTaskName(true);
+            textTaskInputRef.current.focus();
+            return;
+        }
         const batch = writeBatch(FIRESTORE_DB);
         const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
         const tasksRef = collection(userProfileRef, 'Tasks');
@@ -367,9 +375,11 @@ const EditTask = (props) => {
                     <ScrollView style={{paddingHorizontal: 20}}>
                         <View style={styles.taskNameContainer}>
                             <TextInput
-                                onChangeText={text => setEditedTaskName(text)}
+                                ref={textTaskInputRef}
+                                onChangeText={text => {setEditedTaskName(text); setEmptyTaskName(false)}}
                                 value={editedTaskName}
-                                placeholder="Task Name..."
+                                placeholder={emptyTaskName ? "*Task name required..." : "Task Name..."}
+                                placeholderTextColor={emptyTaskName ? '#B86566' : '#C7C7CD'}
                                 style={styles.taskNameInput}
                             />
                         </View>

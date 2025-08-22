@@ -16,7 +16,6 @@ const ListSelect = (props) => {
     const [currYPosition, setCurrYPosition] = useState(0);
     const [currList, setCurrList] = useState(null);
     const [edit, setEdit] = useState(false);
-    const [shouldNavigate, setShouldNavigate] = useState(false);
 
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
@@ -51,15 +50,6 @@ const ListSelect = (props) => {
             willHideSub.remove();
         };
     }, []);
-
-    useEffect(() => {
-        if (shouldNavigate) {
-            navigation.replace('Profile', {userID: currentUser.uid, status: "currentUser"});
-        }
-        return () => {
-            setShouldNavigate(false);
-        }
-    }, [shouldNavigate])
 
     const openModal = () => {
         setAddListModalVisible(true);
@@ -206,13 +196,8 @@ const ListSelect = (props) => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-            <View style={styles.profileBar}>
-                <TouchableOpacity style={styles.profileInfo} onPress={() => setShouldNavigate(true)}>
-                    <Image source={{ uri: userProfile ? userProfile.profilePic : null }} style={{ width: 50, height: 50, borderRadius: 50 }} />
-                    <View style={{ justifyContent: 'center', marginLeft: 10, width: '65%' }}>
-                        <Text style={styles.profileText}>{userProfile ? userProfile.username : ""}</Text>
-                    </View>
-                </TouchableOpacity>
+            <View style={styles.listSelectBar}>
+                <Text style={styles.listSelectText}>List Select</Text>
             </View>
             <FlatList 
                 data={allListItems}
@@ -234,21 +219,15 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'space-between',
     },
-    profileBar: {
+    listSelectBar: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
-        marginHorizontal: 10,
-        marginBottom: 10,
+        marginVertical: 10,
     },
-    profileInfo: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-    },
-    profileText: {
-        fontSize: 16,
+    listSelectText: {
+        fontSize: 18,
         fontFamily: fonts.bold,
-        height: 20,
     },
     addListButton: {
         alignSelf: 'center',

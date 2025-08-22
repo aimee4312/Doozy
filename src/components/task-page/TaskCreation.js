@@ -40,6 +40,8 @@ const TaskCreation = (props) => {
     const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
     const [resolver, setResolver] = useState(null);
 
+    const [emptyTaskName, setEmptyTaskName] = useState(false);
+
     const currentUser = FIREBASE_AUTH.currentUser;
 
     const modalHeight = 730;
@@ -252,6 +254,10 @@ const TaskCreation = (props) => {
             setSelectedLists([]);
             setShowPriority(false);
             setHidden(false);
+            setEmptyTaskName(false);
+        }
+        else {
+            setEmptyTaskName(true);
         }
     };
 
@@ -339,9 +345,10 @@ const TaskCreation = (props) => {
                             <TextInput
                                 ref={textTaskInputRef}
                                 style={styles.inputTask}
-                                onChangeText={text => setNewTask(text)}
+                                onChangeText={text => {setNewTask(text); setEmptyTaskName(false)}}
                                 value={newTask}
-                                placeholder={'Please type here…'}
+                                placeholder={emptyTaskName ? '*Task name required...' : 'Type your task here...'}
+                                placeholderTextColor={emptyTaskName ? '#B86566' : '#C7C7CD'}
                                 autoCorrect={false}
                             />
                             <TouchableOpacity onPress={handleSubmitHelper}>
