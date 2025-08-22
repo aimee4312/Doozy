@@ -16,6 +16,7 @@ const ListSelect = (props) => {
     const [currYPosition, setCurrYPosition] = useState(0);
     const [currList, setCurrList] = useState(null);
     const [edit, setEdit] = useState(false);
+    const [listNameEmpty, setListNameEmpty] = useState(false);
 
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
@@ -67,6 +68,10 @@ const ListSelect = (props) => {
     }
 
     const addList = async () => {
+        if (listName.length === 0) {
+            setListNameEmpty(true);
+            return;
+        }
         try {
             const listRef = doc(collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists'));
             await setDoc(listRef, {name: listName, postIds: [], taskIds: [], timeListCreated: new Date()});
@@ -78,6 +83,10 @@ const ListSelect = (props) => {
     }
 
     const editList = async () => {
+        if (listName.length === 0) {
+            setListNameEmpty(true);
+            return;
+        }
         try {
             const listRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists', currList.id);
             await updateDoc(listRef, {name: listName});
@@ -167,7 +176,14 @@ const ListSelect = (props) => {
                 </TouchableWithoutFeedback>
                 <Animated.View style={{height: animatedHeight, ...styles.addListContainer}}>
                     <View style={styles.inputContainer}>
-                        <TextInput ref={addListRef} placeholder="Enter list name..." style={styles.addListInput} value={listName} onChangeText={setListName} />
+                        <TextInput 
+                            ref={addListRef} 
+                            placeholder={listNameEmpty ? "*List Name Required" : "Enter list name..."}
+                            style={styles.addListInput} 
+                            placeholderTextColor={listNameEmpty ? '#B86566' : '#C7C7CD'}
+                            value={listName} 
+                            onChangeText={text => {setListName(text); setListNameEmpty(false)}} 
+                        />
                         <TouchableOpacity onPress={edit ? editList : addList} style={styles.saveListButton}>
                             <Ionicons name="add-circle-outline" size={32} color={colors.primary}/>
                         </TouchableOpacity>

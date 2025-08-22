@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, Platform, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Dimensions, Modal, Keyboard, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { Ionicons, AntDesign, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ListModal from './PopUpMenus/ListModal';
 import ScheduleMenu from './ScheduleMenu';
@@ -372,7 +372,7 @@ const TaskCreation = (props) => {
                                     <Icon
                                         name="calendar"
                                         size={28}
-                                        color={colors.primary}
+                                        color={selectedDate ? colors.accent : colors.primary}
                                     />
                                 </View>
                             </TouchableOpacity>
@@ -381,7 +381,11 @@ const TaskCreation = (props) => {
                                 onPress={toggleListModal}
                             >
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name="list-outline" size={28} color={colors.primary} />
+                                    {selectedLists.length === 0 ?
+                                        <FontAwesome5 name="list-ul" size={28} color={colors.primary} />
+                                        : 
+                                        <FontAwesome5 name="list-alt" size={28} color={colors.accent} />
+                                    }
                                 </View>
                             </TouchableOpacity>
                             <TouchableOpacity

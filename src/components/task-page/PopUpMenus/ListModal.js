@@ -15,8 +15,8 @@ const ListModal = (props) => {
 
   const [showAddList, setShowAddList] = useState(false);
   const [listInputText, setListInputText] = useState("");
-  const [tempSelectedLists, setTempSelectedLists] = useState(selectedLists);
   const addListInputRef = useRef(null);
+  const [listNameEmpty, setListNameEmpty] = useState(false);
 
   const screenHeight = Dimensions.get('window').height;
   const modalHeight = screenHeight * 0.55;
@@ -53,12 +53,12 @@ const ListModal = (props) => {
   }, []);
 
   const handleListPress = (currId) => {
-    if (tempSelectedLists.includes(currId)) {
-      let filteredList = tempSelectedLists.filter(id => id !== currId);
-      setTempSelectedLists(filteredList);
+    if (selectedLists.includes(currId)) {
+      let filteredList = selectedLists.filter(id => id !== currId);
+      setSelectedLists(filteredList);
     }
     else {
-      setTempSelectedLists([...tempSelectedLists, currId]);
+      setSelectedLists([...selectedLists, currId]);
     }
   }
 
@@ -68,13 +68,13 @@ const ListModal = (props) => {
 
   const addList = async() => {
     try {
-      if (listInputText == "") {
-        setShowAddList(false);
+      if (listInputText.length === 0) {
+        setListNameEmpty(true);
         return;
       }
       const listRef = doc(collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists'));
       await setDoc(listRef, {name: listInputText, taskIds: [], postIds: [], timeListCreated: new Date()});
-      setTempSelectedLists([...tempSelectedLists, listRef.id]);
+      setSelectedLists([...selectedLists, listRef.id]);
       setListInputText("");
       setShowAddList(false);
     } catch (error){
@@ -82,18 +82,17 @@ const ListModal = (props) => {
     }
   }
 
-  const saveChanges = () => {
-    setSelectedLists(tempSelectedLists);
-    setListModalVisible(false);
+  const clear = () => {
+    setSelectedLists([]);
   }
 
   const renderList = ( item, isLast ) => (
-    <TouchableOpacity onPress={() => { handleListPress(item.id) }} style={{ ...(isLast ? {marginBottom: 20} : {}) , ...(tempSelectedLists.includes(item.id) ? styles.listContainerSelected : {}), ...styles.listContainer }}>
+    <TouchableOpacity onPress={() => { handleListPress(item.id) }} style={{ ...(isLast ? {marginBottom: 20} : {}) , ...(selectedLists.includes(item.id) ? styles.listContainerSelected : {}), ...styles.listContainer }}>
       <View style={styles.nameContainer}>
-        <Ionicons name="list-outline" size={18} color={tempSelectedLists.includes(item.id) ? (colors.accent) : (colors.primary)} />
-        <Text style={[tempSelectedLists.includes(item.id) ? {color: colors.accent} : {color: colors.primary}, styles.listName]}>{item.name}</Text>
+        <Ionicons name="list-outline" size={18} color={selectedLists.includes(item.id) ? (colors.accent) : (colors.primary)} />
+        <Text style={[selectedLists.includes(item.id) ? {color: colors.accent} : {color: colors.primary}, styles.listName]}>{item.name}</Text>
       </View>
-      {tempSelectedLists.includes(item.id) && (<View>
+      {selectedLists.includes(item.id) && (<View>
           <FontAwesome6 name={'check'} size={20} color={colors.accent} />
       </View>)}
     </TouchableOpacity>
@@ -106,13 +105,13 @@ const ListModal = (props) => {
           <TouchableOpacity onPress={() => setListModalVisible(false)} style={{ width: 45 }}>
             <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
           </TouchableOpacity>
-          {tempSelectedLists.length !== 0 && <View style={styles.listSelectedContainer}>
-            <Text numberOfLines={1} style={styles.listText}>{listItems.filter(listItem => tempSelectedLists.includes(listItem.id))[0].name}</Text>
-            <Text numberOfLines={1} style={styles.listText}>{tempSelectedLists.length > 1 && ` + ${tempSelectedLists.length - 1} more`}</Text>
+          {selectedLists.length !== 0 && <View style={styles.listSelectedContainer}>
+            <Text numberOfLines={1} style={styles.listText}>{listItems.filter(listItem => selectedLists.includes(listItem.id))[0].name}</Text>
+            <Text numberOfLines={1} style={styles.listText}>{selectedLists.length > 1 && ` + ${selectedLists.length - 1} more`}</Text>
           </View>}
-          <TouchableOpacity style={{width: 50}} onPress={() => saveChanges()}>
-            <Text style={styles.save}>Save</Text>
-          </TouchableOpacity>
+          {selectedLists.length > 0 && <TouchableOpacity style={{width: 50}} onPress={() => clear()}>
+            <Text style={styles.clear}>Clear</Text>
+          </TouchableOpacity>}
         </View>
           <View style={{ height: flatListHeight, ...styles.flatList }}>
             <FlatList
@@ -144,9 +143,10 @@ const ListModal = (props) => {
         {showAddList && (<View style={{height: animatedHeight-modalHeight +50, ...styles.addListInputContainer}}>
           <TextInput
             ref={addListInputRef}
-            onChangeText={text => {setListInputText(text)}}
+            onChangeText={text => {setListInputText(text); setListNameEmpty(false)}}
             value={listInputText}
-            placeholder="Enter list name..."
+            placeholder={listNameEmpty ? "*List Name Required" : "Enter list name..."}
+            placeholderTextColor={listNameEmpty ? '#B86566' : '#C7C7CD'}
             style={styles.addListInput}
             autoFocus={true}
           />
@@ -197,10 +197,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
   },
-  save: {
+  clear: {
     fontSize: 18,
-    color: colors.link,
+    color: colors.red,
     fontFamily: fonts.bold,
+    height: '50%'
   },
   topContainer: {
     flexDirection: 'column',
