@@ -13,6 +13,7 @@ const EditFieldScreen = ({route, navigation}) => {
     const {user, fieldName, fieldInput, description, placeholder} = route.params;
 
     const [field, setField] = useState(fieldInput);
+    const [error, setError] = useState(null);
 
     const handleUpdateField = async() => {
         try {
@@ -33,7 +34,7 @@ const EditFieldScreen = ({route, navigation}) => {
                 user: tempUser,
             }))
         } catch (e) {
-            console.log(e)
+            setError(e.message);
         }
     }
 
@@ -66,6 +67,7 @@ const EditFieldScreen = ({route, navigation}) => {
                 </TouchableOpacity>
             </View>
             <View style={styles.bottomContainer}>
+                {error && <Text style={styles.error}>*{error}</Text>}
                 <View style={styles.textInputContainer}>
                     <TextInput
                         style={styles.textInput}
@@ -110,6 +112,13 @@ const styles = StyleSheet.create({
     bottomContainer: {
         margin: 5,
         flexDirection: 'column',
+    },
+    error: {
+        fontFamily: fonts.regular,
+        fontSize: 14,
+        marginBottom: 5,
+        color: colors.red,
+        textAlign: 'left',
     },
     textInputContainer: {
         backgroundColor: colors.surface,

@@ -63,21 +63,19 @@ const CommentModal = (props) => {
     }, [refresh])
 
     const postComment = async () => {
-        if (commentText.length > 0) {
-            await sendComment(postID, commentText);
-            setRefresh(!refresh);
-            if (setPosts) {
-                setPosts(prevPosts =>
-                    prevPosts.map(post =>
-                    post.id === postID
-                        ? { ...post, commentCount: post.commentCount + 1 }
-                        : post
-                    )
+        await sendComment(postID, commentText);
+        setRefresh(!refresh);
+        if (setPosts) {
+            setPosts(prevPosts =>
+                prevPosts.map(post =>
+                post.id === postID
+                    ? { ...post, commentCount: post.commentCount + 1 }
+                    : post
                 )
-            }
-            setCommentText("");
-            Keyboard.dismiss();
+            )
         }
+        setCommentText("");
+        Keyboard.dismiss();
     }
 
     const deleteCommentHelper = async () => {
@@ -164,9 +162,9 @@ const CommentModal = (props) => {
                         multiline={true}
                         scrollEnabled={true}
                     />
-                    <TouchableOpacity onPress={() => { postComment() }}>
+                    {commentText.length > 0 && <TouchableOpacity onPress={() => { postComment() }}>
                         <Ionicons name={'arrow-up-circle'} size={32} color={colors.accent} />
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                 </View>
             </View>
         </Animated.View>
