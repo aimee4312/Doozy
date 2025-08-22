@@ -133,7 +133,7 @@ const ProfileScreen = ({ route, navigation }) => {
         </View>
         {friendStatus == "currentUser" && (<View style={styles.topContainerButtons}>
           <TouchableOpacity onPress={goToAddFriendsScreen} style={styles.friendsButton}>
-            <Ionicons name="people-outline" size={32} color={colors.primary} />
+            <Ionicons name="person-add-outline" size={30} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={goToSettingsScreen} style={styles.settingsButton}>
             <Ionicons name="settings-sharp" size={32} color={colors.primary} />

@@ -43,6 +43,8 @@ const TaskListScreen = (props) => {
     const sortRef = useRef(null);
     const currentUser = FIREBASE_AUTH.currentUser;
 
+    const [selectedLists, setSelectedLists] = useState([]);
+
 
     useEffect(() => {
         const unsubscribeTasks = fetchTasks();
@@ -58,7 +60,7 @@ const TaskListScreen = (props) => {
 
     useEffect(() => {
         sortTasks(taskItems);
-    }, [order]);
+    }, [order, taskItems]);
 
     function fetchTasks() {
         let unsubscribeTasks = () => { };
@@ -158,9 +160,11 @@ const TaskListScreen = (props) => {
                     const foundList = fetchedLists.find((fetchedList) => fetchedList.id === listId);
                     if (listId === "0") {
                         setCurrList("Master List");
+                        setSelectedLists([]);
                     }
                     else if (foundList){
                         setCurrList(foundList.name);
+                        setSelectedLists([foundList.id]);
                     }
                     else {
                         setCurrList("Master List");
@@ -184,6 +188,14 @@ const TaskListScreen = (props) => {
         } catch (error) {
             console.error("Error fetching user profile:", error);
         }
+    }
+
+    const arraysAreEqual = (arr1, arr2) => {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i].id !== arr2[i].id) return false;
+        }
+        return true;
     }
 
     const sortTasks = (fetchedTasks) => {
@@ -239,6 +251,9 @@ const TaskListScreen = (props) => {
             sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
                 return a.taskName.localeCompare(b.taskName);
             })
+        }
+        if (arraysAreEqual(sortedFetchedTasks, taskItems)) {
+            return;
         }
         setTaskItems(sortedFetchedTasks);
     }
@@ -806,7 +821,19 @@ const TaskListScreen = (props) => {
                                 <Text style={styles.title}>Doozy</Text>
                             </TouchableOpacity>
                             <TouchableOpacity ref={sortRef} onPress={() => { closeSwipeCard(); openSortModal(); }}>
-                                <MaterialCommunityIcons name="sort" size={32} color={colors.primary} />
+                                {order === "default" ? 
+                                    <MaterialCommunityIcons name="sort" size={32} color={colors.primary} />
+                                    :
+                                    (order === "dueDate" ? 
+                                        <MaterialCommunityIcons name="sort-calendar-ascending" size={32} color={colors.primary} />
+                                        : 
+                                        (order === "priority" ?
+                                            <Icon name="flag" size={32} color={colors.primary} />
+                                            :
+                                            <MaterialCommunityIcons name="sort-alphabetical-ascending" size={32} color={colors.primary} />
+                                        )
+                                    )
+                                }
                             </TouchableOpacity>
                         </View>
                         <ScrollView style={styles.ScrollView}>
@@ -871,6 +898,8 @@ const TaskListScreen = (props) => {
                         <TaskCreation
                             closeSwipeCard={closeSwipeCard}
                             listItems={listItems}
+                            selectedLists={selectedLists}
+                            setSelectedLists={setSelectedLists}
                             nav={props.navigation}
                             configureNotifications={configureNotifications}
                             scheduleNotifications={scheduleNotifications}

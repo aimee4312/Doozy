@@ -16,7 +16,6 @@ const ListModal = (props) => {
   const [showAddList, setShowAddList] = useState(false);
   const [listInputText, setListInputText] = useState("");
   const addListInputRef = useRef(null);
-  const [listNameEmpty, setListNameEmpty] = useState(false);
 
   const screenHeight = Dimensions.get('window').height;
   const modalHeight = screenHeight * 0.55;
@@ -68,10 +67,6 @@ const ListModal = (props) => {
 
   const addList = async() => {
     try {
-      if (listInputText.length === 0) {
-        setListNameEmpty(true);
-        return;
-      }
       const listRef = doc(collection(FIRESTORE_DB, 'Users', currentUser.uid, 'Lists'));
       await setDoc(listRef, {name: listInputText, taskIds: [], postIds: [], timeListCreated: new Date()});
       setSelectedLists([...selectedLists, listRef.id]);
@@ -143,16 +138,15 @@ const ListModal = (props) => {
         {showAddList && (<View style={{height: animatedHeight-modalHeight +50, ...styles.addListInputContainer}}>
           <TextInput
             ref={addListInputRef}
-            onChangeText={text => {setListInputText(text); setListNameEmpty(false)}}
+            onChangeText={text => {setListInputText(text);}}
             value={listInputText}
-            placeholder={listNameEmpty ? "*List Name Required" : "Enter list name..."}
-            placeholderTextColor={listNameEmpty ? '#B86566' : '#C7C7CD'}
+            placeholder={"Enter list name..."}
             style={styles.addListInput}
             autoFocus={true}
           />
-          <TouchableOpacity onPress={addList} style={styles.saveListButton}>
+          {listInputText.length > 0 && <TouchableOpacity onPress={addList} style={styles.saveListButton}>
             <Ionicons name="add-circle-outline" size={32} color={colors.primary} />
-          </TouchableOpacity>
+          </TouchableOpacity>}
         </View>)}
       </View>
       

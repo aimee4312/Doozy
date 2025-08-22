@@ -62,7 +62,6 @@ const PostScreen = ({ route, navigation }) => {
     const currUserLikeRef = doc(FIRESTORE_DB, 'Users', currentUser.uid, 'LikedPosts', post.id)
     const likedSnapshot = await getDoc(currUserLikeRef);
     setLiked(likedSnapshot.exists());
-    console.log(likedSnapshot.exists());
   }
 
   useEffect(() => {

@@ -17,13 +17,12 @@ import CheckedTask from '../../assets/checked-task.svg';
 
 
 const TaskCreation = (props) => {
-    const { closeSwipeCard, listItems, nav, configureNotifications, scheduleNotifications, isRepeatingTask } = props;
+    const { closeSwipeCard, listItems, selectedLists, setSelectedLists, nav, configureNotifications, scheduleNotifications, isRepeatingTask } = props;
 
     const textTaskInputRef = useRef(null);
 
     const [newTask, setNewTask] = useState(''); // Task Name
     const [newDescription, setNewDescription] = useState(''); // Task Description
-    const [selectedLists, setSelectedLists] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedPriority, setSelectedPriority] = useState(0);
     const [selectedReminders, setSelectedReminders] = useState([]);
@@ -39,8 +38,6 @@ const TaskCreation = (props) => {
     const [isListModalVisible, setListModalVisible] = useState(false);
     const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
     const [resolver, setResolver] = useState(null);
-
-    const [emptyTaskName, setEmptyTaskName] = useState(false);
 
     const currentUser = FIREBASE_AUTH.currentUser;
 
@@ -203,62 +200,56 @@ const TaskCreation = (props) => {
     }
 
     const handleSubmitHelper = async () => {
-        if (newTask.length !== 0) {
-            if (isCompleted) {
-                let imageURI;
-                let hidden = false;
-                while (true) {
-                    const cameraOption = await openCameraOptionMenu();
-                    if (cameraOption == 'cancel') {
-                        setCameraOptionModalVisible(false);
-                        return;
-                    }
-                    else if (cameraOption == 'library') {
-                        imageURI = await addImage();
-                        if (imageURI) {
-                            break;
-                        }
-                    }
-                    else if (cameraOption == 'camera') {
-                        imageURI = await takePhoto();
-                        if (imageURI) {
-                            break;
-                        }
-                    }
-                    else if (cameraOption == 'no post') {
-                        imageURI = null;
-                        hidden = true;
-                        break;
-                    }
-                    else {
-                        imageURI = null;
+        if (isCompleted) {
+            let imageURI;
+            let hidden = false;
+            while (true) {
+                const cameraOption = await openCameraOptionMenu();
+                if (cameraOption == 'cancel') {
+                    setCameraOptionModalVisible(false);
+                    return;
+                }
+                else if (cameraOption == 'library') {
+                    imageURI = await addImage();
+                    if (imageURI) {
                         break;
                     }
                 }
-                setCameraOptionModalVisible(false); //add loading screen here
-                storeTask(imageURI, hidden);
+                else if (cameraOption == 'camera') {
+                    imageURI = await takePhoto();
+                    if (imageURI) {
+                        break;
+                    }
+                }
+                else if (cameraOption == 'no post') {
+                    imageURI = null;
+                    hidden = true;
+                    break;
+                }
+                else {
+                    imageURI = null;
+                    break;
+                }
             }
-            else {
-                storeTask(null, false);
-            }
-            setNewTask('');
-            setNewDescription('');
-            setCompleted(false);
-            setSelectedLists([]);
-            setSelectedDate(null);
-            setSelectedPriority(0);
-            setSelectedReminders([]);
-            setSelectedRepeat([]);
-            setIsTime(false);
-            setDateRepeatEnds('');
-            setSelectedLists([]);
-            setShowPriority(false);
-            setHidden(false);
-            setEmptyTaskName(false);
+            setCameraOptionModalVisible(false); //add loading screen here
+            storeTask(imageURI, hidden);
         }
         else {
-            setEmptyTaskName(true);
+            storeTask(null, false);
         }
+        setNewTask('');
+        setNewDescription('');
+        setCompleted(false);
+        setSelectedLists([]);
+        setSelectedDate(null);
+        setSelectedPriority(0);
+        setSelectedReminders([]);
+        setSelectedRepeat([]);
+        setIsTime(false);
+        setDateRepeatEnds('');
+        setSelectedLists([]);
+        setShowPriority(false);
+        setHidden(false);
     };
 
 
@@ -284,7 +275,7 @@ const TaskCreation = (props) => {
                         <View style={{ flex: 1 }}>
                         </View>
                     </TouchableWithoutFeedback>
-                    <View style={{height: modalHeight, ...styles.calendarModalContainer}}>
+                    <View style={{ height: modalHeight, ...styles.calendarModalContainer }}>
                         <ScheduleMenu
                             setCalendarModalVisible={setCalendarModalVisible}
                             selectedDate={selectedDate}
@@ -321,7 +312,7 @@ const TaskCreation = (props) => {
                     transparent={true}
                     animationType='slide'
                 >
-                    <TouchableWithoutFeedback onPress={() => {handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false)}}>
+                    <TouchableWithoutFeedback onPress={() => { handleCameraOptionSelect("cancel"); setCameraOptionModalVisible(false) }}>
                         <View style={{ flex: 1 }} />
                     </TouchableWithoutFeedback>
                     <CameraOptionMenu
@@ -335,25 +326,26 @@ const TaskCreation = (props) => {
                 <Animated.View style={{ height: animatedHeight, ...styles.taskCreationContainer }}>
                     <View>
                         <View style={styles.inputWrapper}>
-                            <TouchableOpacity onPress={checker} style={styles.checkedbox}>
-                                {isCompleted ? (
-                                    <CheckedTask width={32} height={32} />
-                                ) : (
-                                    <UncheckedTask width={32} height={32} />
-                                )}
-                            </TouchableOpacity>
-                            <TextInput
-                                ref={textTaskInputRef}
-                                style={styles.inputTask}
-                                onChangeText={text => {setNewTask(text); setEmptyTaskName(false)}}
-                                value={newTask}
-                                placeholder={emptyTaskName ? '*Task name required...' : 'Type your task here...'}
-                                placeholderTextColor={emptyTaskName ? '#B86566' : '#C7C7CD'}
-                                autoCorrect={false}
-                            />
-                            <TouchableOpacity onPress={handleSubmitHelper}>
-                                <Ionicons name={'arrow-up-circle'} size={28} color={colors.accent}/>
-                            </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <TouchableOpacity onPress={checker} style={styles.checkedbox}>
+                                    {isCompleted ? (
+                                        <CheckedTask width={32} height={32} />
+                                    ) : (
+                                        <UncheckedTask width={32} height={32} />
+                                    )}
+                                </TouchableOpacity>
+                                <TextInput
+                                    ref={textTaskInputRef}
+                                    style={styles.inputTask}
+                                    onChangeText={text => { setNewTask(text)}}
+                                    value={newTask}
+                                    placeholder={'Type your task here...'}
+                                    autoCorrect={false}
+                                />
+                            </View>
+                            {newTask.length > 0 && <TouchableOpacity onPress={handleSubmitHelper}>
+                                <Ionicons name={'arrow-up-circle'} size={28} color={colors.accent} />
+                            </TouchableOpacity>}
                         </View>
                         <View style={styles.descriptionWrapper}>
                             <TextInput
@@ -383,7 +375,7 @@ const TaskCreation = (props) => {
                                 <View style={styles.iconContainer}>
                                     {selectedLists.length === 0 ?
                                         <FontAwesome5 name="list-ul" size={28} color={colors.primary} />
-                                        : 
+                                        :
                                         <FontAwesome5 name="list-alt" size={28} color={colors.accent} />
                                     }
                                 </View>
@@ -459,10 +451,10 @@ const styles = StyleSheet.create({
         right: 0,
     },
     calendarModalContainer: {
-        paddingRight: 20, 
-        paddingLeft: 20, 
-        backgroundColor: colors.surface, 
-        borderTopRightRadius: 20, 
+        paddingRight: 20,
+        paddingLeft: 20,
+        backgroundColor: colors.surface,
+        borderTopRightRadius: 20,
         borderTopLeftRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
