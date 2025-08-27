@@ -772,6 +772,7 @@ const TaskListScreen = (props) => {
                                 toggleCompletedTaskVisible={toggleCompletedTaskVisible}
                                 index={completedTaskIndex}
                                 completeTask={completeTask}
+                                deleteItem={deleteItem}
                             />
                         </ Modal>
                         <Modal
@@ -847,7 +848,7 @@ const TaskListScreen = (props) => {
                             <ConfirmationModal
                                 confirm={async()=>{ setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false); await completeTask(completedTaskIndex, true);}}
                                 deny={()=>{setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
-                                cancel={() => {setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
+                                cancel={() => {}}
                                 title={"Delete post?"}
                                 description={"This will delete the post associated with this task and will mark this task as incomplete."}
                                 confirmText={"Delete"}

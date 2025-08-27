@@ -26,6 +26,7 @@ const EditTask = (props) => {
     const [priorityYPosition, setPriorityYPosition] = useState(0);
 
     const [isSaveChangesModalVisible, setSaveChangesModalVisible] = useState(false);
+    const [isDeleteTaskModalVisible, setDeleteTaskModalVisible] = useState(false);
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
     const [isPriorityModalVisible, setPriorityModalVisible] = useState(false);
@@ -296,6 +297,28 @@ const EditTask = (props) => {
                 />
             </ Modal>
             <Modal
+                visible={isDeleteTaskModalVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <ConfirmationModal
+                    confirm={async() => {
+                        await deleteItem(index, false); 
+                        setDeleteTaskModalVisible(false);
+                        setTimeout(() => {
+                            toggleEditTaskVisible()
+                        }, 100);}}
+                    deny={()=>{setDeleteTaskModalVisible(false);}}
+                    cancel={() => {}}
+                    title={"Delete Task?"}
+                    description={"This action cannot be undone."}
+                    confirmText={"Delete"}
+                    denyText={"Cancel"}
+                    confirmColor={colors.red}
+                    denyColor={colors.primary}
+                />
+            </ Modal>
+            <Modal
                 visible={isCalendarModalVisible}
                 transparent={true}
                 animationType="slide"
@@ -444,7 +467,7 @@ const EditTask = (props) => {
                         </View>
                     </ScrollView>
                     <View style={styles.trashContainer}>
-                        <TouchableOpacity onPress={() => {deleteItem(index, false); toggleEditTaskVisible()}} style={styles.trashButton}>
+                        <TouchableOpacity onPress={() => {setDeleteTaskModalVisible(true)}} style={styles.trashButton}>
                             <Ionicons name="trash-outline" size={32} color={colors.red} />
                         </TouchableOpacity>
                     </View>

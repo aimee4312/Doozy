@@ -8,7 +8,7 @@ import CheckedTask from '../../assets/checked-task.svg';
 import ConfirmationModal from '../ConfirmationModal';
 
 const ViewCompletedTask = (props) => {
-    const { task, listItems, toggleCompletedTaskVisible, index, completeTask} = props;
+    const { task, listItems, toggleCompletedTaskVisible, index, completeTask, deleteItem} = props;
 
     const screenHeight = Dimensions.get('window').height;
     const defaultHeight = screenHeight * 0.5;
@@ -19,6 +19,8 @@ const ViewCompletedTask = (props) => {
 
     const flagColor = [colors.primary, colors.secondary, colors.accent, colors.red];
     const [isUncompleteTaskConfirmationVisible, setUncompleteTaskConfirmationVisible] = useState(false);
+    const [isDeleteTaskModalVisible, setDeleteTaskModalVisible] = useState(false);
+
 
     useEffect(() => {
         const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
@@ -78,14 +80,34 @@ const ViewCompletedTask = (props) => {
                         toggleCompletedTaskVisible();
                         await completeTask(index, true);
                     }}
-                    deny={()=>{setUncompleteTaskConfirmationVisible(false); 
-                        setTimeout(() => {
-                            toggleCompletedTaskVisible()
-                        }, 500);
+                    deny={()=>{setUncompleteTaskConfirmationVisible(false);
                     }}
                     cancel={() => {}}
                     title={"Delete post?"}
                     description={"This will delete the post associated with this task and will mark this task as incomplete."}
+                    confirmText={"Delete"}
+                    denyText={"Cancel"}
+                    confirmColor={colors.red}
+                    denyColor={colors.primary}
+                />
+            </ Modal>
+            <Modal
+                visible={isDeleteTaskModalVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <ConfirmationModal
+                    confirm={async() => {
+                        setDeleteTaskModalVisible(false);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        toggleCompletedTaskVisible()
+                        await deleteItem(index, true); 
+                    }}
+                        
+                    deny={()=>{setDeleteTaskModalVisible(false);}}
+                    cancel={() => {}}
+                    title={"Delete Task?"}
+                    description={"This action cannot be undone."}
                     confirmText={"Delete"}
                     denyText={"Cancel"}
                     confirmColor={colors.red}
@@ -139,7 +161,7 @@ const ViewCompletedTask = (props) => {
                         </View>}
                     </ScrollView>
                     <View style={styles.trashContainer}>
-                        <TouchableOpacity onPress={() => {deleteItem(index, true); toggleCompletedTaskVisible();}} style={styles.trashButton}>
+                        <TouchableOpacity onPress={() => {setDeleteTaskModalVisible(true)}} style={styles.trashButton}>
                             <Ionicons name="trash-outline" size={32} color="red" />
                         </TouchableOpacity>
                     </View>
