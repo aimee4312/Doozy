@@ -244,10 +244,9 @@ const TaskCreation = (props) => {
         setSelectedDate(null);
         setSelectedPriority(0);
         setSelectedReminders([]);
-        setSelectedRepeat([]);
+        setSelectedRepeat(null);
         setIsTime(false);
-        setDateRepeatEnds('');
-        setSelectedLists([]);
+        setDateRepeatEnds(null);
         setShowPriority(false);
         setHidden(false);
     };

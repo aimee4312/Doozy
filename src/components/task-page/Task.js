@@ -36,6 +36,7 @@ const Task = (props) => {
     rowRef.current?.close();
     setTimeout(() => {
         deleteItem(i, complete);
+        console.log("deleted")
     }, 300);
     };
 

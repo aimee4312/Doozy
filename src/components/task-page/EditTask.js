@@ -14,7 +14,7 @@ import UncheckedTask from '../../assets/unchecked-task.svg';
 import CheckedTask from '../../assets/checked-task.svg';
 
 const EditTask = (props) => {
-    const { task, index, listItems, toggleEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask, deleteItem } = props;
+    const { task, setTaskItems, index, listItems, toggleEditTaskVisible, configureNotifications, scheduleNotifications, cancelNotifications, isRepeatingTask, deleteItem } = props;
 
     const priorityRef = useRef(null);
 
@@ -198,6 +198,10 @@ const EditTask = (props) => {
                         listRef = doc(userProfileRef, 'Lists', list);
                         batch.update(listRef, { taskIds: arrayRemove(task.id) });
                     })
+                    setTaskItems(prevList => [
+                        ...prevList.slice(0, index),
+                        ...prevList.slice(index + 1)
+                    ]);
                 }
 
                 batch.update(postRef, { image: imageURI });

@@ -345,6 +345,10 @@ const TaskListScreen = (props) => {
                         listRef = doc(listsRef, listId);
                         batch.update(listRef, { taskIds: arrayRemove(docId) });
                     })
+                    setTaskItems(prevList => [
+                        ...prevList.slice(0, index),
+                        ...prevList.slice(index + 1)
+                    ]);
                 }
                 if (imageURI) {
                     batch.update(postRef, { image: imageURI });
@@ -385,6 +389,7 @@ const TaskListScreen = (props) => {
                 })
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1) });
+                batch.update(userProfileRef, { tasks: increment(1) });
                 if (post.reminders.length !== 0) {
                     if (await configureNotifications()) {
                         const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.name);
@@ -396,7 +401,10 @@ const TaskListScreen = (props) => {
                     const imageRef = ref(getStorage(), image);
                     await deleteObject(imageRef);
                 }
-
+                setCompletedTaskItems(prevList => [
+                    ...prevList.slice(0, index),
+                    ...prevList.slice(index + 1)
+                ]);
                 await batch.commit();
 
             } catch (error) {
@@ -507,6 +515,11 @@ const TaskListScreen = (props) => {
                     await deleteObject(imageRef);
                 }
                 batch.update(userProfileRef, { posts: increment(-1) });
+                completedTaskItems.splice(index, 1);
+                setCompletedTaskItems(prevList => [
+                    ...prevList.slice(0, index),
+                    ...prevList.slice(index + 1)
+                ]);
             }
             else {
                 let listRef;
@@ -519,6 +532,10 @@ const TaskListScreen = (props) => {
                 batch.update(userProfileRef, { tasks: increment(-1) });
                 batch.delete(taskRef);
                 await cancelNotifications(taskItems[index].notificationIds);
+                setTaskItems(prevList => [
+                    ...prevList.slice(0, index),
+                    ...prevList.slice(index + 1)
+                ]);
             }
             await batch.commit();
         } catch (error) {
@@ -723,6 +740,7 @@ const TaskListScreen = (props) => {
                         >
                             <EditTask
                                 task={taskItems[editIndex]}
+                                setTaskItems={setTaskItems}
                                 index={editIndex}
                                 listItems={listItems}
                                 toggleEditTaskVisible={toggleEditTaskVisible}
