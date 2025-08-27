@@ -713,7 +713,6 @@ const TaskListScreen = (props) => {
     }
 
     const testFunction = async () => {
-        setUncompleteTaskConfirmationVisible(true);
     }
 
     const uncompleteTaskHelper = (index, complete) => {
@@ -771,9 +770,8 @@ const TaskListScreen = (props) => {
                                 task={completedTaskItems[completedTaskIndex]}
                                 listItems={listItems}
                                 toggleCompletedTaskVisible={toggleCompletedTaskVisible}
-                                setCompletedTaskVisible={setCompletedTaskVisible}
-                                uncompleteTaskHelper={uncompleteTaskHelper}
                                 index={completedTaskIndex}
+                                completeTask={completeTask}
                             />
                         </ Modal>
                         <Modal
@@ -851,7 +849,7 @@ const TaskListScreen = (props) => {
                                 deny={()=>{setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
                                 cancel={() => {setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
                                 title={"Delete post?"}
-                                description={"This will delete the post associated with this task and cannot be undone."}
+                                description={"This will delete the post associated with this task and will mark this task as incomplete."}
                                 confirmText={"Delete"}
                                 denyText={"Cancel"}
                                 confirmColor={colors.red}

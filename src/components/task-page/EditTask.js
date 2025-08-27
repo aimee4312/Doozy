@@ -8,6 +8,7 @@ import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../../firebase
 import { writeBatch, doc, collection, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { addImage, takePhoto } from '../../utils/photoFunctions';
 import CameraOptionMenu from './PopUpMenus/CameraOptionMenu';
+import ConfirmationModal from '../ConfirmationModal';
 import colors from '../../theme/colors';
 import fonts from '../../theme/fonts';
 import UncheckedTask from '../../assets/unchecked-task.svg';
@@ -24,6 +25,7 @@ const EditTask = (props) => {
 
     const [priorityYPosition, setPriorityYPosition] = useState(0);
 
+    const [isSaveChangesModalVisible, setSaveChangesModalVisible] = useState(false);
     const [isCalendarModalVisible, setCalendarModalVisible] = useState(false);
     const [isListModalVisible, setListModalVisible] = useState(false);
     const [isPriorityModalVisible, setPriorityModalVisible] = useState(false);
@@ -120,8 +122,10 @@ const EditTask = (props) => {
                         batch.update(taskRef, { notificationIds: tempNotifIds });
                     }
                 }
+                setSaveChangesModalVisible(false);
             }
             else {
+                setSaveChangesModalVisible(false);
                 const postRef = doc(postsRef);
                 batch.set(postRef, {
                     userId: currentUser.uid,
@@ -208,7 +212,9 @@ const EditTask = (props) => {
                 batch.update(userProfileRef, { posts: increment(1) });
             }
             await batch.commit();
-            toggleEditTaskVisible();
+            setTimeout(() => {
+                toggleEditTaskVisible()
+            }, 100);
         } catch (error) {
             console.error("Error posting post:", error);
         }
@@ -246,8 +252,49 @@ const EditTask = (props) => {
         setPriorityModalVisible(true);
     }
 
+    const discardChangesConfirmation = () => {
+        if (task &&
+            task.taskName !== editedTaskName ||
+            task.description !== editedDescription ||
+            isComplete ||
+            task.completeByDate !== selectedDate ||
+            task.isCompletionTime !== isTime || 
+            task.reminders !== selectedReminders ||
+            task.repeat !== selectedRepeat ||
+            task.repeatEnds !== dateRepeatEnds ||
+            task.priority !== selectedPriority || 
+            task.listIds !== selectedLists
+        ) {
+            setSaveChangesModalVisible(true);
+        }
+        else {
+            toggleEditTaskVisible();
+        }
+
+    }
+
     return (
         <View style={{ flex: 1 }}>
+            <Modal
+                visible={isSaveChangesModalVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <ConfirmationModal
+                    confirm={()=>{saveChanges();}}
+                    deny={()=>{setSaveChangesModalVisible(false);
+                        setTimeout(() => {
+                            toggleEditTaskVisible()
+                        }, 100);}}
+                    cancel={() => {}}
+                    title={"Save Changes?"}
+                    description={"You have unsaved changes. Do you want to save before leaving?"}
+                    confirmText={"Save"}
+                    denyText={"Discard"}
+                    confirmColor={colors.link}
+                    denyColor={colors.red}
+                />
+            </ Modal>
             <Modal
                 visible={isCalendarModalVisible}
                 transparent={true}
@@ -332,13 +379,13 @@ const EditTask = (props) => {
                     onChoose={handleCameraOptionSelect}
                 />
             </Modal>
-            <TouchableWithoutFeedback onPress={() => toggleEditTaskVisible()}>
+            <TouchableWithoutFeedback onPress={() => discardChangesConfirmation()}>
                 <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Animated.View style={[styles.modalContainer, { height: animatedHeight }]}>
                     <View style={styles.rowOneView}>
-                        <TouchableOpacity onPress={() => toggleEditTaskVisible()} style={{ width: 50 }}>
+                        <TouchableOpacity onPress={() => discardChangesConfirmation()} style={{ width: 50 }}>
                             <Ionicons name="chevron-down-outline" size={32} color={colors.primary} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setListModalVisible(true)} style={styles.listButton}>

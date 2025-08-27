@@ -8,7 +8,7 @@ import CheckedTask from '../../assets/checked-task.svg';
 import ConfirmationModal from '../ConfirmationModal';
 
 const ViewCompletedTask = (props) => {
-    const { task, listItems, toggleCompletedTaskVisible, setCompletedTaskVisible, uncompleteTaskHelper, index} = props;
+    const { task, listItems, toggleCompletedTaskVisible, index, completeTask} = props;
 
     const screenHeight = Dimensions.get('window').height;
     const defaultHeight = screenHeight * 0.5;
@@ -56,8 +56,42 @@ const ViewCompletedTask = (props) => {
         });
     }
 
+    const uncompleteTaskHelper = (index, complete) => {
+        if (!task.hidden) {
+            setUncompleteTaskConfirmationVisible(true);
+        }
+        else {
+            completeTask(index, complete);
+        }
+    }
+
     return (
         <View style={{ flex: 1 }}>
+            <Modal
+                visible={isUncompleteTaskConfirmationVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <ConfirmationModal
+                    confirm={async()=>{ setUncompleteTaskConfirmationVisible(false); 
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        toggleCompletedTaskVisible();
+                        await completeTask(index, true);
+                    }}
+                    deny={()=>{setUncompleteTaskConfirmationVisible(false); 
+                        setTimeout(() => {
+                            toggleCompletedTaskVisible()
+                        }, 500);
+                    }}
+                    cancel={() => {}}
+                    title={"Delete post?"}
+                    description={"This will delete the post associated with this task and will mark this task as incomplete."}
+                    confirmText={"Delete"}
+                    denyText={"Cancel"}
+                    confirmColor={colors.red}
+                    denyColor={colors.primary}
+                />
+            </ Modal>
             <TouchableWithoutFeedback onPress={() => toggleCompletedTaskVisible()}>
                 <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
@@ -74,7 +108,7 @@ const ViewCompletedTask = (props) => {
                     </View>
                     <View style={styles.rowTwoView}>
                         {/* // change function */}
-                        <TouchableOpacity onPress={() => {setCompletedTaskVisible(false); uncompleteTaskHelper(index, true)}} style={styles.checkedbox}>
+                        <TouchableOpacity onPress={() => {uncompleteTaskHelper(index, true)}} style={styles.checkedbox}>
                             <CheckedTask width={42} height={42} />
                         </TouchableOpacity>
                         {task && <View style={styles.dateContainer}>
