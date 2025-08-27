@@ -6,6 +6,7 @@ import EditTask from '../components/task-page/EditTask';
 import ViewCompletedTask from '../components/task-page/ViewCompletedTask';
 import ListSelect from '../components/task-page/ListSelect';
 import CameraOptionMenu from '../components/task-page/PopUpMenus/CameraOptionMenu';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { doc, collection, getDoc, addDoc, getDocs, deleteDoc, updateDoc, runTransaction, writeBatch, increment, query, where, onSnapshot, arrayRemove, arrayUnion, orderBy } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB, uploadToFirebase } from '../../firebaseConfig';
 import { getStorage, ref, deleteObject } from "firebase/storage";
@@ -31,6 +32,7 @@ const TaskListScreen = (props) => {
     const [isEditTaskVisible, setEditTaskVisible] = useState(false);
     const [editIndex, setEditIndex] = useState();
     const [isCompletedTaskVisible, setCompletedTaskVisible] = useState(false);
+    const [isUncompleteTaskConfirmationVisible, setUncompleteTaskConfirmationVisible] = useState(false);
     const [completedTaskIndex, setCompletedTaskIndex] = useState(null);
     const [openDrawer, setOpenDrawer] = useState(false);
     const [sortModalVisible, setSortModalVisible] = useState(false);
@@ -712,7 +714,17 @@ const TaskListScreen = (props) => {
     }
 
     const testFunction = async () => {
-        await Notifications.cancelScheduledNotificationAsync("aee5ac74-2f06-49a2-a5a0-d7d0501ea0fc");
+        setUncompleteTaskConfirmationVisible(true);
+    }
+
+    const uncompleteTaskHelper = (index, complete) => {
+        if (!completedTaskItems[index].hidden) {
+            setCompletedTaskIndex(index);
+            setUncompleteTaskConfirmationVisible(true);
+        }
+        else {
+            completeTask(index, complete);
+        }
     }
 
     return (
@@ -830,6 +842,23 @@ const TaskListScreen = (props) => {
                                 onChoose={handleCameraOptionSelect}
                             />
                         </Modal>
+                        <Modal
+                            visible={isUncompleteTaskConfirmationVisible}
+                            transparent={true}
+                            animationType='fade'
+                        >
+                            <ConfirmationModal
+                                confirm={()=>{completeTask(completedTaskIndex, true); setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false);}}
+                                deny={()=>{setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
+                                cancel={() => {setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
+                                title={"Delete post?"}
+                                description={"This will delete the post associated with this task and cannot be undone."}
+                                confirmText={"Delete"}
+                                denyText={"Cancel"}
+                                confirmColor={colors.red}
+                                denyColor={colors.primary}
+                            />
+                        </ Modal>
                         <View style={styles.topBorder}>
                             <TouchableOpacity onPress={() => { closeSwipeCard(); setOpenDrawer(true) }}>
                                 <Ionicons name="menu" size={32} color={colors.primary} />
@@ -896,7 +925,7 @@ const TaskListScreen = (props) => {
                                             <TouchableOpacity onPress={() => handleCompletedTaskPress(index)} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
                                                     text={task.postName}
-                                                    tick={completeTask}
+                                                    tick={uncompleteTaskHelper}
                                                     i={index}
                                                     complete={true}
                                                     deleteItem={deleteItem}
