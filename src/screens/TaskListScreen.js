@@ -517,7 +517,6 @@ const TaskListScreen = (props) => {
                     await deleteObject(imageRef);
                 }
                 batch.update(userProfileRef, { posts: increment(-1) });
-                completedTaskItems.splice(index, 1);
                 setCompletedTaskItems(prevList => [
                     ...prevList.slice(0, index),
                     ...prevList.slice(index + 1)
@@ -772,9 +771,9 @@ const TaskListScreen = (props) => {
                                 task={completedTaskItems[completedTaskIndex]}
                                 listItems={listItems}
                                 toggleCompletedTaskVisible={toggleCompletedTaskVisible}
+                                setCompletedTaskVisible={setCompletedTaskVisible}
+                                uncompleteTaskHelper={uncompleteTaskHelper}
                                 index={completedTaskIndex}
-                                deleteItem={deleteItem}
-                                completeTask={completeTask}
                             />
                         </ Modal>
                         <Modal
@@ -848,7 +847,7 @@ const TaskListScreen = (props) => {
                             animationType='fade'
                         >
                             <ConfirmationModal
-                                confirm={()=>{completeTask(completedTaskIndex, true); setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false);}}
+                                confirm={async()=>{ setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false); await completeTask(completedTaskIndex, true);}}
                                 deny={()=>{setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
                                 cancel={() => {setCompletedTaskIndex(null); setUncompleteTaskConfirmationVisible(false)}}
                                 title={"Delete post?"}

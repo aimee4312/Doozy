@@ -5,9 +5,10 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import colors from '../../theme/colors';
 import fonts from '../../theme/fonts';
 import CheckedTask from '../../assets/checked-task.svg';
+import ConfirmationModal from '../ConfirmationModal';
 
 const ViewCompletedTask = (props) => {
-    const { task, listItems, toggleCompletedTaskVisible, index, deleteItem, completeTask } = props;
+    const { task, listItems, toggleCompletedTaskVisible, setCompletedTaskVisible, uncompleteTaskHelper, index} = props;
 
     const screenHeight = Dimensions.get('window').height;
     const defaultHeight = screenHeight * 0.5;
@@ -17,6 +18,7 @@ const ViewCompletedTask = (props) => {
     const animatedHeight = useRef(new Animated.Value(defaultHeight)).current;
 
     const flagColor = [colors.primary, colors.secondary, colors.accent, colors.red];
+    const [isUncompleteTaskConfirmationVisible, setUncompleteTaskConfirmationVisible] = useState(false);
 
     useEffect(() => {
         const willShowSub = Keyboard.addListener('keyboardWillShow', (e) => {
@@ -72,7 +74,7 @@ const ViewCompletedTask = (props) => {
                     </View>
                     <View style={styles.rowTwoView}>
                         {/* // change function */}
-                        <TouchableOpacity onPress={() => {completeTask(index, true); toggleCompletedTaskVisible()}} style={styles.checkedbox}>
+                        <TouchableOpacity onPress={() => {setCompletedTaskVisible(false); uncompleteTaskHelper(index, true)}} style={styles.checkedbox}>
                             <CheckedTask width={42} height={42} />
                         </TouchableOpacity>
                         {task && <View style={styles.dateContainer}>
