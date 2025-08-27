@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, TouchableOpacity, Modal } from 'react-native';
+import { Alert, View, Button, TextInput, Keyboard, TouchableWithoutFeedback, StyleSheet, Text, KeyboardAvoidingView, Platform, ImageBackground, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../firebaseConfig';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';
 import { deleteUserProfile } from '../utils/deleteUserFunctions';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function Settings() {
     const [userProfile, setUserProfile] = useState(null);
@@ -18,6 +19,7 @@ export default function Settings() {
     const [password, setPassword] = useState('');
     const [isReauthVisible, setReauthVisible] = useState(false);
     const [isError, setError] = useState(false);
+    const [isLogOutModalVisible, setLogOutModalVisible] = useState(false);
     const currentUser = FIREBASE_AUTH.currentUser;
     const navigation = useNavigation();
 
@@ -86,7 +88,7 @@ export default function Settings() {
     const updateUserPassword = async () => {
         try {
             await sendPasswordResetEmail(FIREBASE_AUTH, userProfile.email);
-            console.log("email sent");
+            Alert.alert("Success!", "A password reset email has been sent to your inbox.");
         } catch (error) {
             console.error("Error sending password reset email:", error);
         }
@@ -121,6 +123,23 @@ export default function Settings() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <Modal
+                visible={isLogOutModalVisible}
+                transparent={true}
+                animationType='fade'
+            >
+                <ConfirmationModal
+                    confirm={()=>{ setLogOutModalVisible(false); onLogout()}}
+                    deny={()=>{setLogOutModalVisible(false)}}
+                    cancel={() => {}}
+                    title={"Confirm Logout?"}
+                    description={"You will need to log in again to access your account."}
+                    confirmText={"Logout"}
+                    denyText={"Cancel"}
+                    confirmColor={colors.red}
+                    denyColor={colors.primary}
+                />
+            </ Modal>
             <Modal
                 visible={isReauthVisible}
                 transparent={true}
@@ -182,7 +201,7 @@ export default function Settings() {
                 <View style={{ width: 50 }} />
             </View>
             <Button
-                onPress={onLogout}
+                onPress={()=>setLogOutModalVisible(true)}
                 title="Logout"
                 color="#007AFF"
             />

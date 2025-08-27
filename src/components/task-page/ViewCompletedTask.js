@@ -63,6 +63,7 @@ const ViewCompletedTask = (props) => {
             setUncompleteTaskConfirmationVisible(true);
         }
         else {
+            toggleCompletedTaskVisible();
             completeTask(index, complete);
         }
     }
@@ -80,8 +81,7 @@ const ViewCompletedTask = (props) => {
                         toggleCompletedTaskVisible();
                         await completeTask(index, true);
                     }}
-                    deny={()=>{setUncompleteTaskConfirmationVisible(false);
-                    }}
+                    deny={()=>{setUncompleteTaskConfirmationVisible(false);}}
                     cancel={() => {}}
                     title={"Delete post?"}
                     description={"This will delete the post associated with this task and will mark this task as incomplete."}
