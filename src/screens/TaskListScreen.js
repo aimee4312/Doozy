@@ -881,7 +881,7 @@ const TaskListScreen = (props) => {
                                 }
                             </TouchableOpacity>
                         </View>
-                        <ScrollView style={styles.ScrollView}>
+                        <ScrollView style={styles.scrollView}>
                             <View style={styles.tasksContainer}>
                                 <Text style={styles.sectionTitle}>{currList}</Text>
                                 {taskItems.length === 0 && (<View style={styles.emptyTasks}>
@@ -967,7 +967,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 20,
-        marginBottom: 10
     },
     title: {
         fontSize: 32,
@@ -1023,7 +1022,8 @@ const styles = StyleSheet.create({
         fontFamily: fonts.regular,
     },
     scrollView: {
-
+        paddingTop: 10,
+        marginBottom: 40,
     },
     taskContainer: {
         backgroundColor: colors.red,

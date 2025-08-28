@@ -4,7 +4,7 @@ import { doc, getDoc, collection, getDocs, query, where, onSnapshot, orderBy } f
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions, useNavigationState } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser, findStatus } from '../utils/friendFunctions';
 import CheckedPost from '../assets/checked-post-sent.svg';
 import colors from '../theme/colors';
@@ -190,8 +190,9 @@ const ProfileScreen = ({ route, navigation }) => {
           </View>
         )}
 
-        <View style={styles.tasksContainer}>
-          {posts.map((post, index) => (
+        {(friendStatus === "currentUser" || friendStatus === "friend") ? <View style={styles.tasksContainer}>
+
+          {posts.length > 0 ? (posts.map((post, index) => (
             <TouchableOpacity key={post.id} onPress={() => handlePostPress(index)} style={[styles.item, index === 0 && styles.firstTask, index === posts.length - 1 && styles.lastTask]}>
               <View style={styles.postContainer}>
                 <View style={styles.postInfoContainer}>
@@ -205,8 +206,19 @@ const ProfileScreen = ({ route, navigation }) => {
                 {post.image && <Image source={{ uri: post.image }} style={styles.photo} />}
               </View>
             </TouchableOpacity>
-          ))}
+          )))
+        :
+        (<View style={styles.privateView}>
+          <Ionicons name={"sad-outline"} size={48} color={colors.primary}/>
+          <Text style={styles.privateText}>No posts yet</Text>
+        </View>)}
         </View>
+        :
+        <View style={styles.privateView}>
+          <Feather name={"lock"} size={48} color={colors.primary}/>
+          <Text style={styles.privateText}>This account is private</Text>
+          <Text style={styles.privateDescription}>Add as friend to see their posts</Text>
+        </View>}
       </ScrollView>
     </SafeAreaView>
   );
@@ -439,6 +451,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20,
     marginBottom: '20%',
+  },
+  privateView: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  privateText: {
+    fontFamily: fonts.bold,
+    color: colors.primary,
+    fontSize: 18,
+    paddingTop: 15,
+  },
+  privateDescription: {
+    fontFamily: fonts.regular,
+    color: colors.primary,
+    fontSize: 16,
+    paddingTop: 5,
   },
 });
 

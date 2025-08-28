@@ -225,6 +225,7 @@ const TimelineScreen = (props) => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
+        style={{marginBottom: 40}}
       />
     </SafeAreaView>
   );
@@ -240,7 +241,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 20,
-    marginBottom: 10
   },
   title: {
     fontSize: 32,
