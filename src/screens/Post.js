@@ -10,7 +10,8 @@ import { getTimePassedString } from '../utils/timeFunctions'
 import { sendLike } from "../utils/userReactionFunctions";
 import CommentModal from "../components/timeline/CommentModal";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, writeBatch, increment, arrayRemove } from "firebase/firestore";
+import { getStorage, ref, deleteObject } from "firebase/storage";
 
 //CHAGE EVERYTING
 const PostScreen = ({ route, navigation }) => {
@@ -20,6 +21,8 @@ const PostScreen = ({ route, navigation }) => {
   const [tempPost, setTempPost] = useState([post]);
   const [liked, setLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const currentUser = FIREBASE_AUTH.currentUser;
 
   const toggleCommentModal = () => {
     setCommentModalVisible(!isCommentModalVisible);
@@ -68,8 +71,68 @@ const PostScreen = ({ route, navigation }) => {
     setLikeStatus();
   }, [])
 
+  const deleteItem = async () => {
+    const docId = post.id;
+    const image = post.image;
+    const userProfileRef = doc(FIRESTORE_DB, 'Users', currentUser.uid);
+    const listsRef = collection(userProfileRef, 'Lists');
+    try {
+      const batch = writeBatch(FIRESTORE_DB);
+      let listRef;
+      const postRef = doc(FIRESTORE_DB, 'Posts', post.id);
+      const likesRef = collection(postRef, 'Likes');
+      const commentsRef = collection(postRef, 'Comments');
+      post.listIds.forEach((listId) => {
+        listRef = doc(listsRef, listId);
+        batch.update(listRef, { postIds: arrayRemove(docId) })
+      });
+      const likesSnap = await getDocs(likesRef);
+      likesSnap.forEach(likeDoc => {
+        const userLikeRef = doc(FIRESTORE_DB, 'Users', likeDoc.id, 'LikedPosts', docId);
+        batch.delete(userLikeRef);
+        batch.delete(likeDoc.ref);
+      });
+
+      const commentsSnap = await getDocs(commentsRef);
+      commentsSnap.forEach(commentDoc => {
+        batch.delete(commentDoc.ref);
+      });
+      batch.delete(postRef);
+      if (image) {
+        const imageRef = ref(getStorage(), image);
+        await deleteObject(imageRef);
+      }
+      batch.update(userProfileRef, { posts: increment(-1) });
+      setDeleteModalVisible(false);
+      navigation.goBack();
+      await batch.commit();
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+    };
+
+  }
+
   return (
     <SafeAreaView style={styles.postContainer}>
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType='slide'
+      >
+        <TouchableWithoutFeedback onPress={() => setDeleteModalVisible(false)}>
+          <View style={{ flex: 1 }}>
+          </View>
+        </TouchableWithoutFeedback>
+        <SafeAreaView style={styles.deleteModal}>
+          <TouchableOpacity onPress={deleteItem} style={styles.deleteModalButton}>
+            <Ionicons name="trash-outline" size={22} color={colors.red} />
+            <Text style={styles.deleteText}>Delete Post</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.deleteModalButton}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Modal>
       <Modal
         visible={isCommentModalVisible}
         transparent={true}
@@ -91,9 +154,14 @@ const PostScreen = ({ route, navigation }) => {
           <Ionicons name='chevron-back' size={24} color='black' />
         </TouchableOpacity>
       </View>
-      <View style={styles.profileInfo}>
-        <Image source={{ uri: user.profilePic }} style={styles.profilePic} />
-        <Text style={styles.username}>{user.username}</Text>
+      <View style={styles.profileBar}>
+        <View style={styles.profileInfo}>
+          <Image source={{ uri: user.profilePic }} style={styles.profilePic} />
+          <Text style={styles.username}>{user.username}</Text>
+        </View>
+        {currentUser.uid === user.id && <TouchableOpacity onPress={() => setDeleteModalVisible(true)}>
+          <Ionicons name="ellipsis-vertical-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>}
       </View>
       {tempPost[0].image &&
         <GestureDetector gesture={doubleTapGesture(tempPost[0].id)}>
@@ -157,10 +225,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  profileInfo: {
+  deleteModal: {
+    height: 120,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingLeft: 20,
+    paddingRight: 20,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'column',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4
+  },
+  deleteModalButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 50,
+  },
+  deleteText: {
+    fontFamily: fonts.regular,
+    fontSize: 18,
+    color: colors.red,
+    marginLeft: 10,
+  },
+  cancelText: {
+    fontFamily: fonts.regular,
+    fontSize: 18,
+    color: colors.primary,
+  },
+  profileBar: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
+    justifyContent: 'space-between',
+  },
+  profileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   profilePic: {
     width: 40,
@@ -187,23 +297,23 @@ const styles = StyleSheet.create({
     paddingBottom: 5
   },
   reactionContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      paddingBottom: 5,
-      paddingLeft: 10,
-    },
-    reaction: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    count: {
-      fontFamily: fonts.regular,
-      color: colors.primary,
-      fontSize: 14,
-      marginLeft: 5,
-      minWidth: 20,
-    },
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingBottom: 5,
+    paddingLeft: 10,
+  },
+  reaction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  count: {
+    fontFamily: fonts.regular,
+    color: colors.primary,
+    fontSize: 14,
+    marginLeft: 5,
+    minWidth: 20,
+  },
   taskName: {
     marginLeft: 5,
     fontFamily: fonts.bold,

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, forwardRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal, Platform, DynamicColorIOS } from 'react-native';
+import { StyleSheet, ScrollView, RefreshControl, TextInput, Text, View, TouchableOpacity, TouchableWithoutFeedback, Modal, Platform, DynamicColorIOS } from 'react-native';
 import Task from '../components/task-page/Task';
 import TaskCreation from '../components/task-page/TaskCreation';
 import EditTask from '../components/task-page/EditTask';
@@ -19,6 +19,7 @@ import { addImage, takePhoto } from '../utils/photoFunctions';
 import CheckedPost from '../assets/checked-post-sent.svg';
 import colors from '../theme/colors';
 import fonts from '../theme/fonts';
+import { getDueDateString } from '../utils/timeFunctions';
 
 const TaskListScreen = (props) => {
 
@@ -41,6 +42,7 @@ const TaskListScreen = (props) => {
     const [cameraOptionModalVisible, setCameraOptionModalVisible] = useState(false);
     const [resolver, setResolver] = useState(null);
     const [currList, setCurrList] = useState("");
+    const [refreshing, setRefreshing] = useState(false);
     const unsubscribeRef = useRef();
     const sortRef = useRef(null);
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -58,7 +60,7 @@ const TaskListScreen = (props) => {
         return () => {
             unsubscribeRef.current.forEach(unsub => unsub());
         };
-    }, [listId]);
+    }, [listId, refreshing]);
 
     useEffect(() => {
         sortTasks(taskItems);
@@ -104,6 +106,13 @@ const TaskListScreen = (props) => {
 
         return () => { unsubscribeTasks(); unsubscribeList; };
     }
+
+    const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  };
 
     function fetchPosts() {
         let unsubscribeList = () => { };
@@ -202,7 +211,7 @@ const TaskListScreen = (props) => {
 
     const sortTasks = (fetchedTasks) => {
         let sortedFetchedTasks = [];
-        if (order == "default") {
+        if (order == "default") { //completeByDate -> priority -> timeTaskCreated
             sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
                 if (!a.completeByDate && b.completeByDate) {
                     return 1
@@ -223,7 +232,7 @@ const TaskListScreen = (props) => {
                 }
             })
         }
-        else if (order == "priority") {
+        else if (order == "priority") { //priority -> timeTaskCreated
             sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
                 if (a.priority - b.priority !== 0) {
                     return b.priority - a.priority;
@@ -233,7 +242,7 @@ const TaskListScreen = (props) => {
                 }
             })
         }
-        else if (order == "dueDate") {
+        else if (order == "dueDate") { // completeByDate -> timeTaskCreated
             sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
                 if (!a.completeByDate && b.completeByDate) {
                     return 1
@@ -249,7 +258,7 @@ const TaskListScreen = (props) => {
                 }
             })
         }
-        else {
+        else { // name
             sortedFetchedTasks = fetchedTasks.slice().sort((a, b) => {
                 return a.taskName.localeCompare(b.taskName);
             })
@@ -335,7 +344,7 @@ const TaskListScreen = (props) => {
                     batch.update(taskRef, { completeByDate: newCompleteByDate }); // set new completebydate, add one to post child counter, should be on its youngest child meaning no child has been uncompleted
                     if (task.reminders.length !== 0) { // schedule notifications
                         if (await configureNotifications()) {
-                            const tempNotifIds = await scheduleNotifications(task.reminders, newCompleteByDate, task.isCompletionTime, task.name);
+                            const tempNotifIds = await scheduleNotifications(task.reminders, newCompleteByDate, task.isCompletionTime, task.taskName);
                             batch.update(taskRef, { notificationIds: tempNotifIds });
                         }
                     }
@@ -389,12 +398,25 @@ const TaskListScreen = (props) => {
                     batch.update(listRef, { postIds: arrayRemove(docId) });
                     batch.update(listRef, { taskIds: arrayUnion(taskRef.id) })
                 })
+                const likesRef = collection(postRef, 'Likes');
+                const commentsRef = collection(postRef, 'Comments');
+                const likesSnap = await getDocs(likesRef);
+                likesSnap.forEach(likeDoc => {
+                    const userLikeRef = doc(FIRESTORE_DB, 'Users', likeDoc.id, 'LikedPosts', docId);
+                    batch.delete(userLikeRef);
+                    batch.delete(likeDoc.ref);
+                });
+
+                const commentsSnap = await getDocs(commentsRef);
+                commentsSnap.forEach(commentDoc => {
+                    batch.delete(commentDoc.ref);
+                });
                 batch.delete(postRef);
                 batch.update(userProfileRef, { posts: increment(-1) });
                 batch.update(userProfileRef, { tasks: increment(1) });
                 if (post.reminders.length !== 0) {
                     if (await configureNotifications()) {
-                        const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.name);
+                        const tempNotifIds = await scheduleNotifications(post.reminders, post.completeByDate, post.isCompletionTime, post.postName);
                         batch.update(taskRef, { notificationIds: tempNotifIds });
                     }
                 }
@@ -442,7 +464,7 @@ const TaskListScreen = (props) => {
                 currDueDate.setMonth(currDueDate.getMonth() + 1);
             }
             else if (selectedRepeat == 3) {
-                currDueDate.setYear(currDueDate.getYear() + 1);
+                currDueDate.setYear(currDueDate.getFullYear() + 1);
             }
             else {
                 if (currDueDate.getDay() === 5) {
@@ -725,6 +747,21 @@ const TaskListScreen = (props) => {
         }
     }
 
+    const infoHelper = (task) => { //0: priority, 1: dueDate
+        // if default show completeByDate -> priority -> nothing
+        // if priority show priority only
+        // if dueDate show dueDate only
+        // if name show same as default
+
+        if (task.completeByDate) {
+            return [task.priority, getDueDateString(task.completeByDate.timestamp, task.isCompletionTime)];
+        }
+        else {
+            return [task.priority, null];
+        }
+        
+    }
+
     return (
         <TouchableWithoutFeedback onPress={closeSwipeCard}>
             <View style={styles.container}>
@@ -881,7 +918,9 @@ const TaskListScreen = (props) => {
                                 }
                             </TouchableOpacity>
                         </View>
-                        <ScrollView style={styles.scrollView}>
+                        <ScrollView style={styles.scrollView} refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                        }>
                             <View style={styles.tasksContainer}>
                                 <Text style={styles.sectionTitle}>{currList}</Text>
                                 {taskItems.length === 0 && (<View style={styles.emptyTasks}>
@@ -907,6 +946,7 @@ const TaskListScreen = (props) => {
                                                     isLast={isLast}
                                                     isSelected={index === editIndex}
                                                     hidden={false}
+                                                    info={infoHelper(task)}
                                                 />
                                             </TouchableOpacity>
                                         )
@@ -933,6 +973,7 @@ const TaskListScreen = (props) => {
                                                     isLast={isLast}
                                                     isSelected={index === completedTaskIndex}
                                                     hidden={task.hidden}
+                                                    info={null}
                                                 />
                                             </TouchableOpacity>
                                         )

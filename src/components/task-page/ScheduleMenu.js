@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableHighlight, Button, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ReminderModal from './PopUpMenus/ReminderModal';
 import RepeatModal from './PopUpMenus/RepeatModal';
@@ -340,7 +340,7 @@ const ScheduleMenu = (props) => {
                     />
                 </View>
                 <View style={{height: 200}}>
-                    <TouchableHighlight ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]}>
+                    <TouchableOpacity ref={timeMenuRef} onPress={toggleTimeMenu} style={[styles.menuButton, styles.menuTopButton]}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Time</Text>
                             <View style={styles.cancelContainer}>
@@ -350,8 +350,8 @@ const ScheduleMenu = (props) => {
                                 </TouchableOpacity>}
                             </View>
                         </View>
-                    </TouchableHighlight>
-                    <TouchableHighlight ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton}>
+                    </TouchableOpacity>
+                    <TouchableOpacity ref={reminderMenuRef} onPress={toggleReminderMenu} style={styles.menuButton}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Reminder</Text>
                             <View style={styles.cancelContainer}>
@@ -361,8 +361,8 @@ const ScheduleMenu = (props) => {
                                 </TouchableOpacity>}
                             </View>
                         </View>
-                    </TouchableHighlight>
-                    <TouchableHighlight ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat === null) ? styles.menuBottomButton : null]}>
+                    </TouchableOpacity>
+                    <TouchableOpacity ref={repeatMenuRef} onPress={toggleRepeatMenu} style={[styles.menuButton, (tempSelectedRepeat === null) ? styles.menuBottomButton : null]}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat</Text>
                             <View style={styles.cancelContainer}>
@@ -372,8 +372,8 @@ const ScheduleMenu = (props) => {
                                 </TouchableOpacity>}
                             </View>
                         </View>
-                    </TouchableHighlight>
-                    {(tempSelectedRepeat !== null) && <TouchableHighlight ref={repeatEndsRef} onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
+                    </TouchableOpacity>
+                    {(tempSelectedRepeat !== null) && <TouchableOpacity ref={repeatEndsRef} onPress={toggleRepeatEndsModal} style={[styles.menuButton, styles.menuBottomButton]}>
                         <View style={styles.menuButtonWrapper}>
                             <Text style={styles.menuText}>Repeat Ends</Text>
                             <View style={styles.cancelContainer}>
@@ -383,7 +383,7 @@ const ScheduleMenu = (props) => {
                                 </TouchableOpacity>}
                             </View>
                         </View>
-                    </TouchableHighlight>}
+                    </TouchableOpacity>}
                 </View>
             </View>
             <View style={styles.clearContainer}>
