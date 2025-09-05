@@ -17,6 +17,7 @@ export const deleteUserProfile = async (email, password) => {
         await deleteAllSentRequests(currentUser);
         await deleteAllLists(currentUser);
         await deleteAllTasks(currentUser);
+        await deleteAllLikedPosts(currentUser);
         await deleteUserDoc(currentUser);
         await currentUser.delete();
     } catch (error) {
@@ -119,6 +120,22 @@ const deleteAllTasks = async (currentUser) => {
         await cancelNotifications(docSnap.data().notificationIds);
         batch.delete(docSnap.ref);
     }
+
+    await batch.commit();
+}
+
+const deleteAllLikedPosts = async (currentUser) => {
+    const likedPostsRef = collection(FIRESTORE_DB, 'Users', currentUser.uid, 'LikedPosts');
+    const snapshot = await getDocs(likedPostsRef);
+
+    const batch = writeBatch(FIRESTORE_DB);
+    snapshot.forEach((data) => {
+        const postRef = doc(FIRESTORE_DB, 'Posts', data.id);
+        const likeRef = doc(postRef, 'Likes', currentUser.uid);
+        batch.update( postRef, {likeCount: increment(-1)} );
+        batch.delete(likeRef);
+        batch.delete(data.ref);
+    })
 
     await batch.commit();
 }

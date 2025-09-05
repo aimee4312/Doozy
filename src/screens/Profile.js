@@ -4,7 +4,7 @@ import { doc, getDoc, collection, getDocs, query, where, onSnapshot, orderBy } f
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions, useNavigationState } from '@react-navigation/native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { addFriend, deleteRequest, deletePendingRequest, deleteFriend, requestUser, findStatus } from '../utils/friendFunctions';
 import CheckedPost from '../assets/checked-post-sent.svg';
 import colors from '../theme/colors';
@@ -30,7 +30,7 @@ const ProfileScreen = ({ route, navigation }) => {
           setUserProfile({ id: userSnap.id, ...userSnap.data() });
         }
         else {
-          console.log("No such document!");
+          setUserProfile(null);
         }
       })
       return unsubscribeProfile;
@@ -55,7 +55,7 @@ const ProfileScreen = ({ route, navigation }) => {
         setPosts(postsArray);
       })
       return unsubscribePosts;
-      
+
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
@@ -75,16 +75,16 @@ const ProfileScreen = ({ route, navigation }) => {
         tempFriendStatus = status;
       }
       unsubscribeProfile = fetchProfile();
-      
+
       if (tempFriendStatus == "currentUser" || tempFriendStatus == "friend") {
         unsubscribePosts = fetchPosts();
       }
-      
+
     })();
     unsubscribeRef.current = [unsubscribeProfile, unsubscribePosts].filter(Boolean);
-        return () => {
-            unsubscribeRef.current.forEach(unsub => unsub());
-        };
+    return () => {
+      unsubscribeRef.current.forEach(unsub => unsub());
+    };
   }, []);
 
   const goToSettingsScreen = () => {
@@ -92,7 +92,7 @@ const ProfileScreen = ({ route, navigation }) => {
   };
 
   const goToFriendsScreen = () => {
-    navigation.navigate('Friends', {userID: userID});
+    navigation.navigate('Friends', { userID: userID });
   };
 
   const goToAddFriendsScreen = () => {
@@ -118,7 +118,7 @@ const ProfileScreen = ({ route, navigation }) => {
   }
 
   const handlePostPress = (index) => {
-    navigation.navigate("Post", {post: posts[index], user: userProfile})
+    navigation.navigate("Post", { post: posts[index], user: userProfile })
   }
 
   return (
@@ -144,81 +144,127 @@ const ProfileScreen = ({ route, navigation }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {userProfile && (
+        {userProfile ? (
           <View style={styles.profileContainer}>
             {friendStatus == "userReceivedRequest" && (<View style={styles.friendRequest}>
-                <Text style={styles.detailText}>{userProfile.username} wants to be friends</Text>
-                <View style={{flexDirection: 'row', width: '60%'}}>
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => { deleteRequest(userProfile); setFriendStatus("stranger") }}>
-                    <Text style={styles.buttonText}>Delete</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.confirmButton} onPress={() => { addFriend(userProfile); setFriendStatus("friend") }}>
-                    <Text style={styles.buttonText}>Confirm</Text>
-                  </TouchableOpacity>
-                  </View>
-              </View>)}
+              <Text style={styles.detailText}>{userProfile.username} wants to be friends</Text>
+              <View style={{ flexDirection: 'row', width: '60%' }}>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => { deleteRequest(userProfile); setFriendStatus("stranger") }}>
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmButton} onPress={() => { addFriend(userProfile); setFriendStatus("friend") }}>
+                  <Text style={styles.buttonText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>)}
             <View style={styles.upperProfileContainer}>
               <Image source={{ uri: userProfile.profilePic }} style={{ width: 100, height: 100, borderRadius: 50 }} />
-              <View style={[styles.dataButtonContainer, {width: windowWidth - 100 - 30}]}>
+              <View style={[styles.dataButtonContainer, { width: windowWidth - 100 - 30 }]}>
                 <View style={styles.dataContainer}>
                   <TouchableOpacity onPress={goToFriendsScreen} style={styles.data}>
                     <Text style={styles.dataStat}>{userProfile.friends}</Text>
                     <Text style={styles.dataText}>Friends</Text>
                   </TouchableOpacity>
-                  <View style={styles.divider}/>
+                  <View style={styles.divider} />
                   <View style={styles.data}>
                     <Text style={styles.dataStat}>{userProfile.posts}</Text>
                     <Text style={styles.dataText}>Posts</Text>
                   </View>
                 </View>
                 {friendStatus !== "userReceivedRequest" ?
-                (<TouchableOpacity style={styles.statusButton} onPress={handleStatusChange}>
-                  <Text style={styles.buttonText}>{friendStatus == "currentUser" ? "Edit Profile" :
-                    (friendStatus == "friend" ? "Friends" :
-                      (friendStatus == "userSentRequest" ? "Cancel Request" :
-                        "Add Friend"
-                      ))}</Text>
-                </TouchableOpacity>) : 
-                (<View style={{height: 20}}/>)}
+                  (<TouchableOpacity style={styles.statusButton} onPress={handleStatusChange}>
+                    <Text style={styles.buttonText}>{friendStatus == "currentUser" ? "Edit Profile" :
+                      (friendStatus == "friend" ? "Friends" :
+                        (friendStatus == "userSentRequest" ? "Cancel Request" :
+                          "Add Friend"
+                        ))}</Text>
+                  </TouchableOpacity>) :
+                  (<View style={{ height: 20 }} />)}
               </View>
-              
+
             </View>
             <View style={styles.lowerProfileContainer}>
               <Text style={styles.name}>{userProfile.name}</Text>
               <Text style={styles.bio}>{userProfile.bio}</Text>
             </View>
           </View>
-        )}
-
-        {(friendStatus === "currentUser" || friendStatus === "friend") ? <View style={styles.tasksContainer}>
-
-          {posts.length > 0 ? (posts.map((post, index) => (
-            <TouchableOpacity key={post.id} onPress={() => handlePostPress(index)} style={[styles.item, index === 0 && styles.firstTask, index === posts.length - 1 && styles.lastTask]}>
-              <View style={styles.postContainer}>
-                <View style={styles.postInfoContainer}>
-                  <View style={styles.postNameContainer}>
-                    <CheckedPost width={32} height={32} />
-                    <Text style={styles.postName}>{post.postName}</Text>
+        ) :
+          <View style={styles.profileContainer}>
+            <View style={styles.upperProfileContainer}>
+              <Image source={{ uri: "https://firebasestorage.googleapis.com/v0/b/doozy-3d54c.appspot.com/o/profilePics%2Fdefault.jpg?alt=media&token=c4b20aae-830c-4d47-aa90-2a3ebd6e16fb" }}
+                style={{ width: 100, height: 100, borderRadius: 50 }} />
+              <View style={[styles.dataButtonContainer, { width: windowWidth - 100 - 30 }]}>
+                <View style={styles.dataContainer}>
+                  <TouchableOpacity onPress={goToFriendsScreen} style={styles.data}>
+                    <Text style={styles.dataStat}>-</Text>
+                    <Text style={styles.dataText}>Friends</Text>
+                  </TouchableOpacity>
+                  <View style={styles.divider} />
+                  <View style={styles.data}>
+                    <Text style={styles.dataStat}>-</Text>
+                    <Text style={styles.dataText}>Posts</Text>
                   </View>
-                  {/* {post.description !== "" && <Text style={styles.postDescription}>{post.description}</Text>}
-                  <Text style={styles.postDate}>{getTimePassedString(post.timePosted)}</Text> */}
                 </View>
-                {post.image && <Image source={{ uri: post.image }} style={styles.photo} />}
+
+                <View style={{ height: 20 }} />
               </View>
-            </TouchableOpacity>
-          )))
-        :
-        (<View style={styles.privateView}>
-          <Ionicons name={"sad-outline"} size={48} color={colors.primary}/>
-          <Text style={styles.privateText}>No posts yet</Text>
-        </View>)}
-        </View>
-        :
-        <View style={styles.privateView}>
-          <Feather name={"lock"} size={48} color={colors.primary}/>
-          <Text style={styles.privateText}>This account is private</Text>
-          <Text style={styles.privateDescription}>Add as friend to see their posts</Text>
-        </View>}
+
+            </View>
+          </View>
+        }
+        {userProfile ? (
+          (friendStatus === "currentUser" || friendStatus === "friend") ? (
+            <View style={styles.tasksContainer}>
+              {posts.length > 0 ? (
+                posts.map((post, index) => (
+                  <TouchableOpacity
+                    key={post.id}
+                    onPress={() => handlePostPress(index)}
+                    style={[
+                      styles.item,
+                      index === 0 && styles.firstTask,
+                      index === posts.length - 1 && styles.lastTask
+                    ]}
+                  >
+                    <View style={styles.postContainer}>
+                      <View style={styles.postInfoContainer}>
+                        <View style={styles.postNameContainer}>
+                          <CheckedPost width={32} height={32} />
+                          <Text style={styles.postName}>{post.postName}</Text>
+                        </View>
+                        {/* Uncomment if needed
+                {post.description !== "" && <Text style={styles.postDescription}>{post.description}</Text>}
+                <Text style={styles.postDate}>{getTimePassedString(post.timePosted)}</Text>
+                */}
+                      </View>
+                      {post.image && (
+                        <Image source={{ uri: post.image }} style={styles.photo} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.privateView}>
+                  <Ionicons name="sad-outline" size={48} color={colors.primary} />
+                  <Text style={styles.privateText}>No posts yet</Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.privateView}>
+              <Feather name="lock" size={48} color={colors.primary} />
+              <Text style={styles.privateText}>This account is private</Text>
+              <Text style={styles.privateDescription}>Add as friend to see their posts</Text>
+            </View>
+          )
+        ) : (
+          <View>
+            <View style={styles.privateView}>
+              <MaterialIcons name="person-off" size={48} color={colors.primary} />
+              <Text style={styles.privateText}>This account no longer exists</Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -310,8 +356,8 @@ const styles = StyleSheet.create({
     width: 60,
   },
   divider: {
-    width: 1, 
-    height: '90%', 
+    width: 1,
+    height: '90%',
     borderRadius: 2,
     backgroundColor: colors.primary
   },
@@ -381,7 +427,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     marginBottom: 20,
   },
-  
+
   postDescription: {
     width: '65%',
     alignItems: 'center',
@@ -395,11 +441,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        // Android shadow
-        elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // Android shadow
+    elevation: 4,
   },
   item: {
     flexDirection: 'row',

@@ -200,10 +200,10 @@ const PostScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
           <View style={styles.reaction}>
-            <TouchableOpacity onPress={() => { toggleCommentModal() }}>
+            <TouchableOpacity onPress={() => { toggleCommentModal() }} style={{flexDirection: 'row', alignItems: 'center'}}>
               <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
+              <Text style={styles.count}>{tempPost[0].commentCount}</Text>
             </TouchableOpacity>
-            <Text style={styles.count}>{tempPost[0].commentCount}</Text>
           </View>
         </View>}
         <View style={styles.postNameContainer}>
