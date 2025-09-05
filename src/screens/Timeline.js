@@ -12,12 +12,14 @@ import { getTimePassedString } from '../utils/timeFunctions'
 import { sendLike } from '../utils/userReactionFunctions';
 import CommentModal from '../components/timeline/CommentModal';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import LikeModal from '../components/timeline/LikeModal';
 
 const TimelineScreen = (props) => {
   const [refreshing, setRefreshing] = useState(false);
   const [posts, setPosts] = useState([]);
   const [currPostID, setCurrPostID] = useState(null);
   const [isCommentModalVisible, setCommentModalVisible] = useState(false);
+  const [isLikeModalVisible, setLikeModalVisible] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
 
@@ -130,6 +132,11 @@ const TimelineScreen = (props) => {
     setCommentModalVisible(!isCommentModalVisible);
   }
 
+  const toggleLikeModal = (postID) => {
+    setCurrPostID(postID);
+    setLikeModalVisible(!isLikeModalVisible);
+  }
+
   const handleRefresh = () => {
     setRefreshing(true);
     refreshPosts().finally(() => {
@@ -155,13 +162,15 @@ const TimelineScreen = (props) => {
                 :
                 (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
             </TouchableOpacity>
-            <Text style={styles.count}>{item.likeCount}</Text>
+            <TouchableOpacity onPress={() => toggleLikeModal(item.id)}>
+              <Text style={styles.count}>{item.likeCount}</Text>
+            </TouchableOpacity> 
           </View>
           <View style={styles.reaction}>
-            <TouchableOpacity onPress={() => {toggleCommentModal(item.id)}}>
+            <TouchableOpacity onPress={() => {toggleCommentModal(item.id)}} style={{flexDirection: 'row', alignItems: 'center'}}>
               <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
+              <Text style={styles.count}>{item.commentCount}</Text>
             </TouchableOpacity>
-            <Text style={styles.count}>{item.commentCount}</Text>
           </View>
         </View>}
         <View style={styles.postNameContainer}>
@@ -179,13 +188,15 @@ const TimelineScreen = (props) => {
                 :
                 (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
             </TouchableOpacity>
-            <Text style={styles.count}>{item.likeCount}</Text>
+            <TouchableOpacity onPress={() => toggleLikeModal(item.id)}>
+              <Text style={styles.count}>{item.likeCount}</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.reaction}>
-            <TouchableOpacity onPress={() => {toggleCommentModal(item.id)}}>
+            <TouchableOpacity onPress={() => {toggleCommentModal(item.id)}} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'}}>
               <Ionicons name='chatbubble-outline' size={26} color={colors.primary} />
+              <Text style={styles.count}>{item.commentCount}</Text>
             </TouchableOpacity>
-            <Text style={styles.count}>{item.commentCount}</Text>
           </View>
         </View>}
         <Text style={styles.taskDate}>{getTimePassedString(item.timePosted)}</Text>
@@ -209,6 +220,21 @@ const TimelineScreen = (props) => {
           postID={currPostID}
           toggleCommentModal={toggleCommentModal}
           setPosts={setPosts}
+        />
+      </Modal>
+      <Modal
+        visible={isLikeModalVisible}
+        transparent={true}
+        animationType='slide'
+      >
+        <TouchableWithoutFeedback onPress={() => toggleLikeModal(null)}>
+          <View style={{ flex: 1 }}>
+          </View>
+        </TouchableWithoutFeedback>
+        <LikeModal
+          navigation={props.navigation}
+          postID={currPostID}
+          toggleLikeModal={toggleLikeModal}
         />
       </Modal>
       <View style={styles.topBorder}>

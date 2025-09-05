@@ -3,10 +3,6 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig"
 import { doc, collection,  } from "firebase/firestore";
 
 
-export const fetchLikes = async () => {
-    // fetch all users with query of userID in likes array
-}
-
 export const fetchComments = async (postID) => {
     const commentsRef = collection(FIRESTORE_DB, 'Posts', postID, 'Comments');
     const snapshot = await getDocs(commentsRef);
@@ -54,4 +50,18 @@ export const deleteComment = async (postID, commentID) => {
     batch.delete(doc(FIRESTORE_DB, 'Posts', postID, 'Comments', commentID));
     batch.update(doc(FIRESTORE_DB, 'Posts', postID), {commentCount: increment(-1)});
     await batch.commit();
+}
+
+export const fetchLikes = async (postID) => {
+    const likesRef = collection(FIRESTORE_DB, 'Posts', postID, 'Likes');
+    const snapshot = await getDocs(likesRef);
+    let userLikeList = [];
+    for (const likeDoc of snapshot.docs) {
+        const userLikeRef = doc(FIRESTORE_DB, 'Users', likeDoc.id);
+        const userSnap = await getDoc(userLikeRef);
+        if (userSnap.exists()) {
+            userLikeList.push({ id: userSnap.id, ...userSnap.data()});
+        }
+    }
+    return userLikeList;
 }

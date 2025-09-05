@@ -12,6 +12,7 @@ import CommentModal from "../components/timeline/CommentModal";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../firebaseConfig";
 import { doc, getDoc, getDocs, collection, writeBatch, increment, arrayRemove } from "firebase/firestore";
 import { getStorage, ref, deleteObject } from "firebase/storage";
+import LikeModal from "../components/timeline/LikeModal";
 
 //CHAGE EVERYTING
 const PostScreen = ({ route, navigation }) => {
@@ -22,10 +23,14 @@ const PostScreen = ({ route, navigation }) => {
   const [liked, setLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [isLikeModalVisible, setLikeModalVisible] = useState(false);
   const currentUser = FIREBASE_AUTH.currentUser;
 
   const toggleCommentModal = () => {
     setCommentModalVisible(!isCommentModalVisible);
+  }
+  const toggleLikeModal = () => {
+    setLikeModalVisible(!isLikeModalVisible);
   }
 
   const toggleLike = async (postID) => {
@@ -149,6 +154,21 @@ const PostScreen = ({ route, navigation }) => {
           setPosts={setTempPost}
         />
       </Modal>
+      <Modal
+        visible={isLikeModalVisible}
+        transparent={true}
+        animationType='slide'
+      >
+        <TouchableWithoutFeedback onPress={() => toggleLikeModal(null)}>
+          <View style={{ flex: 1 }}>
+          </View>
+        </TouchableWithoutFeedback>
+        <LikeModal
+          navigation={navigation}
+          postID={post.id}
+          toggleLikeModal={toggleLikeModal}
+        />
+      </Modal>
       <View style={styles.topContainer}>
         <TouchableOpacity onPress={navigation.goBack}>
           <Ionicons name='chevron-back' size={24} color='black' />
@@ -175,7 +195,9 @@ const PostScreen = ({ route, navigation }) => {
                 :
                 (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
             </TouchableOpacity>
-            <Text style={styles.count}>{tempPost[0].likeCount}</Text>
+            <TouchableOpacity onPress={() => toggleLikeModal(post.id)}>
+              <Text style={styles.count}>{tempPost[0].likeCount}</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.reaction}>
             <TouchableOpacity onPress={() => { toggleCommentModal() }}>
@@ -199,7 +221,9 @@ const PostScreen = ({ route, navigation }) => {
                 :
                 (<FontAwesome name='heart-o' size={24} color={colors.primary} />)}
             </TouchableOpacity>
-            <Text style={styles.count}>{tempPost[0].likeCount}</Text>
+            <TouchableOpacity onPress={() => toggleLikeModal(post.id)}>
+              <Text style={styles.count}>{tempPost[0].likeCount}</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.reaction}>
             <TouchableOpacity onPress={() => { toggleCommentModal() }}>

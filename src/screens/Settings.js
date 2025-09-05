@@ -201,19 +201,19 @@ export default function Settings() {
                 <View style={{ width: 50 }} />
             </View>
             <Button
-                onPress={()=>setLogOutModalVisible(true)}
-                title="Logout"
-                color="#007AFF"
-            />
-            <Button
                 onPress={updateUserPassword}
-                title="update password"
+                title="Update Password"
                 color="#007AFF"
             />
             <Button
                 onPress={() => setReauthVisible(true)}
-                title="delete account"
+                title="Delete Account"
                 color="#007AFF"
+            />
+            <Button
+                onPress={()=>setLogOutModalVisible(true)}
+                title="Logout"
+                color={colors.red}
             />
         </SafeAreaView>
 
