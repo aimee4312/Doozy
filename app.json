@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "doozy",
-    "slug": "doozy",
+    "name": "Doozy",
+    "slug": "Doozy",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./src/assets/doozy_logo2_nt.png",
     "assetBundlePatterns": [
       "**/*"
     ],
