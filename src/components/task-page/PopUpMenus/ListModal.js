@@ -141,6 +141,7 @@ const ListModal = (props) => {
             onChangeText={text => {setListInputText(text);}}
             value={listInputText}
             placeholder={"Enter list name..."}
+            placeholderTextColor={'#C7C7CD'}
             style={styles.addListInput}
             autoFocus={true}
           />

@@ -74,6 +74,7 @@ const FriendsScreen = ({ route, navigation }) => {
                 <View style={styles.searchBoxContainer}>
                     <TextInput
                         placeholder='Search Friends...'
+                        placeholderTextColor={'#C7C7CD'}
                         style={styles.searchBox}
                         onChangeText={setSearchText}
                     />

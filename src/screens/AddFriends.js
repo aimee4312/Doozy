@@ -107,6 +107,7 @@ const AddFriendsScreen = ({ navigation }) => {
                 <View style={styles.searchBoxContainer}>
                     <TextInput
                         placeholder='Search Profiles...'
+                        placeholderTextColor={'#C7C7CD'}
                         style={styles.searchBox}
                         onChangeText={setSearchProfilesText}
                     />

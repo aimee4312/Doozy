@@ -170,6 +170,7 @@ const ListSelect = (props) => {
                         <TextInput 
                             ref={addListRef} 
                             placeholder={"Enter list name..."}
+                            placeholderTextColor={'#C7C7CD'}
                             style={styles.addListInput} 
                             value={listName} 
                             onChangeText={text => {setListName(text);}} 

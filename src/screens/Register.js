@@ -114,6 +114,7 @@ const Register = () => {
                                 {errorCode && errorCode[0] == "name" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="John Doe"
+                                    placeholderTextColor={'#C7C7CD'}
                                     value={formData.name}
                                     onChangeText={(text) => handleChange('name', text)}
                                     style={styles.textBox}
@@ -123,6 +124,7 @@ const Register = () => {
                                 {errorCode && errorCode[0] == "email" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="johndoe@email.com"
+                                    placeholderTextColor={'#C7C7CD'}
                                     value={formData.email}
                                     onChangeText={(text) => handleChange('email', text)}
                                     style={styles.textBox}
@@ -134,6 +136,7 @@ const Register = () => {
                                 {errorCode && errorCode[0] == "username" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="johndoe123"
+                                    placeholderTextColor={'#C7C7CD'}
                                     value={formData.username}
                                     onChangeText={(text) => handleChange('username', text)}
                                     style={styles.textBox}
@@ -144,6 +147,7 @@ const Register = () => {
                                 {errorCode && errorCode[0] == "password" && <Text style={styles.errorMessage}>{errorCode[1]}</Text>}
                                 <TextInput
                                     placeholder="8+ characters, 1 number"
+                                    placeholderTextColor={'#C7C7CD'}
                                     value={formData.password}
                                     onChangeText={(text) => handleChange('password', text)}
                                     style={styles.textBox}
@@ -152,6 +156,7 @@ const Register = () => {
                                 <Text style={styles.label}>Confirm Password</Text>
                                 <TextInput
                                     placeholder="Re-enter your password"
+                                    placeholderTextColor={'#C7C7CD'}
                                     value={formData.confirmPassword}
                                     onChangeText={(text) => handleChange('confirmPassword', text)}
                                     style={styles.textBox}

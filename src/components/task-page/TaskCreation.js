@@ -339,6 +339,7 @@ const TaskCreation = (props) => {
                                     onChangeText={text => { setNewTask(text)}}
                                     value={newTask}
                                     placeholder={'Type your task here...'}
+                                    placeholderTextColor={'#C7C7CD'}
                                     autoCorrect={false}
                                 />
                             </View>
@@ -352,6 +353,7 @@ const TaskCreation = (props) => {
                                 onChangeText={text => setNewDescription(text)}
                                 value={newDescription}
                                 placeholder={'Description…'}
+                                placeholderTextColor={'#C7C7CD'}
                             />
                         </View>
                         <View style={styles.detailsWrapper}>

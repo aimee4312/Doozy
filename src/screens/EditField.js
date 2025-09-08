@@ -74,6 +74,7 @@ const EditFieldScreen = ({route, navigation}) => {
                         onChangeText={text => handleChangeText(text)}
                         value={field}
                         placeholder={placeholder}
+                        placeholderTextColor={'#C7C7CD'}
                         autoCorrect={false}
                         autoFocus={true}
                         multiline={fieldName == "Bio"}

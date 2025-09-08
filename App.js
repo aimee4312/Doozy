@@ -34,13 +34,13 @@ const ProfileStack = createStackNavigator();
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentUserID, setCurrentUserID] = useState(null);
 
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_700Bold,
-    Poppins_400Regular_Italic,
-  });
+
+  const [fontsLoaded, fontError] = useFonts({
+  Poppins_400Regular,
+  Poppins_700Bold,
+  Poppins_400Regular_Italic,
+});
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {

@@ -55,6 +55,7 @@ const Login = ({ navigation }) => {
                                 {errorCode && <Text style={styles.errorMessage}>{errorCode}</Text>}
                                 <TextInput
                                     placeholder="hello@example.com"
+                                    placeholderTextColor={'#C7C7CD'}
                                     onChangeText={setEmail}
                                     style={styles.textBox}
                                     autoCapitalize="none"
@@ -64,6 +65,7 @@ const Login = ({ navigation }) => {
                                 <Text style={styles.label}>Password</Text>
                                 <TextInput
                                     placeholder="Password"
+                                    placeholderTextColor={'#C7C7CD'}
                                     value={password}
                                     onChangeText={setPassword}
                                     style={styles.textBox}

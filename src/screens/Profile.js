@@ -232,10 +232,6 @@ const ProfileScreen = ({ route, navigation }) => {
                           <CheckedPost width={32} height={32} />
                           <Text style={styles.postName}>{post.postName}</Text>
                         </View>
-                        {/* Uncomment if needed
-                {post.description !== "" && <Text style={styles.postDescription}>{post.description}</Text>}
-                <Text style={styles.postDate}>{getTimePassedString(post.timePosted)}</Text>
-                */}
                       </View>
                       {post.image && (
                         <Image source={{ uri: post.image }} style={styles.photo} />
@@ -445,7 +441,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 8,
     // Android shadow
-    elevation: 4,
   },
   item: {
     flexDirection: 'row',

@@ -158,6 +158,7 @@ const CommentModal = (props) => {
                         onChangeText={text => { setCommentText(text) }}
                         value={commentText}
                         placeholder="Enter comment..."
+                        placeholderTextColor={'#C7C7CD'}
                         style={styles.commentInput}
                         multiline={true}
                         scrollEnabled={true}

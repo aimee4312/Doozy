@@ -898,10 +898,10 @@ const TaskListScreen = (props) => {
                             <TouchableOpacity onPress={() => { closeSwipeCard(); setOpenDrawer(true) }}>
                                 <Ionicons name="menu" size={32} color={colors.primary} />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={testFunction} style={{ flexDirection: 'row', alignItems: 'center', padding: 1, paddingRight: 5, }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 1, paddingRight: 5, }}>
                                 <CheckedPost width={42} height={42} />
                                 <Text style={styles.title}>Doozy</Text>
-                            </TouchableOpacity>
+                            </View>
                             <TouchableOpacity ref={sortRef} onPress={() => { closeSwipeCard(); openSortModal(); }}>
                                 {order === "default" ? 
                                     <MaterialCommunityIcons name="sort" size={32} color={colors.primary} />

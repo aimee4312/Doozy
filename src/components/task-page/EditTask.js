@@ -462,6 +462,7 @@ const EditTask = (props) => {
                                 onChangeText={text => setEditedDescription(text)}
                                 value={editedDescription}
                                 placeholder="Description..."
+                                placeholderTextColor={'#C7C7CD'}
                                 style={styles.descriptionInput}
                             />
                         </View>
