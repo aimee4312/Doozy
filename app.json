@@ -15,7 +15,10 @@
       "bundleIdentifier": "com.anonymous.doozy"
     },
     "android": {
-      "package": "com.anonymous.doozy"
+      "package": "com.anonymous.doozy",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       [
@@ -43,6 +46,11 @@
         }
       ],
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8b40049f-6723-4750-a028-4ab2894d95dd"
+      }
+    }
   }
 }
