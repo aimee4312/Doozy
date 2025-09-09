@@ -87,6 +87,10 @@ const ProfileScreen = ({ route, navigation }) => {
     };
   }, []);
 
+  useEffect(() => {
+    fetchPosts();
+  }, [friendStatus])
+
   const goToSettingsScreen = () => {
     navigation.navigate('Settings');
   };
