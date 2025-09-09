@@ -274,8 +274,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   postContainer: {
-    marginBottom: 20,
-    borderTopWidth: 1,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
     borderColor: '#ccc'
   },
   profileInfo: {
