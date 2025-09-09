@@ -743,7 +743,7 @@ const TaskListScreen = (props) => {
     }
 
     const uncompleteTaskHelper = (index, complete) => {
-        if (!completedTaskItems[index].hidden) {
+        if (!completedTaskItems[index].hidden && Platform.OS === 'ios') {
             setCompletedTaskIndex(index);
             setUncompleteTaskConfirmationVisible(true);
         }
