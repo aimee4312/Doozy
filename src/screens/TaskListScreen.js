@@ -307,35 +307,40 @@ const TaskListScreen = (props) => {
                 batch.update(userProfileRef, { posts: increment(1) }); // increment post count
 
                 let imageURI;
-                while (true) {
-                    const cameraOption = await openCameraOptionMenu();
-                    if (cameraOption == 'cancel') {
-                        setCameraOptionModalVisible(false);
-                        return;
-                    }
-                    else if (cameraOption == 'library') {
-                        imageURI = await addImage();
-                        if (imageURI) {
-                            break;
-                        }
-                    }
-                    else if (cameraOption == 'camera') {
-                        imageURI = await takePhoto();
-                        if (imageURI) {
-                            break;
-                        }
-                    }
-                    else if (cameraOption == 'no post') {
-                        imageURI = null;
-                        batch.update(postRef, { hidden: true });
-                        break;
-                    }
-                    else {
-                        imageURI = null;
-                        break;
-                    }
+                if (Platform.OS === 'android') { //TEMPORARY FIX
+                    imageURI = await addImage();
                 }
-                setCameraOptionModalVisible(false);
+                else {
+                    while (true) {
+                        const cameraOption = await openCameraOptionMenu();
+                        if (cameraOption == 'cancel') {
+                            setCameraOptionModalVisible(false);
+                            return;
+                        }
+                        else if (cameraOption == 'library') {
+                            imageURI = await addImage();
+                            if (imageURI) {
+                                break;
+                            }
+                        }
+                        else if (cameraOption == 'camera') {
+                            imageURI = await takePhoto();
+                            if (imageURI) {
+                                break;
+                            }
+                        }
+                        else if (cameraOption == 'no post') {
+                            imageURI = null;
+                            batch.update(postRef, { hidden: true });
+                            break;
+                        }
+                        else {
+                            imageURI = null;
+                            break;
+                        }
+                    }
+                    setCameraOptionModalVisible(false);
+                }
                 await cancelNotifications(task.notificationIds); // cancel any upcoming notifications
 
                 const taskRef = doc(tasksRef, task.id);
@@ -902,7 +907,7 @@ const TaskListScreen = (props) => {
                                 <CheckedPost width={42} height={42} />
                                 <Text style={styles.title}>Doozy</Text>
                             </View>
-                            <TouchableOpacity ref={sortRef} onPress={() => { closeSwipeCard(); openSortModal(); }}>
+                            <TouchableOpacity ref={sortRef} onPress={() => { if (Platform.OS === 'ios'){closeSwipeCard(); openSortModal();} else {}}}>
                                 {order === "default" ? 
                                     <MaterialCommunityIcons name="sort" size={32} color={colors.primary} />
                                     :
@@ -933,7 +938,7 @@ const TaskListScreen = (props) => {
                                         const isFirst = index == 0;
                                         const isLast = index == taskItems.length - 1;
                                         return (
-                                            <TouchableOpacity onPress={() => handleTaskPress(index)} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
+                                            <TouchableOpacity onPress={() => Platform.OS === 'ios'?  handleTaskPress(index) : {}} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
                                                     text={task.taskName}
                                                     tick={completeTask}
@@ -960,7 +965,7 @@ const TaskListScreen = (props) => {
                                         const isFirst = index == 0;
                                         const isLast = index == completedTaskItems.length - 1;
                                         return (
-                                            <TouchableOpacity onPress={() => handleCompletedTaskPress(index)} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
+                                            <TouchableOpacity onPress={() => Platform.OS === 'ios' ? handleCompletedTaskPress(index) : {}} key={index} style={[styles.taskContainer, isFirst && styles.firstTask, isLast && styles.lastTask]}>
                                                 <Task
                                                     text={task.postName}
                                                     tick={uncompleteTaskHelper}

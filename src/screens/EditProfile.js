@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
         color: colors.primary,
     },
     textInput: {
-        fontSize: '18',
+        fontSize: 18,
         flex: 7,
         fontFamily: fonts.regular,
         color: colors.primary,

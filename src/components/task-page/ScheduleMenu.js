@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Button, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ReminderModal from './PopUpMenus/ReminderModal';
 import RepeatModal from './PopUpMenus/RepeatModal';
@@ -9,6 +9,7 @@ import { Calendar } from 'react-native-calendars';
 import { Ionicons, Feather} from '@expo/vector-icons';
 import colors from '../../theme/colors';
 import fonts from '../../theme/fonts';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const ScheduleMenu = (props) => {
 
@@ -92,6 +93,15 @@ const ScheduleMenu = (props) => {
         setIsRepeatEndsModalVisible(!isRepeatEndsModalVisible);
     };
 
+    const showTimepicker = (currentTime, onChange) => {
+    DateTimePickerAndroid.open({
+        value: currentTime,
+        onChange,
+        mode: 'time',
+        is24Hour: false, // or true as desired
+    });
+    };
+
     const toggleTimeMenu = () => {
         if (!isTempTime) {
             setTempTime(new Date());
@@ -101,7 +111,12 @@ const ScheduleMenu = (props) => {
                 setTimeButtonHeight(pageY);
             });
         }
-        setIsTimeMenuVisible(!isTimeMenuVisible);
+        if (Platform.OS === 'ios') {
+            setIsTimeMenuVisible(!isTimeMenuVisible);
+        }
+        else {
+            showTimepicker(tempTime, handleTimeChange);
+        }
         if (!isTempTime) {
             setIsTempTime(true);
             setTempSelectedReminders([0]);
@@ -128,7 +143,13 @@ const ScheduleMenu = (props) => {
     }
 
     const handleTimeChange = (newTime) => {
-        setTempTime(newTime);
+        if (Platform.OS === 'android')  {
+            setTempTime(new Date(newTime.nativeEvent.timestamp));
+        }
+        else {
+           setTempTime(newTime); 
+        }
+        
     }
 
     const handleReminderStringChange = () => {
