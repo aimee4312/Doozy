@@ -2,6 +2,8 @@
 
 A social media to-do app that combines task management with social interaction, allowing users to create and share accomplishments with friends. It makes organizing daily tasks engaging by integrating social features like following friends, commenting on tasks, and viewing shared timelines of activities. Designed to foster productivity through connection, this app helps users stay motivated and accountable while managing their personal and collaborative goals.
 
+[![Watch the demo](https://img.youtube.com/vi/y3X5wKtbIBE/0.jpg)](https://www.youtube.com/watch?v=y3X5wKtbIBE)
+
 ## Getting Started
 
 ### Prerequisites
