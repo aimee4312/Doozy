@@ -33,3 +33,10 @@ A social media to-do app that combines task management with social interaction, 
 
 - **iOS:** Open the Camera app and scan the QR code displayed in the terminal or browser. This will prompt you to open the project in Expo Go.
 - **Android:** Open the Expo Go app and scan the QR code displayed in the terminal or browser.
+
+### Additional Tips
+
+- Feel free to use the demo account to log in rather than signing up
+  - email: demo_account@gmail.com
+  - password: password
+- There are some minor bugs on Android that don't allow task edit or task sorting
